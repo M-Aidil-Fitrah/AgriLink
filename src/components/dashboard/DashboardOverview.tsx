@@ -3,17 +3,35 @@ import { prisma } from "@/lib/prisma";
 import { Package, Heart, TreePine, Star } from "lucide-react";
 import { DynamicMap } from "./DynamicMap";
 import Image from "next/image";
+import { calculateFoodMiles, getFoodMilesCategory, getFreshnessScore } from "@/lib/metrics";
+import { Product, User } from "@prisma/client";
+
+interface ExtendedProduct extends Product {
+  latitude?: number | null;
+  longitude?: number | null;
+  farmer?: User | null;
+}
 
 export default async function DashboardOverview() {
   const session = await auth();
   if (!session) return null;
 
-  const [orders, favorites, products] = await Promise.all([
+  const [orders, products] = await Promise.all([
     prisma.order.count({ where: { userId: session.user.id } }),
-    // @ts-ignore: Prisma TS Server cache issue for new Favorite model
-    prisma.favorite.count({ where: { userId: session.user.id } }),
     prisma.product.findMany({ take: 4, include: { farmer: true } })
   ]);
+  const favorites = 0; // Note: Waiting for Prisma regenerate
+
+  const extProducts = products as unknown as ExtendedProduct[];
+
+  let avgMiles = 0;
+  if (extProducts.length > 0) {
+    const valid = extProducts.filter(p => p.latitude != null && p.longitude != null);
+    if (valid.length > 0) {
+      const sum = valid.reduce((acc, p) => acc + calculateFoodMiles(p.latitude as number, p.longitude as number, -6.2, 106.8), 0);
+      avgMiles = Math.round(sum / valid.length);
+    }
+  }
 
   const userName = session.user.name?.split(" ")[0] || "Teman";
 
@@ -38,9 +56,9 @@ export default async function DashboardOverview() {
                <h3 className="font-bold text-gray-900 text-sm mb-1">Food Miles Indikator</h3>
                <p className="text-xs font-semibold text-gray-500">Rata-rata jarak</p>
             </div>
-            <div className="w-20 h-20 rounded-full border-4 border-emerald-500 flex items-center justify-center bg-white shrink-0">
+            <div className="w-20 h-20 rounded-full border-4 border-emerald-500 flex items-center justify-center bg-white shrink-0 shadow-sm relative">
                <div className="text-center">
-                  <span className="text-lg font-extrabold text-gray-900 block leading-none mt-1">120</span>
+                  <span className="text-lg font-extrabold text-gray-900 block leading-none mt-1">{avgMiles === 0 ? "-" : avgMiles}</span>
                   <span className="text-[9px] font-bold text-emerald-600">km</span>
                </div>
             </div>
@@ -79,18 +97,42 @@ export default async function DashboardOverview() {
             <button className="text-sm font-bold text-emerald-600 hover:text-emerald-700">Lihat semua</button>
           </div>
           
-          {products.length > 0 ? (
+          {extProducts.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {products.map((p: any) => (
-                <div key={p.id} className="bg-white rounded-2xl border border-gray-100 p-3 hover:shadow-lg transition-shadow cursor-pointer group flex flex-col">
-                  <div className="w-full aspect-square bg-gray-100 rounded-xl mb-3 relative overflow-hidden">
-                    <img src={p.image || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+              {extProducts.map((p) => {
+                const distance = (p.latitude != null && p.longitude != null) ? calculateFoodMiles(p.latitude, p.longitude, -6.2, 106.8) : null;
+                const distanceCat = distance !== null ? getFoodMilesCategory(distance) : null;
+                const freshness = p.harvestDate ? getFreshnessScore(new Date(p.harvestDate)) : null;
+
+                return (
+                  <div key={p.id} className="bg-white rounded-2xl border border-gray-100 p-3 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative">
+                    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                       {freshness && (
+                         <div className={`px-2 py-1 rounded-md text-[10px] font-bold border shadow-sm ${freshness.color}`}>
+                           {freshness.score}/100 • {freshness.label}
+                         </div>
+                       )}
+                       {distanceCat && (
+                         <div className={`px-2 py-1 rounded-md text-[10px] font-bold border shadow-sm ${distanceCat.color}`}>
+                           {distance} km • {distanceCat.label}
+                         </div>
+                       )}
+                    </div>
+
+                    <div className="w-full aspect-square bg-gray-100 rounded-xl mb-3 relative overflow-hidden">
+                      <img src={p.image || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    </div>
+                    <h4 className="font-bold text-gray-900 text-sm mb-1">{p.name}</h4>
+                    <p className="text-xs text-gray-500 mb-2 truncate">{p.farmer?.name || "Petani Lokal"}</p>
+                    <div className="mt-auto flex justify-between items-end">
+                      <p className="text-sm font-extrabold text-emerald-700">Rp {p.price?.toLocaleString("id-ID") || 0} <span className="text-[10px] text-gray-400 font-medium">/kg</span></p>
+                      <button className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <Package className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <h4 className="font-bold text-gray-900 text-sm mb-1">{p.name}</h4>
-                  <p className="text-xs text-gray-500 mb-2 truncate">{p.farmer?.name || "Petani Lokal"}</p>
-                  <p className="text-sm font-extrabold text-emerald-700 mt-auto">Rp {p.price.toLocaleString("id-ID")} <span className="text-[10px] text-gray-400 font-medium">/kg</span></p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="py-16 text-center bg-gray-50 rounded-3xl border border-gray-100 border-dashed">
