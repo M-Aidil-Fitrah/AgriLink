@@ -12,9 +12,10 @@ import {
   Search,
   MapPin,
   ShoppingCart,
-  LogOut,
-  Leaf
+  LogOut
 } from "lucide-react";
+import { LocationDisplay } from "@/components/dashboard/LocationDisplay";
+import Image from "next/image";
 
 export default async function DashboardLayout({
   children,
@@ -34,31 +35,25 @@ export default async function DashboardLayout({
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-100 flex flex-col pt-6 pb-6 shadow-sm z-20">
         <div className="px-6 mb-8 flex flex-col items-center">
-          <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-3 shadow-[0_4px_10px_rgba(16,185,129,0.1)]">
-            <Leaf className="w-7 h-7" />
-          </div>
+          <Image src="/logo_agrilink.png" width={150} height={100} className="w-16 h-auto object-contain mb-2" alt="Agrilink Logo" />
           <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">AgriLink</h1>
           <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mt-1">Dari Petani, Untuk Anda</p>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {[
-            { name: "Dashboard", icon: LayoutDashboard, active: true },
-            { name: "Produk", icon: PackageSearch },
-            { name: "Peta", icon: Map },
-            { name: "Pesanan", icon: ShoppingBag },
-            { name: "Favorit", icon: Heart },
-            { name: "Jejak Produk", icon: Activity },
-            { name: "Notifikasi", icon: Bell },
+            { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+            { name: "Produk", href: "/dashboard/produk", icon: PackageSearch },
+            { name: "Peta", href: "/dashboard/peta", icon: Map },
+            { name: "Pesanan", href: "/dashboard/pesanan", icon: ShoppingBag },
+            { name: "Favorit", href: "/dashboard/favorit", icon: Heart },
+            { name: "Jejak Produk", href: "/dashboard/jejak", icon: Activity },
+            { name: "Notifikasi", href: "/dashboard/notifikasi", icon: Bell },
           ].map((item) => (
             <Link
               key={item.name}
-              href="#"
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                item.active
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-500 hover:bg-emerald-50 hover:text-emerald-700`}
             >
               <item.icon className="w-5 h-5" />
               {item.name}
@@ -67,13 +62,6 @@ export default async function DashboardLayout({
         </nav>
 
         <div className="px-4 mt-auto space-y-4">
-          {/* Ad Banner */}
-          <div className="bg-emerald-50 rounded-2xl p-4 text-center">
-            <Leaf className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-            <p className="text-xs font-bold text-emerald-800 mb-1">Dukung Pertanian Lokal</p>
-            <p className="text-[10px] text-emerald-600 font-medium">Setiap pembelianmu membantu petani tumbuh.</p>
-          </div>
-
           <div className="flex items-center gap-3 px-2 py-2">
             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold">
               {user.name?.charAt(0) || "U"}
@@ -112,10 +100,7 @@ export default async function DashboardLayout({
             />
           </div>
           <div className="flex items-center gap-6 ml-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600 bg-gray-50 px-4 py-2 rounded-full cursor-pointer hover:bg-gray-100 transition-colors">
-              <MapPin className="w-4 h-4 text-emerald-600" />
-              Jakarta, ID
-            </div>
+            <LocationDisplay />
             <button className="relative text-gray-500 hover:text-gray-900 transition-colors">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white">2</span>

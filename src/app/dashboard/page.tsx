@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { Package, Heart, TreePine, Star } from "lucide-react";
+import { DynamicMap } from "@/components/dashboard/DynamicMap";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -90,8 +91,8 @@ export default async function DashboardPage() {
              <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-gray-900">Peta Produk Terdekat</h3>
              </div>
-             <div className="w-full h-48 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 text-sm">
-                Integrasi Maps
+             <div className="w-full h-48 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 text-sm relative overflow-hidden">
+                <DynamicMap />
              </div>
            </div>
 

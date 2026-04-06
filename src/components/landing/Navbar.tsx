@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Leaf } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -28,8 +28,8 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-2 group">
-          <Leaf className="w-6 h-6 text-emerald-600" />
+        <Link href="/" className="flex items-center gap-3 group">
+          <Image src="/logo_agrilink.png" width={150} height={100} className="w-12 h-auto object-cover" alt="Agrilink Logo" />
           <span className="text-xl font-extrabold tracking-tight text-gray-900 group-hover:text-emerald-700 transition-colors">
             Agrilink
           </span>
