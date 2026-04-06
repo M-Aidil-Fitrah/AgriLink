@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DeleteProductButton } from "./DeleteProductButton";
 import { Package, Plus, Pencil } from "lucide-react";
 import { CultivationMethod } from "@prisma/client";
+import Image from "next/image";
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   ORGANIC: "Organik",
@@ -76,14 +77,16 @@ export async function FarmerProdukView() {
                   <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0">
-                          <img
+                        <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
+                          <Image
                             src={
                               product.image ||
                               "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=100"
                             }
                             alt={product.name}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            sizes="48px"
                           />
                         </div>
                         <div>

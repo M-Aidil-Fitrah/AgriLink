@@ -57,7 +57,6 @@ export async function registerUser(prevState: AuthState, formData: FormData) {
       data: {
         name,
         email,
-        // @ts-ignore: Prisma TS Server cache issue for password field
         password: hashedPassword,
         role,
       },

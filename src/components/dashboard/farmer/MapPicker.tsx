@@ -71,6 +71,7 @@ export function MapPicker({
         onChange(newCoords);
       });
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
   if (!mounted) {

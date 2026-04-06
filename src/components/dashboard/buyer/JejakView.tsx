@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { calculateFoodMiles, getFoodMilesCategory, getFreshnessScore } from "@/lib/metrics";
 import { FoodMilesCategory, FreshnessResult } from "@/lib/types";
 import { MapPin, Leaf, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 type ProductRow = {
   id: string;
@@ -29,24 +30,27 @@ export function JejakView({ products }: { products: ProductRow[] }) {
   const [computed, setComputed] = useState<ProductWithMetrics[]>([]);
 
   useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLat(pos.coords.latitude);
-          setUserLon(pos.coords.longitude);
-        },
-        () => {
-          // Default ke Banda Aceh jika akses ditolak
-          setUserLat(5.5483);
-          setUserLon(95.3238);
-          setLocationError(true);
-        }
-      );
-    } else {
+    if (!("geolocation" in navigator)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserLat(5.5483);
+       
       setUserLon(95.3238);
+       
       setLocationError(true);
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLat(pos.coords.latitude);
+        setUserLon(pos.coords.longitude);
+      },
+      () => {
+        setUserLat(5.5483);
+        setUserLon(95.3238);
+        setLocationError(true);
+      }
+    );
   }, []);
 
   useEffect(() => {
@@ -62,13 +66,13 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       return { ...p, distance, distanceCat, freshness };
     });
 
-    // Sort by distance ascending
     result.sort((a, b) => {
       if (a.distance === null) return 1;
       if (b.distance === null) return -1;
       return a.distance - b.distance;
     });
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setComputed(result);
   }, [userLat, userLon, products]);
 
@@ -96,7 +100,6 @@ export function JejakView({ products }: { products: ProductRow[] }) {
         </div>
       )}
 
-      {/* Summary */}
       {avgMiles !== null && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
           <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 flex items-center gap-5">
@@ -135,25 +138,31 @@ export function JejakView({ products }: { products: ProductRow[] }) {
               key={p.id}
               className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-5 hover:shadow-sm transition-shadow"
             >
-              <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0">
-                <img
+              <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
+                <Image
                   src={
                     p.image ||
                     "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
                   }
                   alt={p.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="56px"
                 />
               </div>
 
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-gray-900 text-sm truncate">{p.name}</h4>
-                <p className="text-xs text-gray-500 mt-0.5">{p.farmerName} · {p.origin || "Lokasi tidak diketahui"}</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {p.farmerName} · {p.origin || "Lokasi tidak diketahui"}
+                </p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
                 {p.distance !== null && p.distanceCat ? (
-                  <span className={`px-3 py-1.5 rounded-full text-xs font-bold border ${p.distanceCat.color}`}>
+                  <span
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border ${p.distanceCat.color}`}
+                  >
                     {p.distance} km · {p.distanceCat.label}
                   </span>
                 ) : (
@@ -161,7 +170,9 @@ export function JejakView({ products }: { products: ProductRow[] }) {
                     Lokasi tidak tersedia
                   </span>
                 )}
-                <span className={`px-3 py-1.5 rounded-full text-xs font-bold border ${p.freshness.color}`}>
+                <span
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border ${p.freshness.color}`}
+                >
                   {p.freshness.score}/100 · {p.freshness.label}
                 </span>
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { ArrowRight, Sprout, HandHeart, MapPin } from "lucide-react";
+import { ArrowRight, Sprout, MapPin } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -78,10 +78,12 @@ export function HeroSection() {
            className="relative mt-8 lg:mt-0"
         >
           <div className="relative w-full aspect-4/5 md:aspect-3/4 lg:aspect-square max-w-[500px] mx-auto rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white bg-white">
-            <img 
-              src="https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=1500&auto=format&fit=crop" 
-              alt="Petani panen segar" 
-              className="w-full h-full object-cover"
+            <Image
+              src="https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=1500&auto=format&fit=crop"
+              alt="Petani panen segar"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 500px"
             />
             <div className="absolute inset-0 bg-linear-to-t from-gray-900/60 to-transparent" />
             

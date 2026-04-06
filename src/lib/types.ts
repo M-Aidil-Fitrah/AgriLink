@@ -4,10 +4,7 @@ import {
   Order,
   OrderItem,
   Favorite,
-  Location,
-  OrderStatus,
   CultivationMethod,
-  Role,
 } from "@prisma/client";
 
 // ─── Shared Utility Types ─────────────────────────────────────────────────────

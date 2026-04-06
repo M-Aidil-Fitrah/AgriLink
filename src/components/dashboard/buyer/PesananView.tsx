@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { OrderWithItems } from "@/lib/types";
 import { OrderStatus } from "@prisma/client";
 import { Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
+import Image from "next/image";
 
 const STATUS_MAP: Record<
   OrderStatus,
@@ -117,14 +118,16 @@ export async function PesananView() {
                 <div className="px-6 py-4 space-y-3">
                   {order.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0">
-                        <img
+                      <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
+                        <Image
                           src={
                             item.product.image ||
                             "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
                           }
                           alt={item.product.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="56px"
                         />
                       </div>
                       <div className="flex-1">

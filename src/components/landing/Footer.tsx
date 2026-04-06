@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function Footer() {
   return (
     <footer className="bg-gray-950 text-gray-400 py-12 pb-8 border-t border-gray-900 mt-auto">
@@ -5,7 +7,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="md:col-span-2">
              <div className="flex items-center gap-3 mb-4 opacity-90">
-               <img src="/logo_agrilink.png" alt="Agrilink Logo" className="w-12 h-12 object-contain grayscale brightness-200" />
+               <Image src="/logo_agrilink.png" alt="Agrilink Logo" width={48} height={48} className="w-12 h-12 object-contain grayscale brightness-200" />
                <span className="text-xl font-extrabold text-white tracking-tight">Agrilink</span>
              </div>
              <p className="text-sm max-w-sm mb-6 leading-relaxed">

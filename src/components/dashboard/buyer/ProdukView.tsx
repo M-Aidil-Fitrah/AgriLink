@@ -4,6 +4,7 @@ import { getFreshnessScore, getFoodMilesCategory, calculateFoodMiles } from "@/l
 import { ProductWithFarmer } from "@/lib/types";
 import { FavoriteButton } from "./FavoriteButton";
 import { CultivationMethod } from "@prisma/client";
+import Image from "next/image";
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   ORGANIC: "Organik",
@@ -97,15 +98,17 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                 key={product.id}
                 className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all group flex flex-col"
               >
-                <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
-                  <img
-                    src={
-                      product.image ||
-                      "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"
-                    }
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                  <div className="relative w-full aspect-square">
+                    <Image
+                      src={
+                        product.image ||
+                        "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"
+                      }
+                      alt={product.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                    />
                   <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                     {product.harvestDate && (
                       <span className={`px-2 py-1 rounded-lg text-[10px] font-bold border ${freshness.color}`}>

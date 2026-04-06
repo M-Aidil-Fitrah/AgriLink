@@ -2,7 +2,7 @@
 
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
-import { ArrowRight, Leaf, Shield, Truck } from "lucide-react";
+import { Leaf } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -39,8 +39,14 @@ export function LandingView() {
 
         {/* Clean Hero Image Grid */}
         <div className="relative">
-           <div className="aspect-4/3 rounded-3xl overflow-hidden bg-gray-100">
-              <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1600&auto=format&fit=crop" className="w-full h-full object-cover" alt="Sayuran segar" />
+           <div className="aspect-4/3 rounded-3xl overflow-hidden bg-gray-100 relative">
+              <Image
+                src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1600&auto=format&fit=crop"
+                className="object-cover"
+                alt="Sayuran segar"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
            </div>
            
            {/* Floating Info Box */}

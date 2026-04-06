@@ -4,6 +4,7 @@ import { getFreshnessScore } from "@/lib/metrics";
 import { FavoriteWithProduct } from "@/lib/types";
 import { FavoriteButton } from "./FavoriteButton";
 import { Heart } from "lucide-react";
+import Image from "next/image";
 
 export async function FavoritView() {
   const session = await auth();
@@ -49,13 +50,15 @@ export async function FavoritView() {
                 className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all group flex flex-col"
               >
                 <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
-                  <img
+                  <Image
                     src={
                       product.image ||
                       "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"
                     }
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                   />
                   {product.harvestDate && (
                     <div className="absolute top-3 left-3">

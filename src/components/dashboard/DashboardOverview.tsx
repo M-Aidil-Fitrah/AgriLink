@@ -4,6 +4,7 @@ import { Package, Heart, TreePine, Star } from "lucide-react";
 import { DynamicMap } from "./DynamicMap";
 import { calculateFoodMiles, getFoodMilesCategory, getFreshnessScore } from "@/lib/metrics";
 import { ProductWithFarmer } from "@/lib/types";
+import Image from "next/image";
 
 const BUYER_LAT = 5.5483;
 const BUYER_LON = 95.3238;
@@ -109,10 +110,12 @@ export default async function DashboardOverview() {
                 return (
                   <div key={product.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden group flex flex-col hover:shadow-md transition-shadow">
                     <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
-                      <img
+                      <Image
                         src={product.image || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform"
+                        sizes="(max-width: 768px) 50vw, 25vw"
                       />
                       <div className="absolute top-2 left-2 flex flex-col gap-1">
                         {product.harvestDate && (
