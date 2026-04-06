@@ -29,7 +29,7 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-3 group">
-          <Image src="/logo_agrilink.png" width={150} height={100} className="w-12 h-auto object-cover" alt="Agrilink Logo" />
+          <Image src="/logo_agrilink.png" width={80} height={80} className="w-10 h-10 object-contain" alt="Agrilink Logo" />
           <span className="text-xl font-extrabold tracking-tight text-gray-900 group-hover:text-emerald-700 transition-colors">
             Agrilink
           </span>

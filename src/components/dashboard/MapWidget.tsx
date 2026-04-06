@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState } from "react";
 
-const MAP_CENTER: [number, number] = [-6.200000, 106.816666]; // Jakarta default
+const MAP_CENTER: [number, number] = [5.5483, 95.3238]; // Banda Aceh default
 
 export default function MapWidget() {
   const [mounted, setMounted] = useState(false);

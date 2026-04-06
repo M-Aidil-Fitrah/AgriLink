@@ -18,7 +18,7 @@ export default function LoginForm() {
       className="w-full max-w-sm p-8 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100"
     >
       <div className="flex flex-col items-center text-center mb-6">
-        <Image src="/logo_agrilink.png" width={120} height={80} alt="Agrilink Logo" className="object-contain mb-4 h-12 w-auto" />
+        <Image src="/logo_agrilink.png" width={80} height={80} alt="Agrilink Logo" className="w-14 h-14 object-contain mb-4" />
         <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Selamat Datang</h2>
         <p className="text-gray-500 text-sm mt-1 font-medium">Silakan masuk ke akun Anda</p>
       </div>
