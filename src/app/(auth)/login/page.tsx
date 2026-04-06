@@ -16,10 +16,15 @@ export default function LoginPage() {
             src="https://images.unsplash.com/photo-1595841696677-6479ff3f62eb?q=80&w=2000&auto=format&fit=crop"
             alt="Agriculture landscape"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-emerald-900/80 to-transparent" />
-          <div className="absolute bottom-12 left-12 right-12 text-white">
-            <h2 className="text-4xl font-bold mb-4">Empowering Sustainable Agriculture.</h2>
-            <p className="text-emerald-100 text-lg">Connect directly with local farmers, reduce food miles, and ensure food quality right from the source.</p>
+          <div className="absolute inset-0 bg-linear-to-t from-emerald-950 via-emerald-900/80 to-transparent" />
+          <div className="absolute bottom-16 left-12 right-12 text-white">
+            <span className="px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold tracking-widest text-emerald-100 uppercase mb-6 inline-block">Masuk ke Sistem</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+              Kembali <br /><span className="text-emerald-300">Menyemai Karya</span>.
+            </h2>
+            <p className="text-emerald-100/90 text-lg md:text-xl font-medium max-w-lg leading-relaxed">
+              Lanjutkan langkah Anda mendukung petani lokal. Ciptakan ekosistem pangan cerdas dengan satu klik.
+            </p>
           </div>
         </div>
       </div>

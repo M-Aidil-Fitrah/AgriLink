@@ -15,10 +15,15 @@ export default function RegisterPage() {
             src="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?q=80&w=2000&auto=format&fit=crop"
             alt="Farmer in field"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-emerald-900/90 to-emerald-900/20" />
-          <div className="absolute bottom-12 left-12 right-12 text-white">
-            <h2 className="text-4xl font-bold mb-4">Join the Movement.</h2>
-            <p className="text-emerald-100 text-lg">Whether you are growing the food or putting it on your table, Agrilink bridges the gap.</p>
+          <div className="absolute inset-0 bg-linear-to-t from-emerald-950 via-emerald-900/90 to-emerald-900/20" />
+          <div className="absolute bottom-16 left-12 right-12 text-white">
+            <span className="px-4 py-2 bg-emerald-500/80 backdrop-blur-md rounded-full text-xs font-bold tracking-widest text-white uppercase mb-6 inline-block">Mulai Perjalanan Anda</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+              Perubahan <br />Dimulai <span className="text-emerald-300">Dari Anda</span>.
+            </h2>
+            <p className="text-emerald-100/90 text-lg md:text-xl font-medium max-w-lg leading-relaxed">
+              Baik Anda yang mendarmabaktikan diri merawat bumi, maupun yang menanti hasil panen segar di meja makan. Ini tempat Anda.
+            </p>
           </div>
         </div>
       </div>
