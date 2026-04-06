@@ -12,21 +12,14 @@ export default function LoginForm() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full max-w-md p-8 sm:p-10 bg-white/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_-15px_rgba(16,185,129,0.15)] border border-emerald-50"
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full max-w-sm p-8 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100"
     >
-      <div className="flex flex-col items-center mb-8">
-        <motion.div 
-          whileHover={{ rotate: 180 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="w-14 h-14 bg-linear-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center mb-5 text-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-        >
-          <Leaf className="w-7 h-7" />
-        </motion.div>
-        <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Welcome Back</h2>
-        <p className="text-gray-500 text-sm mt-3 font-medium">Log in to your Agrilink account</p>
+      <div className="flex flex-col items-start mb-6">
+        <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Selamat Datang</h2>
+        <p className="text-gray-500 text-sm mt-1 font-medium">Silakan masuk ke akun Anda</p>
       </div>
 
       <form action={dispatch} className="space-y-6">
@@ -39,7 +32,7 @@ export default function LoginForm() {
               name="email"
               placeholder="anda@email.com"
               required
-              className="w-full pl-12 pr-4 py-3.5 bg-gray-50/50 hover:bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all duration-300 font-medium shadow-sm"
+              className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all duration-200 font-medium"
             />
           </div>
         </div>
@@ -47,13 +40,12 @@ export default function LoginForm() {
         <div className="space-y-1.5">
           <label className="block text-sm font-semibold tracking-wide text-gray-700">Kata Sandi</label>
           <div className="relative group">
-            <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-500 transition-colors" />
             <input
               type="password"
               name="password"
               placeholder="••••••••"
               required
-              className="w-full pl-12 pr-4 py-3.5 bg-gray-50/50 hover:bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all duration-300 font-medium shadow-sm"
+              className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all duration-200 font-medium"
             />
           </div>
         </div>
@@ -69,26 +61,23 @@ export default function LoginForm() {
         )}
 
         <motion.button
-          whileHover={{ scale: 1.01, boxShadow: "0 10px 25px -5px rgba(16,185,129,0.4)" }}
+          whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={isPending}
-          className="w-full relative overflow-hidden group flex items-center justify-center gap-2 bg-linear-to-r from-emerald-600 to-emerald-500 text-white py-4 px-4 rounded-2xl font-bold tracking-wide transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_15px_rgba(16,185,129,0.3)] mt-2"
+          className="w-full relative overflow-hidden flex items-center justify-center gap-2 bg-emerald-600 text-white py-3.5 px-4 rounded-xl font-bold tracking-wide transition-all hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm mt-4"
         >
           {isPending ? (
-            <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <>
-              <span className="relative z-10 flex items-center gap-2">Masuk <LogIn className="w-5 h-5" /></span>
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-            </>
+            <span className="relative z-10 flex items-center gap-2">Masuk</span>
           )}
         </motion.button>
       </form>
 
-      <div className="mt-8 text-center text-sm text-gray-500 font-medium">
+      <div className="mt-6 text-center text-sm text-gray-500 font-medium">
         Belum memiliki akun?{" "}
-        <Link href="/register" className="text-emerald-600 hover:text-emerald-500 font-bold hover:underline transition-all">
+        <Link href="/register" className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline transition-all">
           Buat Akun Baru
         </Link>
       </div>

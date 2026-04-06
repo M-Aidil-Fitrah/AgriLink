@@ -2,29 +2,31 @@ import RegisterForm from "@/components/auth/RegisterForm";
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen w-full flex bg-gray-50 flex-col md:flex-row">
-      <div className="flex-1 flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24">
-        <div className="mx-auto w-full max-w-sm flex justify-center">
+    <div className="relative h-screen w-full overflow-hidden bg-gray-950 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 w-full h-full z-0">
+        <img
+          src="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?q=80&w=2000&auto=format&fit=crop"
+          alt="Farmer in field"
+          className="w-full h-full object-cover opacity-50"
+        />
+        <div className="absolute inset-0 bg-linear-to-b md:bg-linear-to-r from-white via-white/80 to-transparent" />
+      </div>
+
+      <div className="relative z-10 w-full h-full flex flex-col md:flex-row shadow-2xl">
+        <div className="w-full md:w-[45%] h-full flex items-center justify-center bg-white/40 backdrop-blur-md px-6 md:px-12 lg:px-24">
           <RegisterForm />
         </div>
-      </div>
-      <div className="hidden md:block relative flex-1 order-first">
-        <div className="absolute inset-0 bg-emerald-900 overflow-hidden">
-          <img
-            className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-overlay"
-            src="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?q=80&w=2000&auto=format&fit=crop"
-            alt="Farmer in field"
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-emerald-950 via-emerald-900/90 to-emerald-900/20" />
-          <div className="absolute bottom-16 left-12 right-12 text-white">
-            <span className="px-4 py-2 bg-emerald-500/80 backdrop-blur-md rounded-full text-xs font-bold tracking-widest text-white uppercase mb-6 inline-block">Mulai Perjalanan Anda</span>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-              Perubahan <br />Dimulai <span className="text-emerald-300">Dari Anda</span>.
-            </h2>
-            <p className="text-emerald-100/90 text-lg md:text-xl font-medium max-w-lg leading-relaxed">
-              Baik Anda yang mendarmabaktikan diri merawat bumi, maupun yang menanti hasil panen segar di meja makan. Ini tempat Anda.
-            </p>
-          </div>
+        
+        <div className="hidden md:flex flex-1 flex-col justify-end p-16 pb-24 text-white drop-shadow-lg">
+          <span className="w-fit px-4 py-2 bg-emerald-500/20 backdrop-blur-lg rounded-full text-xs font-bold tracking-widest text-emerald-50 uppercase mb-6 border border-emerald-400/30">
+            Perubahan Dimulai Dari Anda
+          </span>
+          <h2 className="text-4xl lg:text-6xl font-extrabold leading-tight mb-6 tracking-tight">
+            Transparansi Pangan<br/><span className="text-emerald-400">Masa Depan.</span>
+          </h2>
+          <p className="text-emerald-50 text-lg lg:text-xl font-medium max-w-lg leading-relaxed shadow-sm">
+            Baik Anda pahlawan hijau merawat bumi maupun yang menanti panen lokal segar; ini tempat Anda.
+          </p>
         </div>
       </div>
     </div>

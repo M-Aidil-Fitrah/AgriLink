@@ -10,7 +10,13 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', Object.fromEntries(formData));
+    const data = Object.fromEntries(formData);
+    // Add redirectTo manually before calling signIn
+    await signIn('credentials', {
+      email: data.email as string,
+      password: data.password as string,
+      redirectTo: '/dashboard',
+    });
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
