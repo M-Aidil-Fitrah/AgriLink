@@ -1,8 +1,11 @@
-export default function PesananPage() {
-  return (
-    <div className="p-8 pb-20">
-      <h2 className="text-3xl font-extrabold text-gray-900 mb-6">Pesanan Saya</h2>
-      <p className="text-gray-500">Menampilkan riwayat pesanan dari database...</p>
-    </div>
-  );
+import { auth } from "@/auth";
+import { PesananView } from "@/components/dashboard/buyer/PesananView";
+import { FarmerPesananView } from "@/components/dashboard/farmer/FarmerPesananView";
+
+export default async function PesananPage() {
+  const session = await auth();
+  if (session?.user?.role === "FARMER") {
+    return <FarmerPesananView />;
+  }
+  return <PesananView />;
 }

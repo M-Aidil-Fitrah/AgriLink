@@ -16,7 +16,7 @@ enum Role {
 
 enum CultivationMethod {
   ORGANIC
-  HYDROOPONIC
+  HYDROPONIC
   CONVENTIONAL
   OTHER
 }
@@ -31,18 +31,18 @@ enum OrderStatus {
 
 // NextAuth Models
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -63,18 +63,18 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // Hashed password for Credentials provider
+  password      String?
   role          Role      @default(USER)
-  
-  accounts      Account[]
-  sessions      Session[]
-  locations     Location[]
-  products      Product[] // Only for FARMER role
-  orders        Order[]   // Orders placed by BUYER
-  favorites     Favorite[]
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  accounts  Account[]
+  sessions  Session[]
+  locations Location[]
+  products  Product[]  // Only for FARMER role
+  orders    Order[]    // Orders placed by BUYER
+  favorites Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {
@@ -87,75 +87,86 @@ model VerificationToken {
 
 // Application Models
 model Location {
-  id        String   @id @default(cuid())
-  label     String?  // e.g. "Home", "Farm Field 1"
+  id        String  @id @default(cuid())
+  label     String? // e.g. "Rumah", "Lahan Kebun 1"
   address   String?
   latitude  Float
   longitude Float
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPrimary Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Product {
-  id                String            @id @default(cuid())
-  name              String
-  description       String?
-  price             Float
-  stock             Int               @default(0)
-  image             String?
-  
-  // Sustainability/Traceability fields
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int    @default(0)
+  image       String?
+  unit        String @default("kg") // e.g. kg, ikat, buah
+
+  // Sustainability / Traceability
   harvestDate       DateTime?
   cultivationMethod CultivationMethod @default(CONVENTIONAL)
-  origin            String?           // General region or specific origin
+  origin            String?
 
-  farmerId          String
-  farmer            User              @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  // Location for Food Miles (PostGIS synced via SQL trigger)
+  latitude  Float?
+  longitude Float?
 
-  orderItems        OrderItem[]
-  favorites         Favorite[]
+  farmerId String
+  farmer   User   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  orderItems OrderItem[]
+  favorites  Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  userId     String
-  user       User        @relation(fields: [userId], references: [id])
-  status     OrderStatus @default(PENDING)
-  total      Float
-  items      OrderItem[]
-  
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(PENDING)
+  total           Float
+  note            String?
+  deliveryAddress String?
+  deliveryLat     Float?
+  deliveryLon     Float?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  
-  quantity  Int
-  price     Float    // Price at the time of order
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Int
+  price    Float // Price at time of order
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Favorite {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
