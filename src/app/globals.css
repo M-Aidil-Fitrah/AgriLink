@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --color-agrilink-light: #d1fae5;
+  --color-agrilink-main: #10b981;
+  --color-agrilink-dark: #047857;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -14,8 +20,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #022c22;
+    --foreground: #f1f5f9;
   }
 }
 
