@@ -1,6 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, PackageSearch, Map, ShoppingBag, Heart, Activity } from "lucide-react";
+import {
+  LayoutDashboard,
+  PackageSearch,
+  Map,
+  ShoppingBag,
+  Heart,
+  Activity,
+  Store,
+} from "lucide-react";
 
 const BUYER_LINKS = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -9,6 +17,10 @@ const BUYER_LINKS = [
   { name: "Pesanan", href: "/dashboard/pesanan", icon: ShoppingBag },
   { name: "Favorit", href: "/dashboard/favorit", icon: Heart },
   { name: "Jejak", href: "/dashboard/jejak", icon: Activity },
+];
+
+const BUYER_SECONDARY_LINKS = [
+  { name: "Ajukan Menjadi Seller", href: "/dashboard/ajukan-seller", icon: Store },
 ];
 
 const FARMER_LINKS = [
@@ -33,7 +45,7 @@ export function Sidebar({ role }: { role?: string }) {
         />
         <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">AgriLink</h1>
         <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mt-1">
-          {isFarmer ? "Aplikasi Petani" : "Dari Petani, Untuk Anda"}
+          {isFarmer ? "Dashboard Seller" : "Dari Petani, Untuk Anda"}
         </p>
       </div>
 
@@ -49,6 +61,22 @@ export function Sidebar({ role }: { role?: string }) {
           </Link>
         ))}
       </nav>
+
+      {/* Seller application link for buyers only */}
+      {!isFarmer && (
+        <div className="px-4 mt-4 pt-4 border-t border-gray-100">
+          {BUYER_SECONDARY_LINKS.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 border border-emerald-100 bg-emerald-50/50"
+            >
+              <item.icon className="w-5 h-5 shrink-0" />
+              {item.name}
+            </Link>
+          ))}
+        </div>
+      )}
     </aside>
   );
 }

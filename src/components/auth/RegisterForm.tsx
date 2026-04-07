@@ -12,13 +12,13 @@ export default function RegisterForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<'USER' | 'FARMER'>('USER');
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    formData.append("role", selectedRole);
-    
+    // All registrations default to USER role
+    formData.append("role", "USER");
+
     startTransition(async () => {
       const res = await registerUser(null, formData);
       if (res?.error) {
@@ -38,25 +38,10 @@ export default function RegisterForm() {
     >
       <div className="flex flex-col items-center text-center mb-6">
         <Image src="/logo_agrilink.png" width={80} height={80} alt="Agrilink Logo" className="w-14 h-14 object-contain mb-4" />
-        <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Daftar Akun</h2>
-        <p className="text-gray-500 text-sm mt-1 font-medium">Bergabung bersama kami</p>
-      </div>
-
-      <div className="flex gap-3 mb-6">
-        <button
-          type="button"
-          onClick={() => setSelectedRole('USER')}
-          className={`flex-1 flex flex-col items-center justify-center py-3 px-2 rounded-xl border text-sm transition-all duration-200 ${selectedRole === 'USER' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold' : 'border-gray-200 hover:bg-gray-50 text-gray-500 font-medium'}`}
-        >
-          Pembeli
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelectedRole('FARMER')}
-          className={`flex-1 flex flex-col items-center justify-center py-3 px-2 rounded-xl border text-sm transition-all duration-200 ${selectedRole === 'FARMER' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold' : 'border-gray-200 hover:bg-gray-50 text-gray-500 font-medium'}`}
-        >
-          Petani
-        </button>
+        <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Buat Akun</h2>
+        <p className="text-gray-500 text-sm mt-1 font-medium">
+          Bergabung sebagai pembeli dan mulai berbelanja
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,7 +52,7 @@ export default function RegisterForm() {
             <input
               type="text"
               name="name"
-              placeholder="John Doe"
+              placeholder="Budi Santoso"
               required
               className="w-full pl-12 pr-4 py-3 bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all duration-200 font-medium"
             />
@@ -97,7 +82,7 @@ export default function RegisterForm() {
               name="password"
               placeholder="••••••••"
               required
-               className="w-full pl-12 pr-4 py-3 bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all duration-200 font-medium"
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all duration-200 font-medium"
             />
           </div>
         </div>
@@ -131,11 +116,13 @@ export default function RegisterForm() {
         </motion.button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-gray-500 font-medium">
-        Sudah memiliki akun?{" "}
-        <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline transition-all">
-          Masuk Sekarang
-        </Link>
+      <div className="mt-6 text-center">
+        <div className="border-t border-gray-100 pt-4 text-sm text-gray-500 font-medium">
+          Sudah memiliki akun?{" "}
+          <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline transition-all">
+            Masuk Sekarang
+          </Link>
+        </div>
       </div>
     </motion.div>
   );

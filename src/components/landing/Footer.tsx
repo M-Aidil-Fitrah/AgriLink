@@ -2,15 +2,15 @@ import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-950 text-gray-400 py-12 pb-8 border-t border-gray-900 mt-auto">
+    <footer className="bg-emerald-950 text-emerald-200 py-12 pb-8 border-t border-emerald-900 mt-auto">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="md:col-span-2">
              <div className="flex items-center gap-3 mb-4 opacity-90">
-               <Image src="/logo_agrilink.png" alt="Agrilink Logo" width={48} height={48} className="w-12 h-12 object-contain grayscale brightness-200" />
+               <Image src="/logo_agrilink.png" alt="Agrilink Logo" width={48} height={48} className="w-12 h-12 object-contain brightness-200" />
                <span className="text-xl font-extrabold text-white tracking-tight">Agrilink</span>
              </div>
-             <p className="text-sm max-w-sm mb-6 leading-relaxed">
+             <p className="text-sm max-w-sm mb-6 leading-relaxed text-emerald-300">
                Membangun masa depan pertanian berkelanjutan di Indonesia dengan menghubungkan petani organik secara langsung kepada meja makan keluarga Anda.
              </p>
           </div>
@@ -31,10 +31,10 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between text-xs font-semibold">
+        <div className="border-t border-emerald-900 pt-8 flex flex-col md:flex-row items-center justify-between text-xs font-semibold text-emerald-400">
           <p>&copy; {new Date().getFullYear()} Agrilink Indonesia. Seluruh hak cipta dilindungi.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
-            <a href="#" className="hover:text-white transition-colors">Syarat & Ketentuan</a>
+            <a href="#" className="hover:text-white transition-colors">Syarat &amp; Ketentuan</a>
             <a href="#" className="hover:text-white transition-colors">Kebijakan Privasi</a>
           </div>
         </div>

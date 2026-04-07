@@ -29,6 +29,12 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum SellerApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // NextAuth Models
 model Account {
   id                String  @id @default(cuid())
@@ -66,12 +72,13 @@ model User {
   password      String?
   role          Role      @default(USER)
 
-  accounts  Account[]
-  sessions  Session[]
-  locations Location[]
-  products  Product[]  // Only for FARMER role
-  orders    Order[]    // Orders placed by BUYER
-  favorites Favorite[]
+  accounts          Account[]
+  sessions          Session[]
+  locations         Location[]
+  products          Product[]          // Only for FARMER role
+  orders            Order[]            // Orders placed by USER
+  favorites         Favorite[]
+  sellerApplication SellerApplication?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -88,7 +95,7 @@ model VerificationToken {
 // Application Models
 model Location {
   id        String  @id @default(cuid())
-  label     String? // e.g. "Rumah", "Lahan Kebun 1"
+  label     String?
   address   String?
   latitude  Float
   longitude Float
@@ -102,20 +109,18 @@ model Location {
 }
 
 model Product {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
   description String?
   price       Float
-  stock       Int    @default(0)
+  stock       Int     @default(0)
   image       String?
-  unit        String @default("kg") // e.g. kg, ikat, buah
+  unit        String  @default("kg")
 
-  // Sustainability / Traceability
   harvestDate       DateTime?
   cultivationMethod CultivationMethod @default(CONVENTIONAL)
   origin            String?
 
-  // Location for Food Miles (PostGIS synced via SQL trigger)
   latitude  Float?
   longitude Float?
 
@@ -155,20 +160,53 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
 
   quantity Int
-  price    Float // Price at time of order
+  price    Float
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Favorite {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   userId    String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+}
+
+model SellerApplication {
+  id     String                  @id @default(cuid())
+  userId String                  @unique
+  user   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status SellerApplicationStatus @default(PENDING)
+
+  // Identitas Pribadi
+  fullName       String
+  nik            String
+  ktpPhotoUrl    String  @db.Text
+  selfiePhotoUrl String  @db.Text
+  phone          String
+  address        String
+
+  // Identitas Usaha
+  businessName     String
+  businessType     String
+  businessAddress  String
+  latitude         Float?
+  longitude        Float?
+  businessPhotoUrl String  @db.Text
+  description      String  @db.Text
+  mainCommodity    String
+
+  // Review
+  adminNote  String?  @db.Text
+  reviewedAt DateTime?
+  reviewedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

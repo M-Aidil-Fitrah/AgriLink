@@ -7,19 +7,23 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith('/admin') || nextUrl.pathname.startsWith('/farmer');
-      
-      if (isOnDashboard) {
+      const protectedPaths = ['/admin', '/dashboard'];
+      const isProtected = protectedPaths.some((p) => nextUrl.pathname.startsWith(p));
+
+      if (isProtected) {
         if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
-      } else if (isLoggedIn) {
-        // optionally redirect logged in users away from auth pages
+        return false; // Redirect unauthenticated users to login
+      }
+
+      if (isLoggedIn) {
+        // Redirect logged-in users away from auth pages back to home
         if (nextUrl.pathname.startsWith('/login') || nextUrl.pathname.startsWith('/register')) {
-            return Response.redirect(new URL('/', nextUrl));
+          return Response.redirect(new URL('/', nextUrl));
         }
       }
+
       return true;
     },
   },
-  providers: [], // Add providers with an empty array for now
+  providers: [],
 } satisfies NextAuthConfig;

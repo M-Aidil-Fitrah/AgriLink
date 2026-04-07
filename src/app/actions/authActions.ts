@@ -10,20 +10,25 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    const data = Object.fromEntries(formData);
-    // Add redirectTo manually before calling signIn
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    // Determine redirect target based on role
+    const user = await prisma.user.findUnique({ where: { email }, select: { role: true } });
+    const redirectTo = user?.role === 'ADMIN' ? '/admin' : '/dashboard';
+
     await signIn('credentials', {
-      email: data.email as string,
-      password: data.password as string,
-      redirectTo: '/dashboard',
+      email,
+      password,
+      redirectTo,
     });
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
-          return 'Invalid credentials.';
+          return 'Email atau kata sandi salah.';
         default:
-          return 'Something went wrong.';
+          return 'Terjadi kesalahan. Silakan coba lagi.';
       }
     }
     throw error;
@@ -37,10 +42,11 @@ export async function registerUser(prevState: AuthState, formData: FormData) {
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const role = formData.get('role') as 'USER' | 'FARMER' | 'ADMIN';
+    // Role is always USER on registration
+    const role = 'USER' as const;
 
-    if (!name || !email || !password || !role) {
-      return { error: 'Missing fields' };
+    if (!name || !email || !password) {
+      return { error: 'Semua field wajib diisi' };
     }
 
     const existingUser = await prisma.user.findUnique({
@@ -48,7 +54,7 @@ export async function registerUser(prevState: AuthState, formData: FormData) {
     });
 
     if (existingUser) {
-      return { error: 'Email already exists' };
+      return { error: 'Email sudah terdaftar' };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -65,10 +71,10 @@ export async function registerUser(prevState: AuthState, formData: FormData) {
     return { success: true };
   } catch (error) {
     console.error(error);
-    return { error: 'Internal server error' };
+    return { error: 'Terjadi kesalahan server' };
   }
 }
 
 export async function logout() {
-  await signOut();
+  await signOut({ redirectTo: '/' });
 }
