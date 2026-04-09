@@ -4,8 +4,24 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CultivationMethod, Product } from "@prisma/client";
 import { createProduct, updateProduct, ProductInput } from "@/app/actions/productActions";
-import { MapPicker } from "./MapPicker";
 import { Loader2 } from "lucide-react";
+import { ImageUpload } from "@/components/dashboard/ImageUpload";
+import dynamic from "next/dynamic";
+import type { ComponentType } from "react";
+
+type MapPickerProps = {
+  initialLat?: number | null;
+  initialLon?: number | null;
+  onChange: (coords: { lat: number; lon: number }) => void;
+};
+
+const MapPicker = dynamic<MapPickerProps>(
+  () => import("./MapPicker").then((mod) => mod.MapPicker as ComponentType<MapPickerProps>),
+  { 
+    ssr: false,
+    loading: () => <div className="h-64 w-full bg-gray-50 animate-pulse rounded-2xl flex items-center justify-center text-xs font-semibold text-gray-400 uppercase tracking-widest">Memuat Peta...</div>
+  }
+);
 
 const CULTIVATION_OPTIONS: { value: CultivationMethod; label: string }[] = [
   { value: "ORGANIC", label: "Organik" },
@@ -22,6 +38,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
   const [error, setError] = useState<string | null>(null);
   const [lat, setLat] = useState<number | null>(product?.latitude ?? null);
   const [lon, setLon] = useState<number | null>(product?.longitude ?? null);
+  const [imageUrl, setImageUrl] = useState<string>(product?.image ?? "");
 
   function handleMapChange({ lat, lon }: { lat: number; lon: number }) {
     setLat(lat);
@@ -38,7 +55,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
       description: formData.get("description") as string,
       price: parseFloat(formData.get("price") as string),
       stock: parseInt(formData.get("stock") as string),
-      image: formData.get("image") as string,
+      image: imageUrl,
       unit: formData.get("unit") as string,
       harvestDate: formData.get("harvestDate") as string,
       cultivationMethod: formData.get("cultivationMethod") as CultivationMethod,
@@ -172,16 +189,13 @@ export function ProductForm({ product }: { product?: Product | null }) {
           />
         </div>
 
-        <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-gray-700">URL Foto Produk</label>
-          <input
-            name="image"
-            type="url"
-            defaultValue={product?.image ?? ""}
-            placeholder="https://contoh.com/foto-produk.jpg"
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-          />
-        </div>
+        <ImageUpload
+          label="Foto Produk"
+          hint="Gunakan foto berkualitas tinggi untuk menarik pembeli"
+          value={imageUrl}
+          onChange={setImageUrl}
+          folder="products"
+        />
       </section>
 
       {/* Lokasi Kebun */}

@@ -25,7 +25,7 @@ export function UpdateStatusButton({
     setError(null);
     startTransition(async () => {
       const result = await updateOrderStatus(orderId, targetStatus);
-      if (!result.success) setError(result.error);
+      if (!result.success) setError(result.error ?? "Gagal memperbarui status");
     });
   }
 

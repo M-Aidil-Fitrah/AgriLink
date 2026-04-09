@@ -1,13 +1,20 @@
+import { useState } from "react";
 import { Search, ShoppingCart, LogOut } from "lucide-react";
 import { LocationDisplay } from "./LocationDisplay";
 import { Session } from "next-auth";
 import { signOut } from "@/auth";
+import { useCart } from "@/context/CartContext";
+import { CartDrawer } from "./buyer/CartDrawer";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export function TopHeader({ session }: { session: Session }) {
   const user = session.user;
+  const { totalItems } = useCart();
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   return (
     <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shrink-0">
+
       <div className="w-full max-w-xl relative">
         <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
         <input
@@ -18,10 +25,21 @@ export function TopHeader({ session }: { session: Session }) {
       </div>
       <div className="flex items-center gap-5 ml-4">
         <LocationDisplay />
-        <button className="relative text-gray-500 hover:text-gray-900 transition-colors">
+        <NotificationDropdown />
+        <button 
+          onClick={() => setIsCartOpen(true)}
+          className="relative text-gray-500 hover:text-gray-900 transition-colors"
+        >
           <ShoppingCart className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white">0</span>
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white animate-in zoom-in duration-300">
+              {totalItems}
+            </span>
+          )}
         </button>
+
+        <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
 
         <div className="h-6 w-px bg-gray-200 mx-2"></div>
 

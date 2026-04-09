@@ -8,6 +8,7 @@ import {
   Heart,
   Activity,
   Store,
+  User,
 } from "lucide-react";
 
 const BUYER_LINKS = [
@@ -17,6 +18,7 @@ const BUYER_LINKS = [
   { name: "Pesanan", href: "/dashboard/pesanan", icon: ShoppingBag },
   { name: "Favorit", href: "/dashboard/favorit", icon: Heart },
   { name: "Jejak", href: "/dashboard/jejak", icon: Activity },
+  { name: "Profil", href: "/dashboard/profil", icon: User },
 ];
 
 const BUYER_SECONDARY_LINKS = [
@@ -27,6 +29,7 @@ const FARMER_LINKS = [
   { name: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
   { name: "Produk Saya", href: "/dashboard/farmer-produk", icon: PackageSearch },
   { name: "Pesanan Masuk", href: "/dashboard/pesanan", icon: ShoppingBag },
+  { name: "Profil Saya", href: "/dashboard/profil", icon: User },
 ];
 
 export function Sidebar({ role }: { role?: string }) {

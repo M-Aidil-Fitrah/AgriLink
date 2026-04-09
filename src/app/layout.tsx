@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "Menghubungkan petani langsung dengan konsumen.",
 };
 
+import { CartProvider } from "@/context/CartContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,8 +25,11 @@ export default function RootLayout({
       <body
         className={`${jakartaSans.variable} ${jakartaSans.className} antialiased selection:bg-emerald-200 selection:text-emerald-900`}
       >
-        {children}
+        <CartProvider>
+          {children}
+        </CartProvider>
       </body>
     </html>
   );
 }
+

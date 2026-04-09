@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition } from "react";
 import { submitSellerApplication } from "@/app/actions/sellerApplicationActions";
 import { SellerApplication } from "@prisma/client";
-import { User, Phone, MapPin, Building, FileText, CheckCircle, Clock, XCircle, Upload, type LucideIcon } from "lucide-react";
+import { User, Phone, MapPin, Building, FileText, CheckCircle, Clock, XCircle, type LucideIcon } from "lucide-react";
 import dynamic from "next/dynamic";
+import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import type { ComponentType } from "react";
 
 type MapPickerProps = {
@@ -44,53 +45,7 @@ const STATUS_CONFIG: Record<string, { label: string; desc: string; icon: LucideI
   },
 };
 
-function FileUploadField({
-  label,
-  hint,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  onChange: (url: string) => void;
-}) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      setPreview(result);
-      onChange(result);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  return (
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
-      <p className="text-xs text-gray-400 mb-2">{hint}</p>
-      <div
-        onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all"
-      >
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="Preview" className="max-h-32 mx-auto rounded-lg object-contain" />
-        ) : (
-          <div className="flex flex-col items-center gap-2 py-4">
-            <Upload className="w-8 h-8 text-gray-300" />
-            <span className="text-sm font-medium text-gray-500">Klik untuk unggah foto</span>
-            <span className="text-xs text-gray-400">JPG, PNG, maks. 5MB</span>
-          </div>
-        )}
-      </div>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-    </div>
-  );
-}
 
 export function AjukanSellerView({
   existingApplication,
@@ -236,16 +191,22 @@ export function AjukanSellerView({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FileUploadField
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ImageUpload
               label="Foto KTP"
-              hint="Pastikan tulisan KTP terbaca jelas"
+              hint="Pastikan tulisan KTP terbaca jelas (JPG/PNG)"
               onChange={setKtpPhotoUrl}
+              bucket="verifikasi-seller"
+              folder="ktp"
+              isPrivate={true}
             />
-            <FileUploadField
+            <ImageUpload
               label="Foto Selfie dengan KTP"
-              hint="Foto Anda sambil memegang KTP"
+              hint="Foto Anda sambil memegang KTP secara jelas"
               onChange={setSelfiePhotoUrl}
+              bucket="verifikasi-seller"
+              folder="selfie"
+              isPrivate={true}
             />
           </div>
         </div>
@@ -322,10 +283,12 @@ export function AjukanSellerView({
             )}
           </div>
 
-          <FileUploadField
+          <ImageUpload
             label="Foto Usaha / Kebun"
-            hint="Foto yang menunjukkan kebun atau tempat usaha Anda secara nyata"
+            hint="Foto nyata dari kebun atau tempat usaha Anda"
             onChange={setBusinessPhotoUrl}
+            bucket="agrilink-uploads"
+            folder="verification/business"
           />
         </div>
 

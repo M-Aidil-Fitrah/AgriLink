@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { SellerApplicationStatus } from "@prisma/client";
+import { createNotification } from "./notificationActions";
 
 export type SellerApplicationFormData = {
   fullName: string;
@@ -108,6 +109,22 @@ export async function reviewSellerApplication(
       await tx.user.update({
         where: { id: application.userId },
         data: { role: "FARMER" },
+      });
+      
+      await createNotification({
+          userId: application.userId,
+          title: "Pendaftaran Seller Disetujui!",
+          message: "Selamat! Akun Anda telah resmi menjadi Seller di Agrilink. Silakan login ulang untuk melihat dashboard baru.",
+          type: "APPLICATION",
+          link: "/dashboard"
+      });
+    } else if (decision === "REJECTED") {
+      await createNotification({
+          userId: application.userId,
+          title: "Pendaftaran Seller Ditolak",
+          message: `Mohon maaf, pengajuan Anda belum dapat kami proses. Alasan: ${adminNote}`,
+          type: "APPLICATION",
+          link: "/dashboard/ajukan-seller"
       });
     }
   });

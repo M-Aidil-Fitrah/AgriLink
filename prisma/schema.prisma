@@ -80,6 +80,7 @@ model User {
   favorites         Favorite[]
   sellerApplication SellerApplication?
 
+  notifications     Notification[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -132,7 +133,12 @@ model Product {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([farmerId])
+  @@index([name])
+  @@index([cultivationMethod])
 }
+
 
 model Order {
   id              String      @id @default(cuid())
@@ -149,7 +155,11 @@ model Order {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
+
 
 model OrderItem {
   id      String @id @default(cuid())
@@ -164,7 +174,11 @@ model OrderItem {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([productId])
 }
+
 
 model Favorite {
   id        String  @id @default(cuid())
@@ -209,4 +223,24 @@ model SellerApplication {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // E.g., 'ORDER_STATUS', 'APPLICATION', 'NEW_PRODUCT'
+  read      Boolean  @default(false)
+  link      String?  // Optional link to redirect user
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+

@@ -5,6 +5,7 @@ import { ProductWithFarmer } from "@/lib/types";
 import { FavoriteButton } from "./FavoriteButton";
 import { CultivationMethod } from "@prisma/client";
 import Image from "next/image";
+import { AddToCartButton } from "./AddToCartButton";
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   ORGANIC: "Organik",
@@ -139,7 +140,18 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                       </span>
                       <span className="text-xs text-gray-400 ml-1">/{product.unit}</span>
                     </div>
-                    <span className="text-xs font-semibold text-gray-400">{product.stock} tersisa</span>
+                    <AddToCartButton 
+                      item={{
+                        id: product.id,
+                        name: product.name,
+                        price: product.price,
+                        quantity: 1,
+                        image: product.image,
+                        unit: product.unit,
+                        farmerId: product.farmer.id,
+                        farmerName: product.farmer.name || "Petani",
+                      }}
+                    />
                   </div>
                 </div>
               </div>
