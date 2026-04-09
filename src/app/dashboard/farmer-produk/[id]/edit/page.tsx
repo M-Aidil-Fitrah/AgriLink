@@ -6,14 +6,16 @@ import { redirect, notFound } from "next/navigation";
 export default async function EditProdukPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await auth();
   if (!session || session.user.role !== "FARMER") redirect("/dashboard");
 
   const product = await prisma.product.findFirst({
-    where: { id: params.id, farmerId: session.user.id },
+    where: { id: id, farmerId: session.user.id },
   });
+
 
   if (!product) notFound();
 
