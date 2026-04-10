@@ -5,6 +5,14 @@ import { calculateFoodMiles } from "@/lib/metrics";
 import { ProductWithFarmer } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
+import { CultivationMethod } from "@prisma/client";
+
+const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
+  ORGANIC: "Organik",
+  HYDROPONIC: "Hidroponik",
+  CONVENTIONAL: "Konvensional",
+  OTHER: "Lainnya",
+};
 
 const BUYER_LAT = 5.5483;
 const BUYER_LON = 95.3238;
@@ -83,7 +91,7 @@ export default async function DashboardOverview() {
         ))}
       </div>
 
-      {/* Strict 1-Row Recommendation Block */}
+      {/* Balanced 1-Row Recommendation Block */}
       <div className="space-y-4">
         <div className="flex justify-between items-center px-1">
           <h3 className="text-base font-bold text-gray-900 tracking-tight flex items-center gap-2">
@@ -93,27 +101,44 @@ export default async function DashboardOverview() {
           <Link href="/dashboard/produk" className="text-[10px] font-black text-emerald-600 uppercase tracking-widest border-b border-emerald-200 pb-0.5">Lihat Semua</Link>
         </div>
 
-        {/* Using a solid 4-column grid that forces 1 row on larger screens */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {products.map((product) => (
-            <Link key={product.id} href={`/dashboard/produk/${product.id}`} className="group bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <div key={product.id} className="group bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
               <div className="relative w-full aspect-[16/11] bg-gray-50 overflow-hidden">
-                <Image 
-                  src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
-                  alt={product.name} 
-                  fill 
-                  className="object-cover group-hover:scale-110 transition-all duration-300"
-                  sizes="(max-width: 640px) 50vw, 25vw"
-                />
-              </div>
-              <div className="p-3">
-                <h4 className="font-bold text-gray-900 text-[11px] truncate uppercase tracking-tight leading-none group-hover:text-emerald-600 transition-colors">{product.name}</h4>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs font-black text-emerald-700">Rp {product.price.toLocaleString("id-ID")}</span>
-                  <span className="text-[9px] font-bold text-gray-400">/{product.unit}</span>
+                <Link href={`/dashboard/produk/${product.id}`}>
+                  <Image 
+                    src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
+                    alt={product.name} 
+                    fill 
+                    className="object-cover group-hover:scale-105 transition-all duration-300"
+                    sizes="(max-width: 640px) 50vw, 25vw"
+                  />
+                </Link>
+                <div className="absolute top-2 left-2">
+                  <span className="px-1.5 py-0.5 bg-white/90 backdrop-blur-sm rounded-md text-[8px] font-bold text-emerald-800 uppercase shadow-sm">
+                    {CULTIVATION_LABELS[product.cultivationMethod]}
+                  </span>
                 </div>
               </div>
-            </Link>
+              <div className="p-3 flex flex-col flex-1">
+                <Link href={`/dashboard/produk/${product.id}`} className="mb-2">
+                  <h4 className="font-bold text-gray-900 text-[11px] truncate uppercase tracking-tight leading-none group-hover:text-emerald-600 transition-colors">{product.name}</h4>
+                  <div className="flex items-center gap-1.5 mt-1.5 opacity-70">
+                    <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
+                    <p className="text-[9px] font-semibold text-gray-500 truncate">{product.farmer.name || "Petani"}</p>
+                  </div>
+                </Link>
+                <div className="mt-auto pt-2 border-t border-gray-50 flex items-center justify-between">
+                  <div>
+                    <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-0.5">Mulai Dari</p>
+                    <div className="flex items-baseline gap-0.5">
+                      <span className="text-xs font-black text-emerald-700">Rp {product.price.toLocaleString("id-ID")}</span>
+                      <span className="text-[8px] font-bold text-gray-400">/{product.unit}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>

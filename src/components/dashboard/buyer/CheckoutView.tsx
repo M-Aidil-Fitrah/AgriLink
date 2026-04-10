@@ -1,216 +1,192 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { useState, useTransition } from "react";
-import { createOrder } from "@/app/actions/orderActions";
-import { useRouter } from "next/navigation";
-import { MapPin, ShoppingBag, CreditCard, ChevronRight, Loader2, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ShieldCheck, MapPin, CreditCard, ShoppingBag, Loader2, CheckCircle2, Info } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
-import dynamic from "next/dynamic";
-import type { ComponentType } from "react";
-
-type MapPickerProps = {
-  initialLat?: number | null;
-  initialLon?: number | null;
-  onChange: (coords: { lat: number; lon: number }) => void;
-};
-
-const MapPicker = dynamic<MapPickerProps>(
-  () => import("../farmer/MapPicker").then((mod) => mod.MapPicker as ComponentType<MapPickerProps>),
-  { 
-    ssr: false, 
-    loading: () => <div className="h-48 w-full bg-gray-100 animate-pulse rounded-2xl" />
-  }
-);
+import { useState, useTransition } from "react";
+import { createOrderAction } from "@/app/actions/orderActions";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 export function CheckoutView() {
   const { items, totalPrice, clearCart } = useCart();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const [address, setAddress] = useState("");
-  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [note, setNote] = useState("");
-
-  if (items.length === 0 && !success) {
-    return (
-      <div className="p-8 text-center bg-white rounded-3xl border border-gray-100 shadow-sm py-20">
-         <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300 mx-auto mb-4">
-            <ShoppingBag className="w-8 h-8" />
-         </div>
-         <h2 className="text-xl font-bold text-gray-900">Keranjang Kosong</h2>
-         <p className="text-gray-500 mt-2 mb-6">Tambahkan produk ke keranjang sebelum melakukan checkout.</p>
-         <button 
-           onClick={() => router.push("/dashboard/produk")}
-           className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all"
-         >
-           Ke Katalog Produk
-         </button>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="p-8 max-w-lg mx-auto text-center py-20">
-         <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center text-emerald-600 mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10" />
-         </div>
-         <h2 className="text-3xl font-extrabold text-gray-900">Pesanan Berhasil!</h2>
-         <p className="text-gray-600 font-medium mt-3">Pesanan Anda telah diteruskan ke petani. Silakan cek status pengiriman secara berkala.</p>
-         <div className="mt-10 grid grid-cols-2 gap-4">
-            <button 
-              onClick={() => router.push("/dashboard/pesanan")}
-              className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all"
-            >
-              Cek Pesanan
-            </button>
-            <button 
-              onClick={() => router.push("/dashboard/produk")}
-              className="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 transition-all"
-            >
-              Belanja Lagi
-            </button>
-         </div>
-      </div>
-    );
-  }
 
   const handleCheckout = () => {
-    if (!address) { setError("Alamat pengiriman wajib diisi"); return; }
-    if (!coords) { setError("Pilih lokasi pengiriman di peta"); return; }
-
+    setError(null);
     startTransition(async () => {
-      const res = await createOrder({
-        items: items.map(i => ({ productId: i.id, quantity: i.quantity, price: i.price })),
-        total: totalPrice,
-        note,
-        deliveryAddress: address,
-        deliveryLat: coords.lat,
-        deliveryLon: coords.lon,
+      const result = await createOrderAction({
+        items: items.map(i => ({
+          productId: i.id,
+          quantity: i.quantity,
+          price: i.price
+        })),
+        total: totalPrice + 2000, 
+        deliveryAddress: "Jl. Syiah Kuala No. 123, Kuta Alam, Banda Aceh, 23123"
       });
 
-      if (!res.success) {
-        setError(res.error);
+      if (result.success) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          clearCart();
+          router.push("/dashboard/pesanan");
+        }, 3000);
       } else {
-        setSuccess(true);
-        clearCart();
+        setError(result.error);
       }
     });
   };
 
-  return (
-    <div className="p-8 pb-24 grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-8">
-        <h2 className="text-3xl font-extrabold text-gray-900">Checkout</h2>
-
-        {/* Alamat Pengiriman */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-5">
-           <div className="flex items-center gap-3 pb-3 border-b border-gray-50">
-             <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
-                <MapPin className="w-4 h-4" />
-             </div>
-             <div>
-                <h3 className="font-extrabold text-gray-900 text-sm">Alamat Pengiriman</h3>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Tentukan tujuan pengiriman produk</p>
-             </div>
-           </div>
-
-           <div className="space-y-4">
-              <div className="space-y-1.5">
-                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Nama Jalan / Komplek / No. Rumah</label>
-                 <textarea 
-                   rows={2}
-                   value={address}
-                   onChange={(e) => setAddress(e.target.value)}
-                   placeholder="Jl. Thamrin No. 123, Lt. 2..."
-                   className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-2xl text-sm font-medium text-gray-900 outline-none transition-all resize-none"
-                 />
-              </div>
-
-              <div className="space-y-1.5">
-                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Pin Point Lokasi (Map)</label>
-                 <div className="h-64 rounded-2xl overflow-hidden border border-gray-100">
-                    <MapPicker onChange={setCoords} />
-                 </div>
-                 {coords && (
-                   <p className="text-[10px] font-bold text-emerald-600 mt-1">Koordinat Terpilih: {coords.lat.toFixed(6)}, {coords.lon.toFixed(6)}</p>
-                 )}
-              </div>
-           </div>
-        </div>
-
-        {/* Ringkasan Belanja */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-           <div className="flex items-center gap-3 pb-4 border-b border-gray-50 mb-4">
-             <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
-                <ShoppingBag className="w-4 h-4" />
-             </div>
-             <h3 className="font-extrabold text-gray-900 text-sm">Produk yang Dibeli</h3>
-           </div>
-           
-           <div className="divide-y divide-gray-50">
-              {items.map(item => (
-                <div key={item.id} className="py-4 flex items-center gap-4">
-                   <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden relative shrink-0">
-                      <Image src={item.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} alt={item.name} fill className="object-cover" sizes="64px" />
-                   </div>
-                   <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{item.farmerName}</p>
-                      <h4 className="font-bold text-gray-900 text-sm truncate">{item.name}</h4>
-                      <p className="text-xs text-gray-400 font-medium">{item.quantity} {item.unit} × Rp {item.price.toLocaleString("id-ID")}</p>
-                   </div>
-                   <p className="text-sm font-extrabold text-gray-900">Rp {(item.price * item.quantity).toLocaleString("id-ID")}</p>
-                </div>
-              ))}
-           </div>
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-6 text-center">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600">
+          <CheckCircle2 className="w-10 h-10" />
+        </motion.div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Selesai!</h2>
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-widest max-w-xs mx-auto">Pesanan Anda telah diterima petani.</p>
         </div>
       </div>
+    );
+  }
 
-      <div className="space-y-6">
-         {/* Ringkasan Pembayaran */}
-         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sticky top-24">
-            <h3 className="font-extrabold text-gray-900 mb-6">Ringkasan Pembayaran</h3>
-            
-            <div className="space-y-4 mb-6">
-               <div className="flex justify-between text-sm font-medium text-gray-500">
-                  <span>Subtotal</span>
-                  <span className="text-gray-900">Rp {totalPrice.toLocaleString("id-ID")}</span>
-               </div>
-               <div className="flex justify-between text-sm font-medium text-gray-500">
-                  <span>Biaya Ongkos Kirim</span>
-                  <span className="text-emerald-600 font-bold italic">Gratis (Promo)</span>
-               </div>
-               <div className="pt-4 border-t border-gray-50 flex justify-between items-end">
-                  <span className="text-sm font-bold text-gray-900 uppercase tracking-widest">Total Bayar</span>
-                  <span className="text-2xl font-extrabold text-emerald-700">Rp {totalPrice.toLocaleString("id-ID")}</span>
-               </div>
-            </div>
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <ShoppingBag className="w-10 h-10 text-gray-200" />
+        <h2 className="text-lg font-bold text-gray-900 uppercase">Keranjang Kosong</h2>
+        <Link href="/dashboard/produk" className="text-sm font-black text-emerald-600 underline uppercase tracking-widest">Ke Katalog</Link>
+      </div>
+    );
+  }
 
-            <div className="bg-emerald-50 rounded-2xl p-4 flex items-start gap-3 mb-8">
-               <CreditCard className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-               <div>
-                  <p className="text-xs font-bold text-emerald-800">Metode Pembayaran</p>
-                  <p className="text-xs font-medium text-emerald-600 mt-0.5">Transfer Bank Manual (Konfirmasi via Admin)</p>
-               </div>
-            </div>
+  return (
+    <div className="max-w-[1100px] mx-auto px-6 py-6 pb-24">
+      <Link href="/dashboard/produk" className="inline-flex items-center gap-1.5 text-xs font-black text-gray-400 hover:text-emerald-600 transition-all mb-6 uppercase tracking-[0.2em]">
+        <ChevronLeft className="w-3.5 h-3.5" />
+        Kembali Belanja
+      </Link>
 
-            {error && (
-              <p className="text-xs font-bold text-red-500 mb-4 bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>
-            )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-8 space-y-6">
+           <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase mb-4">Pembayaran</h1>
 
-            <button
-               onClick={handleCheckout}
-               disabled={isPending}
-               className="w-full py-4 bg-emerald-600 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
-            >
-               {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Buat Pesanan Sekarang"}
-               {!isPending && <ChevronRight className="w-5 h-5" />}
-            </button>
-         </div>
+           <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-50 pb-3">
+                 <h3 className="text-xs font-black text-gray-900 flex items-center gap-2 uppercase tracking-widest">
+                    <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    Alamat Pengiriman
+                 </h3>
+                 <button className="text-[10px] font-black text-emerald-600 hover:underline uppercase tracking-widest">Ubah</button>
+              </div>
+              <div className="p-5 bg-gray-50/50 rounded-xl border border-gray-100/50 relative overflow-hidden group">
+                 <div className="relative z-10">
+                    <p className="font-black text-gray-900 text-sm uppercase tracking-tight">Rumah Utama (Andi)</p>
+                    <p className="text-gray-500 mt-1 text-xs font-medium leading-relaxed max-w-sm">Jl. Syiah Kuala No. 123, Kuta Alam, Banda Aceh, 23123</p>
+                    <div className="flex items-center gap-3 mt-4">
+                      <span className="text-[10px] font-black text-gray-400 bg-gray-200/50 px-3 py-1 rounded uppercase tracking-wider">0812-xxxx-xxxx</span>
+                      <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/50 px-3 py-1 rounded uppercase tracking-wider">Utama</span>
+                    </div>
+                 </div>
+                 <MapPin className="absolute -bottom-2 -right-2 w-20 h-20 text-gray-100 pointer-events-none -rotate-12" />
+              </div>
+           </div>
+
+           <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
+              <h3 className="text-xs font-black text-gray-900 flex items-center gap-2 uppercase tracking-widest border-b border-gray-50 pb-3">
+                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
+                  <ShoppingBag className="w-4 h-4" />
+                </div>
+                Daftar Produk
+              </h3>
+              <div className="divide-y divide-gray-50">
+                 {items.map(item => (
+                   <div key={item.id} className="flex gap-5 py-4 group">
+                      <div className="w-16 h-16 relative bg-gray-50 rounded-lg overflow-hidden border border-gray-100 shrink-0">
+                         <Image src={item.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} alt={item.name} fill className="object-cover" />
+                      </div>
+                      <div className="flex-1 flex justify-between items-center">
+                         <div>
+                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none mb-1.5">{item.farmerName}</p>
+                            <h4 className="font-bold text-gray-900 text-sm uppercase tracking-tight leading-none mb-2">{item.name}</h4>
+                            <span className="text-[11px] font-bold text-gray-400">{item.quantity} {item.unit} x Rp {item.price.toLocaleString("id-ID")}</span>
+                         </div>
+                         <span className="font-black text-gray-900 text-sm">Rp {(item.price * item.quantity).toLocaleString("id-ID")}</span>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+
+        <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-8">
+           <div className="bg-emerald-900 text-white rounded-[2rem] p-7 shadow-xl relative overflow-hidden">
+              <div className="relative z-10 space-y-7">
+                 <div>
+                   <h3 className="text-[10px] font-black opacity-40 uppercase tracking-[0.2em] mb-2">Total Tagihan</h3>
+                   <p className="text-3xl font-black tracking-tighter">Rp {(totalPrice + 2000).toLocaleString("id-ID")}</p>
+                 </div>
+
+                 <div className="space-y-3 pt-5 border-t border-white/10 text-[11px] font-bold opacity-60 uppercase tracking-widest">
+                    <div className="flex justify-between items-center">
+                       <span>Subtotal</span>
+                       <span>Rp {totalPrice.toLocaleString("id-ID")}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                       <span>Biaya Layanan</span>
+                       <span>Rp 2.000</span>
+                    </div>
+                 </div>
+
+                 <div className="pt-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-black uppercase tracking-widest opacity-40">Metode Bayar</div>
+                      <span className="text-[8px] font-black bg-white/10 px-2 py-0.5 rounded uppercase">Otomatis</span>
+                    </div>
+                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer group/btn">
+                       <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                        <CreditCard className="w-5 h-5" />
+                       </div>
+                       <div>
+                          <p className="font-black text-[11px] uppercase tracking-tight leading-none">V-Account BCA</p>
+                          <p className="text-[9px] opacity-40 mt-1 uppercase font-bold">Instan & Aman</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 {error && (
+                   <p className="text-[10px] font-bold text-red-300 bg-red-900/40 p-2.5 rounded-lg border border-red-800/50">{error}</p>
+                 )}
+
+                 <button 
+                  onClick={handleCheckout}
+                  disabled={isPending}
+                  className="w-full h-12 bg-white text-emerald-900 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-emerald-50 transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+                 >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "BAYAR SEKARANG"}
+                 </button>
+
+                 <div className="flex items-center gap-2 justify-center text-[9px] font-black opacity-30 tracking-[0.2em] uppercase">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    AGRILINK SECURE
+                 </div>
+              </div>
+           </div>
+
+           <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+              <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-[10px] font-bold text-amber-800/80 leading-relaxed uppercase tracking-tighter">
+                 Simulasi pembayaran otomatis. Pesanan akan langsung diteruskan ke dasbor petani.
+              </p>
+           </div>
+        </div>
       </div>
     </div>
   );

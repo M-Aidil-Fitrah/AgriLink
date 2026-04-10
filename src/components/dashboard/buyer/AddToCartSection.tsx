@@ -6,7 +6,6 @@ import { useCart } from "@/context/CartContext";
 import { ProductWithFarmer } from "@/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { CreditCard } from "lucide-react";
 
 export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
@@ -17,6 +16,7 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
   const router = useRouter();
 
   const handleAddToCart = (redirect = false) => {
+    if (product.stock === 0) return;
     setIsAdding(true);
     setTimeout(() => {
       addItem({
@@ -40,48 +40,55 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-6">
-        <div className="flex items-center bg-gray-100/50 p-1.5 rounded-2xl border border-gray-100">
-          <button
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-500 hover:text-emerald-600 transition-colors"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-          <span className="w-16 text-center text-lg font-black text-gray-900">{quantity}</span>
-          <button
-            onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-            className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-500 hover:text-emerald-600 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center bg-white p-0.5 rounded-lg border border-gray-100 shadow-sm">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="w-7 h-7 flex items-center justify-center hover:text-emerald-600 transition-colors"
+            >
+              <Minus className="w-3 h-3" />
+            </button>
+            <span className="w-10 text-center text-sm font-black text-gray-900">{quantity}</span>
+            <button
+              onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+              className="w-7 h-7 flex items-center justify-center hover:text-emerald-600 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+             Tersedia: <span className="text-gray-900">{product.stock} {product.unit}</span>
+          </div>
         </div>
-        <div className="text-sm font-bold text-gray-400">
-           Tersedia <span className="text-gray-900 font-extrabold">{product.stock} {product.unit}</span>
+        
+        <div className="text-right">
+           <p className="text-[8px] font-bold text-gray-400 uppercase leading-none">Subtotal</p>
+           <p className="text-xs font-black text-emerald-700 mt-1">Rp {(product.price * quantity).toLocaleString("id-ID")}</p>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-2">
         <button
           onClick={() => handleAddToCart(false)}
           disabled={isAdding || product.stock === 0}
-          className="flex-1 relative h-16 bg-white border-2 border-emerald-600 text-emerald-700 rounded-3xl font-black text-lg transition-all hover:bg-emerald-50 flex items-center justify-center gap-3 overflow-hidden group"
+          className="flex-1 relative h-10 bg-white border border-emerald-600 text-emerald-700 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all hover:bg-emerald-50 flex items-center justify-center gap-2 overflow-hidden group disabled:opacity-50 disabled:border-gray-200 disabled:text-gray-300"
         >
           <AnimatePresence mode="wait">
             {isAdding ? (
-              <motion.div key="loading" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <Loader2 className="w-6 h-6 animate-spin" />
+              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <Loader2 className="w-3 h-3 animate-spin" />
               </motion.div>
             ) : showSuccess ? (
-              <motion.div key="success" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-2">
-                <CheckCircle2 className="w-6 h-6" />
-                Masuk Keranjang
+              <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3" />
+                Done
               </motion.div>
             ) : (
-              <motion.div key="default" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
-                <ShoppingCart className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                Tambah Keranjang
+              <motion.div key="default" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+                <ShoppingCart className="w-3 h-3" />
+                + Keranjang
               </motion.div>
             )}
           </AnimatePresence>
@@ -90,31 +97,12 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
         <button
           onClick={() => handleAddToCart(true)}
           disabled={isAdding || product.stock === 0}
-          className="flex-1 h-16 bg-emerald-700 text-white rounded-3xl font-black text-lg hover:bg-emerald-800 transition-all shadow-xl shadow-emerald-100 flex items-center justify-center gap-3"
+          className="flex-[1.5] h-10 bg-emerald-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none"
         >
-          <CreditCard className="w-6 h-6" />
+          <CreditCard className="w-3 h-3" />
           Beli Sekarang
         </button>
       </div>
-
-      <AnimatePresence>
-        {showSuccess && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3 text-emerald-800">
-               <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-               <span className="text-sm font-bold">Berhasil masuk keranjang!</span>
-            </div>
-            <Link href="/dashboard/checkout" className="text-sm font-black text-emerald-700 hover:text-emerald-900 underline decoration-2 underline-offset-4">
-               Ke Checkout
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

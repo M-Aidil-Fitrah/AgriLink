@@ -19,8 +19,8 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
 
   return (
     <div className="space-y-4">
-      {/* Main Display */}
-      <div className="relative aspect-square md:aspect-auto md:h-[550px] overflow-hidden rounded-[40px] bg-gray-50 border border-gray-100 group">
+      {/* Main Display - Compact Height */}
+      <div className="relative aspect-square md:aspect-auto md:h-[400px] overflow-hidden rounded-[2.5rem] bg-gray-50 border border-gray-100 group">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeIndex}
@@ -55,18 +55,18 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
                 onClick={nextImage}
                 className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all text-gray-900 border border-white/20"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </>
           )}
         </div>
 
-        {/* Fullscreen Trigger */}
+        {/* Fullscreen Trigger - Smaller */}
         <button
           onClick={() => setIsFullscreen(true)}
-          className="absolute top-6 right-6 w-11 h-11 bg-white/80 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-lg hover:bg-white transition-all text-gray-900 border border-white/20 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+          className="absolute top-4 right-4 w-9 h-9 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg hover:bg-white transition-all text-gray-900 border border-white/20 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
         >
-          <Maximize2 className="w-5 h-5" />
+          <Maximize2 className="w-4 h-4" />
         </button>
 
         {/* Indicator */}
@@ -80,15 +80,15 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
         </div>
       </div>
 
-      {/* Thumbnails Row */}
+      {/* Thumbnails Row - Compact */}
       {displayImages.length > 1 && (
-        <div className="flex gap-4 px-2">
+        <div className="flex gap-3 px-1">
           {displayImages.map((img, idx) => (
             <button
               key={idx}
               onClick={() => setActiveIndex(idx)}
-              className={`relative w-20 h-20 rounded-2xl overflow-hidden border-4 transition-all
-                ${idx === activeIndex ? 'border-emerald-500 shadow-md transform -translate-y-1' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-105'}
+              className={`relative w-14 h-14 rounded-xl overflow-hidden border-2 transition-all
+                ${idx === activeIndex ? 'border-emerald-500 shadow-sm transform -translate-y-0.5' : 'border-transparent opacity-60 hover:opacity-100'}
               `}
             >
               <Image src={img} alt={`${name} thumb ${idx}`} fill className="object-cover" />

@@ -2,103 +2,95 @@ import { ProductWithFarmer } from "@/lib/types";
 import { ProductGallery } from "./ProductGallery";
 import { AddToCartSection } from "./AddToCartSection";
 import { ProductFarmerCard, ProductAttribute } from "./ProductInfoComponents";
-import { Calendar, Leaf, Info, Star, ChevronLeft, ShieldCheck } from "lucide-react";
+import { Calendar, Leaf, Info, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { getFreshnessScore } from "@/lib/metrics";
 import React from "react";
-import { Product as PrismaProduct } from "@prisma/client";
 
-type ProductOverride = PrismaProduct & { images: string[] };
+export function ProductDetails({ product }: { product: ProductWithFarmer }) {
+  const harvestDate = product.harvestDate ? new Date(product.harvestDate) : null;
+  const freshness = getFreshnessScore(harvestDate);
 
-export function ProductDetails({ product }: { product: ProductWithFarmer & { images: string[] } }) {
-   const p = product as ProductOverride;
-   const freshness = getFreshnessScore(p.harvestDate);
+  return (
+    <div className="max-w-[1000px] mx-auto px-6 py-6 pb-20">
+      {/* Breadcrumb - Super Compact */}
+      <Link 
+        href="/dashboard/produk" 
+        className="inline-flex items-center gap-1.5 text-[9px] font-black text-gray-400 hover:text-emerald-600 transition-all mb-4 tracking-widest uppercase"
+      >
+        <ChevronLeft className="w-3 h-3" />
+        Kembali ke Katalog
+      </Link>
 
-   return (
-      <div className="max-w-7xl mx-auto px-6 py-10 pb-32">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Col: Gallery Only */}
+        <div className="lg:col-span-5">
+           <ProductGallery images={product.images} name={product.name} />
+        </div>
 
-         <Link
-            href="/dashboard/produk"
-            className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-emerald-600 transition-colors mb-8 group"
-         >
-            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Kembali ke Katalog
-         </Link>
+        {/* Right Col: All Info */}
+        <div className="lg:col-span-7 flex flex-col pt-1">
+          <div className="mb-6">
+             <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[8px] font-black uppercase tracking-widest rounded-md border border-emerald-100">
+                   {product.cultivationMethod.replace("_", " ")}
+                </span>
+                <span className="text-[8px] font-bold text-gray-300 uppercase tracking-widest">Terverifikasi</span>
+             </div>
+             
+             <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none mb-4 uppercase">{product.name}</h1>
+             
+             <div className="flex items-end gap-1.5">
+                <div className="flex flex-col">
+                  <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">Harga</p>
+                  <span className="text-2xl font-black text-emerald-700 leading-none">Rp {product.price.toLocaleString("id-ID")}</span>
+                </div>
+                <span className="text-xs font-bold text-gray-400 mb-0.5 pb-0.5">/ {product.unit}</span>
+             </div>
+          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            {/* Left: Gallery */}
-            <div className="space-y-8">
-               <ProductGallery images={product.images} name={product.name} />
-               <div className="bg-emerald-50/50 rounded-[40px] p-10 border border-emerald-100/50 shadow-xs">
+          {/* Compact Attributes Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+             <ProductAttribute 
+                icon={Calendar} 
+                label="Panen" 
+                value={product.harvestDate ? new Date(product.harvestDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "—"} 
+                color="bg-white text-blue-600 border border-gray-50 shadow-sm"
+             />
+             <ProductAttribute 
+                icon={Leaf} 
+                label="Kualitas" 
+                value={`${freshness.score}/100 - ${freshness.label}`} 
+                color="bg-white text-emerald-600 border border-gray-50 shadow-sm"
+             />
+          </div>
 
-                  <div className="flex items-center gap-3 mb-4">
-                     <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                        <Info className="w-5 h-5" />
-                     </div>
-                     <h3 className="font-extrabold text-gray-900 text-lg">Deskripsi Produk</h3>
-                  </div>
-                  <p className="text-gray-600 font-medium leading-relaxed">
-                     {product.description || "Petani belum memberikan deskripsi lengkap untuk produk ini. Namun, kami menjamin kualitas dan kesegarannya karena dikirim langsung setelah masa panen."}
-                  </p>
-               </div>
-            </div>
+          <div className="mb-6">
+             <AddToCartSection product={product} />
+          </div>
 
-            {/* Right: Info */}
-            <div className="flex flex-col">
-               <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                     <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full">
-                        {product.cultivationMethod.replace("_", " ")}
-                     </span>
-                     <div className="flex items-center gap-1 ml-2">
-                        {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />)}
-                        <span className="text-[10px] font-bold text-gray-400 ml-1">(4.8/5)</span>
-                     </div>
-                  </div>
-                  <h1 className="text-5xl font-black text-gray-900 tracking-tight leading-[1.1] mb-6">{product.name}</h1>
+          <div className="space-y-4">
+             {/* Store Info */}
+             <div className="space-y-3 pt-4 border-t border-gray-50">
+                <h3 className="font-bold text-gray-900 text-[10px] tracking-widest uppercase opacity-40 px-1">Dijual Oleh</h3>
+                <ProductFarmerCard farmer={product.farmer} />
+             </div>
 
-                  <div className="flex items-baseline gap-2">
-                     <span className="text-4xl font-black text-emerald-700">Rp {product.price.toLocaleString("id-ID")}</span>
-                     <span className="text-lg font-bold text-gray-400">/ {product.unit}</span>
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
-                  <ProductAttribute
-                     icon={Calendar}
-                     label="Masa Panen"
-                     value={product.harvestDate ? new Date(product.harvestDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "—"}
-                     color="bg-blue-50 text-blue-600"
-                  />
-                  <ProductAttribute
-                     icon={Leaf}
-                     label="Kesegaran"
-                     value={`${freshness.score}/100 (${freshness.label})`}
-                     color="bg-amber-50 text-amber-600"
-                  />
-               </div>
-
-               <div className="mb-10">
-                  <AddToCartSection product={product} />
-               </div>
-
-               <div className="space-y-4">
-                  <h3 className="font-extrabold text-gray-900 text-lg">Informasi Penjual</h3>
-                  <ProductFarmerCard farmer={product.farmer} />
-               </div>
-
-               {/* Guarantee Section */}
-               <div className="mt-10 p-6 bg-gray-50 rounded-[32px] border border-gray-100 flex items-center gap-5">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
-                     <ShieldCheck className="w-8 h-8 text-emerald-600" />
-                  </div>
-                  <div>
-                     <p className="font-extrabold text-gray-900 leading-tight">Jaminan Kualitas AgriLink</p>
-                     <p className="text-sm text-gray-500 font-medium mt-1">Produk dikembalikan 100% jika tidak sesuai atau rusak.</p>
-                  </div>
-               </div>
-            </div>
-         </div>
+             {/* Description Moved Here */}
+             <div className="p-4 bg-gray-50/50 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                   <div className="w-6 h-6 bg-emerald-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+                      <Info className="w-3 h-3" />
+                   </div>
+                   <h3 className="font-bold text-gray-900 text-[10px] tracking-tight uppercase">Deskripsi Produk</h3>
+                </div>
+                <p className="text-gray-500 font-medium leading-relaxed text-[11px]">
+                  {product.description || "Kualitas dan kesegaran dijamin karena dikirim langsung oleh petani lokal segera setelah masa panen berakhir."}
+                </p>
+             </div>
+          </div>
+        </div>
       </div>
-   );
+    </div>
+  );
 }
