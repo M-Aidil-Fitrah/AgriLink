@@ -1,8 +1,10 @@
+"use client";
+
 import { useState } from "react";
 import { Search, ShoppingCart, LogOut } from "lucide-react";
 import { LocationDisplay } from "./LocationDisplay";
 import { Session } from "next-auth";
-import { signOut } from "@/auth";
+import { logout } from "@/app/actions/authActions";
 import { useCart } from "@/context/CartContext";
 import { CartDrawer } from "./buyer/CartDrawer";
 import { NotificationDropdown } from "./NotificationDropdown";
@@ -51,10 +53,7 @@ export function TopHeader({ session }: { session: Session }) {
              <span className="text-sm font-bold text-gray-900 leading-tight">{user?.name}</span>
              <span className="text-[10px] uppercase font-semibold text-gray-500">{user?.role}</span>
           </div>
-          <form action={async () => {
-             "use server";
-             await signOut({ redirectTo: "/" });
-          }}>
+          <form action={logout}>
             <button type="submit" className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50" title="Keluar">
                <LogOut className="w-5 h-5" />
             </button>
