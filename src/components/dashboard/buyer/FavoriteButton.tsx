@@ -25,13 +25,13 @@ export function FavoriteButton({
     <button
       onClick={handleClick}
       disabled={isPending}
-      className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all border ${
+      className={`w-7 h-7 rounded-lg flex items-center justify-center shadow-sm transition-all border ${
         initialFavorited
-          ? "bg-red-500 text-white border-red-500"
-          : "bg-white text-gray-400 border-gray-100 hover:text-red-400"
-      } ${isPending ? "opacity-50" : ""}`}
+          ? "bg-rose-500 text-white border-rose-500"
+          : "bg-white/90 backdrop-blur-sm text-gray-400 border-gray-100 hover:text-rose-400"
+      } ${isPending ? "opacity-50 scale-95" : "hover:scale-105 active:scale-95"}`}
     >
-      <Heart className="w-4 h-4" fill={initialFavorited ? "currentColor" : "none"} />
+      <Heart className="w-3.5 h-3.5" fill={initialFavorited ? "currentColor" : "none"} />
     </button>
   );
 }

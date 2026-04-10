@@ -1,13 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { getFreshnessScore } from "@/lib/metrics";
 import Link from "next/link";
 import { DeleteProductButton } from "./DeleteProductButton";
-import { Package, Plus, Pencil } from "lucide-react";
-import { CultivationMethod, Product as PrismaProduct } from "@prisma/client";
+import { Package, Plus, Pencil, MapPin } from "lucide-react";
+import { CultivationMethod } from "@prisma/client";
 import Image from "next/image";
-
-type Product = PrismaProduct & { images: string[] };
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   ORGANIC: "Organik",
@@ -26,133 +23,89 @@ export async function FarmerProdukView() {
   });
 
   return (
-    <div className="p-8 pb-20">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-6 pb-20 max-w-[1400px] mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div>
-          <h2 className="text-3xl font-extrabold text-gray-900">Produk Saya</h2>
-          <p className="text-gray-500 font-medium mt-1">
-            {products.length} produk terdaftar di katalog
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Etalase Sayur</h2>
+          <p className="text-sm text-gray-500 font-medium">
+            {products.length} produk di katalog Anda
           </p>
         </div>
         <Link
           href="/dashboard/farmer-produk/tambah"
-          className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition-all shadow-md"
         >
           <Plus className="w-4 h-4" />
-          Upload Produk
+          TAMBAH PRODUK
         </Link>
       </div>
 
       {products.length === 0 ? (
-        <div className="py-24 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-          <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 font-semibold text-lg">Belum ada produk</p>
-          <p className="text-gray-400 text-sm mt-2">Mulai upload produk untuk mulai berjualan</p>
-          <Link
-            href="/dashboard/farmer-produk/tambah"
-            className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Upload Produk Pertama
-          </Link>
+        <div className="py-20 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+          <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-sm text-gray-500 font-medium tracking-tight uppercase">Belum ada produk aktif</p>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-50 bg-gray-50/50">
-                <th className="text-left px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Produk</th>
-                <th className="text-left px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Harga</th>
-                <th className="text-left px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Stok</th>
-                <th className="text-left px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Metode</th>
-                <th className="text-left px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Kesegaran</th>
-                <th className="text-left px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Lokasi</th>
-                <th className="px-6 py-4" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {products.map((product) => {
-                const freshness = getFreshnessScore(product.harvestDate);
-                const hasLocation = product.latitude != null && product.longitude != null;
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {products.map((product) => {
+            const hasLocation = product.latitude != null && product.longitude != null;
 
-                return (
-                  <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
-                          <Image
-                            src={
-                              (product as Product).images?.[0] ||
-                              "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=100"
-                            }
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                            sizes="48px"
-                          />
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm">{product.name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{product.origin || "—"}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-gray-900 text-sm">
-                        Rp {product.price.toLocaleString("id-ID")}
-                        <span className="text-gray-400 font-medium ml-1">/{product.unit}</span>
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-bold ${
-                          product.stock > 10
-                            ? "text-emerald-700 bg-emerald-50"
-                            : product.stock > 0
-                            ? "text-amber-700 bg-amber-50"
-                            : "text-red-700 bg-red-50"
-                        }`}
+            return (
+              <div key={product.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
+                <div className="relative w-full aspect-[16/11] overflow-hidden">
+                  <Image
+                    src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"}
+                    alt={product.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform"
+                    sizes="(max-width: 640px) 50vw, 20vw"
+                  />
+                  <div className="absolute top-2 left-2 flex gap-1">
+                    <span className="px-2 py-0.5 bg-white/90 backdrop-blur-sm rounded-lg text-[9px] font-bold text-emerald-800 uppercase shadow-sm">
+                      {CULTIVATION_LABELS[product.cultivationMethod]}
+                    </span>
+                    {hasLocation && (
+                      <span className="px-2 py-0.5 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase shadow-sm flex items-center gap-1">
+                        <MapPin className="w-2.5 h-2.5" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="absolute bottom-2 right-2">
+                    <div className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-white/50">
+                      <p className="text-sm font-black text-gray-900 leading-none">{product.stock} {product.unit}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 flex flex-col flex-1">
+                  <div className="mb-4">
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight uppercase truncate tracking-tight">
+                      {product.name}
+                    </h3>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase mt-2">Update: {product.updatedAt.toLocaleDateString('id-ID')}</p>
+                  </div>
+
+                  <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
+                    <div>
+                      <p className="text-[9px] font-bold text-gray-300 uppercase leading-none mb-1">Harga</p>
+                      <p className="text-sm font-black text-gray-900">Rp {product.price.toLocaleString("id-ID")}</p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        href={`/dashboard/farmer-produk/${product.id}/edit`}
+                        className="w-8 h-8 bg-gray-50 text-gray-400 flex items-center justify-center rounded-lg hover:bg-emerald-50 hover:text-emerald-600 border border-transparent hover:border-emerald-100 transition-all shadow-sm"
+                        title="Edit"
                       >
-                        {product.stock} {product.unit}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-semibold text-gray-600">
-                        {CULTIVATION_LABELS[product.cultivationMethod]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {product.harvestDate ? (
-                        <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-bold border ${freshness.color}`}>
-                          {freshness.score}/100
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {hasLocation ? (
-                        <span className="text-xs font-semibold text-emerald-600">Terpasang</span>
-                      ) : (
-                        <span className="text-xs text-gray-400">Belum diatur</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 justify-end">
-                        <Link
-                          href={`/dashboard/farmer-produk/${product.id}/edit`}
-                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Link>
-                        <DeleteProductButton productId={product.id} productName={product.name} />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Link>
+                      <DeleteProductButton productId={product.id} productName={product.name} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

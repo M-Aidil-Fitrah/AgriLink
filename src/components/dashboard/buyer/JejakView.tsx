@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { calculateFoodMiles, getFoodMilesCategory, getFreshnessScore } from "@/lib/metrics";
-import { FoodMilesCategory, FreshnessResult, ProductRow } from "@/lib/types";
-import { MapPin, Leaf, AlertCircle } from "lucide-react";
+import { calculateFoodMiles, getFoodMilesCategory } from "@/lib/metrics";
+import { FoodMilesCategory, ProductRow } from "@/lib/types";
+import { MapPin, Leaf, AlertCircle, ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 type ProductWithMetrics = ProductRow & {
   distance: number | null;
   distanceCat: FoodMilesCategory | null;
-  freshness: FreshnessResult;
 };
 
 export function JejakView({ products }: { products: ProductRow[] }) {
@@ -50,8 +50,7 @@ export function JejakView({ products }: { products: ProductRow[] }) {
           ? calculateFoodMiles(p.latitude, p.longitude, userLat, userLon)
           : null;
       const distanceCat = distance !== null ? getFoodMilesCategory(distance) : null;
-      const freshness = getFreshnessScore(p.harvestDate ? new Date(p.harvestDate) : null);
-      return { ...p, distance, distanceCat, freshness };
+      return { ...p, distance, distanceCat };
     });
 
     return result.sort((a, b) => {
@@ -70,101 +69,76 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       : null;
 
   return (
-    <div className="p-8 pb-20">
+    <div className="p-6 pb-20 max-w-[1400px] mx-auto">
       <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-gray-900">Jejak Produk</h2>
-        <p className="text-gray-500 font-medium mt-1">
-          Lacak jarak tempuh dan kesegaran produk dari lahan petani
+        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Traceability</h2>
+        <p className="text-sm text-gray-400 font-medium">
+          Ditelusuri dari lahan petani ke lokasi Anda
         </p>
       </div>
 
-      {locationError && (
-        <div className="mb-6 flex items-center gap-3 px-5 py-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700 text-sm font-medium">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          Akses lokasi ditolak. Menggunakan lokasi default Banda Aceh untuk kalkulasi.
-        </div>
-      )}
-
       {avgMiles !== null && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-          <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 flex items-center gap-5">
-            <div className="w-16 h-16 rounded-full border-4 border-emerald-500 bg-white flex flex-col items-center justify-center shrink-0">
-              <span className="text-xl font-black text-gray-900 leading-none">{avgMiles}</span>
-              <span className="text-[10px] font-bold text-emerald-600">km</span>
-            </div>
-            <div>
-              <p className="font-bold text-gray-900 text-sm">Rata-rata Food Miles</p>
-              <p className="text-xs text-gray-500 font-medium mt-0.5">
-                {getFoodMilesCategory(avgMiles).label}
-              </p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+             <div className="relative z-10">
+               <p className="text-[9px] font-black uppercase tracking-widest opacity-80 mb-2">Rerata Food Miles</p>
+               <div className="flex items-baseline gap-1">
+                 <span className="text-3xl font-black">{avgMiles}</span>
+                 <span className="text-sm font-bold opacity-80">KM</span>
+               </div>
+             </div>
+             <Leaf className="absolute -bottom-2 -right-2 w-16 h-16 opacity-10 rotate-12" />
           </div>
-          <div className="bg-white border border-gray-100 rounded-3xl p-6">
-            <Leaf className="w-6 h-6 text-emerald-500 mb-2" />
-            <p className="font-bold text-gray-900 text-sm">Produk Dilacak</p>
-            <p className="text-2xl font-black text-gray-900 mt-1">{computed.length}</p>
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Produk</p>
+             <p className="text-xl font-black text-gray-900">{computed.length}</p>
           </div>
-          <div className="bg-white border border-gray-100 rounded-3xl p-6">
-            <MapPin className="w-6 h-6 text-emerald-500 mb-2" />
-            <p className="font-bold text-gray-900 text-sm">Produk dengan Lokasi</p>
-            <p className="text-2xl font-black text-gray-900 mt-1">{validDistances.length}</p>
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Terverifikasi GPS</p>
+             <p className="text-xl font-black text-gray-900">{validDistances.length}</p>
           </div>
         </div>
       )}
 
-      {computed.length === 0 ? (
-        <div className="py-24 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-          <p className="text-gray-500 font-semibold text-lg">Memuat data jejak produk...</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {computed.map((p) => (
-            <div
-              key={p.id}
-              className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-5 hover:shadow-sm transition-shadow"
-            >
-              <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
-                <Image
-                  src={
-                    p.images?.[0] ||
-                    "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
-                  }
-                  alt={p.name}
-                  fill
-                  className="object-cover"
-                  sizes="56px"
-                />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {computed.map((p) => (
+          <div key={p.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
+            <div className="relative w-full aspect-[16/11] bg-gray-100 overflow-hidden">
+              <Image src={p.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform" />
+              {p.distance !== null && (
+                <div className="absolute top-2 left-2">
+                  <span className="px-2 py-0.5 bg-black/50 backdrop-blur-md rounded-lg text-[9px] font-black text-white shadow-sm border border-white/20 uppercase">
+                    {p.distance} KM
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-3.5 flex flex-col flex-1">
+              <div className="mb-4">
+                <h4 className="font-bold text-gray-900 text-sm truncate uppercase tracking-tight">{p.name}</h4>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                   <MapPin className="w-2.5 h-2.5 text-emerald-500" />
+                   <p className="text-[10px] text-gray-400 font-bold uppercase truncate">{p.origin || "Lokasi Petani"}</p>
+                </div>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-gray-900 text-sm truncate">{p.name}</h4>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {p.farmerName} · {p.origin || "Lokasi tidak diketahui"}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                {p.distance !== null && p.distanceCat ? (
-                  <span
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border ${p.distanceCat.color}`}
-                  >
-                    {p.distance} km · {p.distanceCat.label}
-                  </span>
-                ) : (
-                  <span className="px-3 py-1.5 rounded-full text-xs font-bold border text-gray-400 bg-gray-50 border-gray-200">
-                    Lokasi tidak tersedia
-                  </span>
-                )}
-                <span
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold border ${p.freshness.color}`}
+              <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
+                <div>
+                  <p className="text-[8px] font-bold text-gray-300 uppercase leading-none mb-1">Penanam</p>
+                  <p className="text-xs font-black text-gray-900 truncate">{p.farmerName}</p>
+                </div>
+                <Link 
+                  href={`/dashboard/produk/${p.id}`}
+                  className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                 >
-                  {p.freshness.score}/100 · {p.freshness.label}
-                </span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
