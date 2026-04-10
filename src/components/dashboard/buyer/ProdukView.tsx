@@ -7,6 +7,9 @@ import { CultivationMethod } from "@prisma/client";
 import Link from "next/link";
 import Image from "next/image";
 import { AddToCartButton } from "./AddToCartButton";
+import { Product as PrismaProduct } from "@prisma/client";
+
+type ProductOverride = PrismaProduct & { images: string[]; farmer: { name: string; id: string } };
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   ORGANIC: "Organik",
@@ -32,7 +35,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
       farmer: { select: { id: true, name: true, email: true, role: true } },
     },
     orderBy: { createdAt: "desc" },
-  }) as ProductWithFarmer[];
+  }) as unknown as ProductOverride[];
 
   const userFavorites = await prisma.favorite.findMany({
     where: { userId: session.user.id },
@@ -104,7 +107,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                   <Link href={`/dashboard/produk/${product.id}`}>
                     <Image
                       src={
-                        product.image ||
+                        product.images?.[0] ||
                         "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"
                       }
                       alt={product.name}
@@ -151,7 +154,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                         name: product.name,
                         price: product.price,
                         quantity: 1,
-                        image: product.image,
+                        image: product.images?.[0] || null,
                         unit: product.unit,
                         farmerId: product.farmer.id,
                         farmerName: product.farmer.name || "Petani",

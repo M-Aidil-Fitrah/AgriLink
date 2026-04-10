@@ -4,8 +4,10 @@ import { getFreshnessScore } from "@/lib/metrics";
 import Link from "next/link";
 import { DeleteProductButton } from "./DeleteProductButton";
 import { Package, Plus, Pencil } from "lucide-react";
-import { CultivationMethod } from "@prisma/client";
+import { CultivationMethod, Product as PrismaProduct } from "@prisma/client";
 import Image from "next/image";
+
+type Product = PrismaProduct & { images: string[] };
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   ORGANIC: "Organik",
@@ -80,7 +82,7 @@ export async function FarmerProdukView() {
                         <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
                           <Image
                             src={
-                              product.image ||
+                              (product as Product).images?.[0] ||
                               "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=100"
                             }
                             alt={product.name}

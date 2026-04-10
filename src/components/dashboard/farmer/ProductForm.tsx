@@ -2,8 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CultivationMethod, Product } from "@prisma/client";
+import { CultivationMethod, Product as PrismaProduct } from "@prisma/client";
 import { createProduct, updateProduct, ProductInput } from "@/app/actions/productActions";
+
+// Temporary type override until prisma generate is run locally
+type Product = PrismaProduct & { images: string[] };
 import { Loader2 } from "lucide-react";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import dynamic from "next/dynamic";
@@ -38,7 +41,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
   const [error, setError] = useState<string | null>(null);
   const [lat, setLat] = useState<number | null>(product?.latitude ?? null);
   const [lon, setLon] = useState<number | null>(product?.longitude ?? null);
-  const [imageUrl, setImageUrl] = useState<string>(product?.image ?? "");
+  const [images, setImages] = useState<string[]>(product?.images ?? []);
 
   function handleMapChange({ lat, lon }: { lat: number; lon: number }) {
     setLat(lat);
@@ -55,7 +58,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
       description: formData.get("description") as string,
       price: parseFloat(formData.get("price") as string),
       stock: parseInt(formData.get("stock") as string),
-      image: imageUrl,
+      images: images,
       unit: formData.get("unit") as string,
       harvestDate: formData.get("harvestDate") as string,
       cultivationMethod: formData.get("cultivationMethod") as CultivationMethod,
@@ -191,10 +194,11 @@ export function ProductForm({ product }: { product?: Product | null }) {
 
         <ImageUpload
           label="Foto Produk"
-          hint="Gunakan foto berkualitas tinggi untuk menarik pembeli"
-          value={imageUrl}
-          onChange={setImageUrl}
+          hint="Maksimal 3 foto. Gunakan foto berkualitas tinggi (Maks 2MB per foto)"
+          value={images}
+          onChange={(val) => setImages(val as string[])}
           folder="products"
+          maxImages={3}
         />
       </section>
 

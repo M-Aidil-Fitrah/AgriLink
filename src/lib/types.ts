@@ -49,7 +49,7 @@ export type NearbyProductRow = {
   description: string | null;
   price: number;
   stock: number;
-  image: string | null;
+  images: string[];
   unit: string;
   latitude: number | null;
   longitude: number | null;

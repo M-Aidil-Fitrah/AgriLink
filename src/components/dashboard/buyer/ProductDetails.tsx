@@ -6,12 +6,17 @@ import { Calendar, Leaf, Info, Star, ChevronLeft, ShieldCheck } from "lucide-rea
 import Link from "next/link";
 import { getFreshnessScore } from "@/lib/metrics";
 import React from "react";
+import { Product as PrismaProduct } from "@prisma/client";
 
-export function ProductDetails({ product }: { product: ProductWithFarmer }) {
-  const freshness = getFreshnessScore(product.harvestDate);
+type ProductOverride = PrismaProduct & { images: string[] };
+
+export function ProductDetails({ product }: { product: ProductWithFarmer & { images: string[] } }) {
+  const p = product as ProductOverride;
+  const freshness = getFreshnessScore(p.harvestDate);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 pb-32">
+
       <Link 
         href="/dashboard/produk" 
         className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-emerald-600 transition-colors mb-8 group"
@@ -23,8 +28,9 @@ export function ProductDetails({ product }: { product: ProductWithFarmer }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left: Gallery */}
         <div className="space-y-8">
-           <ProductGallery image={product.image} name={product.name} />
-           <div className="bg-emerald-50/50 rounded-[32px] p-8 border border-emerald-100/50">
+           <ProductGallery images={product.images} name={product.name} />
+           <div className="bg-emerald-50/50 rounded-[40px] p-10 border border-emerald-100/50 shadow-xs">
+
               <div className="flex items-center gap-3 mb-4">
                  <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                     <Info className="w-5 h-5" />

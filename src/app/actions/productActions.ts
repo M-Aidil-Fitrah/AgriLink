@@ -11,7 +11,7 @@ export type ProductInput = {
   description: string;
   price: number;
   stock: number;
-  image: string;
+  images: string[];
   unit: string;
   harvestDate: string;
   cultivationMethod: CultivationMethod;
@@ -41,7 +41,7 @@ export async function createProduct(
         description: input.description || null,
         price: input.price,
         stock: input.stock,
-        image: input.image || null,
+        images: input.images,
         unit: input.unit || "kg",
         harvestDate: (input.harvestDate && !isNaN(new Date(input.harvestDate).getTime())) 
           ? new Date(input.harvestDate) 
@@ -51,7 +51,7 @@ export async function createProduct(
         latitude: input.latitude,
         longitude: input.longitude,
         farmerId: session.user.id,
-      },
+      } as Parameters<typeof prisma.product.create>[0]["data"],
     });
 
     revalidatePath("/dashboard/farmer-produk");
@@ -92,7 +92,7 @@ export async function updateProduct(
         description: input.description || null,
         price: input.price,
         stock: input.stock,
-        image: input.image || null,
+        images: input.images,
         unit: input.unit || "kg",
         harvestDate: (input.harvestDate && !isNaN(new Date(input.harvestDate).getTime())) 
           ? new Date(input.harvestDate) 
@@ -101,7 +101,7 @@ export async function updateProduct(
         origin: input.origin || null,
         latitude: input.latitude,
         longitude: input.longitude,
-      },
+      } as Parameters<typeof prisma.product.update>[0]["data"],
     });
 
     revalidatePath("/dashboard/farmer-produk");
