@@ -13,7 +13,10 @@ export default async function JejakPage() {
   const productRows = products.map((p) => ({
     id: p.id,
     name: p.name,
-    image: p.image,
+    images: p.images,
+    price: p.price,
+    stock: p.stock,
+    unit: p.unit,
     latitude: p.latitude,
     longitude: p.longitude,
     harvestDate: p.harvestDate ? p.harvestDate.toISOString() : null,

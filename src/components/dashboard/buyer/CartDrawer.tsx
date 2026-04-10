@@ -66,7 +66,7 @@ export function CartDrawer() {
                   <div key={item.id} className="flex gap-4 group">
                     <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden relative shrink-0 border border-gray-100">
                       <Image 
-                        src={item.image || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
+                        src={item.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
                         alt={item.name} 
                         fill 
                         className="object-cover"

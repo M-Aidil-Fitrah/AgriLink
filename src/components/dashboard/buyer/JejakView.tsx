@@ -1,21 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { calculateFoodMiles, getFoodMilesCategory, getFreshnessScore } from "@/lib/metrics";
-import { FoodMilesCategory, FreshnessResult } from "@/lib/types";
+import { FoodMilesCategory, FreshnessResult, ProductRow } from "@/lib/types";
 import { MapPin, Leaf, AlertCircle } from "lucide-react";
 import Image from "next/image";
-
-type ProductRow = {
-  id: string;
-  name: string;
-  image: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  harvestDate: string | null;
-  farmerName: string | null;
-  origin: string | null;
-};
 
 type ProductWithMetrics = ProductRow & {
   distance: number | null;
@@ -27,15 +16,14 @@ export function JejakView({ products }: { products: ProductRow[] }) {
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLon, setUserLon] = useState<number | null>(null);
   const [locationError, setLocationError] = useState(false);
-  const [computed, setComputed] = useState<ProductWithMetrics[]>([]);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserLat(5.5483);
-       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserLon(95.3238);
-       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocationError(true);
       return;
     }
@@ -53,8 +41,8 @@ export function JejakView({ products }: { products: ProductRow[] }) {
     );
   }, []);
 
-  useEffect(() => {
-    if (userLat === null || userLon === null) return;
+  const computed = useMemo(() => {
+    if (userLat === null || userLon === null) return [];
 
     const result: ProductWithMetrics[] = products.map((p) => {
       const distance =
@@ -66,14 +54,11 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       return { ...p, distance, distanceCat, freshness };
     });
 
-    result.sort((a, b) => {
+    return result.sort((a, b) => {
       if (a.distance === null) return 1;
       if (b.distance === null) return -1;
       return a.distance - b.distance;
     });
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setComputed(result);
   }, [userLat, userLon, products]);
 
   const validDistances = computed
@@ -141,7 +126,7 @@ export function JejakView({ products }: { products: ProductRow[] }) {
               <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
                 <Image
                   src={
-                    p.image ||
+                    p.images?.[0] ||
                     "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
                   }
                   alt={p.name}

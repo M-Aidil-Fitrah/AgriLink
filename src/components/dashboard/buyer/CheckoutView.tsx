@@ -93,7 +93,7 @@ export function CheckoutView() {
         deliveryLon: coords.lon,
       });
 
-      if (res.error) {
+      if (!res.success) {
         setError(res.error);
       } else {
         setSuccess(true);
@@ -156,7 +156,7 @@ export function CheckoutView() {
               {items.map(item => (
                 <div key={item.id} className="py-4 flex items-center gap-4">
                    <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden relative shrink-0">
-                      <Image src={item.image || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} alt={item.name} fill className="object-cover" sizes="64px" />
+                      <Image src={item.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} alt={item.name} fill className="object-cover" sizes="64px" />
                    </div>
                    <div className="flex-1 min-w-0">
                       <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{item.farmerName}</p>

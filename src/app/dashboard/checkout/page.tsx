@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useState, useTransition } from "react";
 import { createOrderAction } from "@/app/actions/orderActions";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
@@ -132,7 +132,7 @@ export default function CheckoutPage() {
                  {items.map(item => (
                    <div key={item.id} className="flex gap-6 p-6 hover:bg-gray-50 rounded-3xl transition-all group border border-transparent hover:border-gray-100">
                       <div className="w-20 h-20 relative bg-gray-100 rounded-2xl overflow-hidden border border-gray-100 shrink-0">
-                         <Image src={item.image || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                         <Image src={item.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
                       </div>
                       <div className="flex-1 flex justify-between items-start">
                          <div>
@@ -218,7 +218,7 @@ export default function CheckoutPage() {
                <h4 className="font-black text-amber-900 text-sm uppercase tracking-tight">Penting</h4>
              </div>
              <p className="text-xs font-bold text-amber-800/80 leading-relaxed uppercase tracking-tighter">
-                Klik tombol "Bayar Sekarang" di atas untuk mensimulasikan pembayaran yang sudah selesai. Pesanan akan langsung diteruskan ke dasbor petani.
+                Klik tombol &quot;Bayar Sekarang&quot; di atas untuk mensimulasikan pembayaran yang sudah selesai. Pesanan akan langsung diteruskan ke dasbor petani.
              </p>
            </div>
         </div>

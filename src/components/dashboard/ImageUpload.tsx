@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Upload, X, Loader2, Plus } from "lucide-react";
+import { X, Loader2, Plus } from "lucide-react";
 import { uploadImageAction } from "@/app/actions/uploadActions";
 import { getImageUrl } from "@/lib/supabase";
 import Image from "next/image";

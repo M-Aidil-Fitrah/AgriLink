@@ -1,11 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { OrderWithItems } from "@/lib/types";
-import { OrderStatus, Product as PrismaProduct } from "@prisma/client";
-import { Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
+import { OrderStatus } from "@prisma/client";
+import { Package, Clock, Truck, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
-
-type ProductOverride = Omit<PrismaProduct, "image"> & { images: string[] };
 
 const STATUS_MAP: Record<
   OrderStatus,
@@ -42,10 +39,9 @@ export async function PesananView() {
   const session = await auth();
   if (!session) return null;
 
-  const ordersRaw = (await prisma.order.findMany({
+  const orders = await prisma.order.findMany({
     where: { userId: session.user.id },
     include: {
-      user: { select: { id: true, name: true, email: true, role: true } },
       items: {
         include: {
           product: {
@@ -55,27 +51,23 @@ export async function PesananView() {
               images: true,
               price: true,
               unit: true,
-              latitude: true,
-              longitude: true,
             },
           },
         },
       },
     },
     orderBy: { createdAt: "desc" },
-  }));
-
-  const orders = ordersRaw as unknown as (Omit<OrderWithItems, "items"> & { 
-    items: (Omit<OrderWithItems["items"][0], "product"> & { product: ProductOverride })[] 
-  })[];
+  });
 
   return (
     <div className="p-8 pb-20">
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-gray-900">Pesanan Saya</h2>
-        <p className="text-gray-500 font-medium mt-1">
-          {orders.length} riwayat transaksi
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-extrabold text-gray-900">Pesanan Saya</h2>
+          <p className="text-gray-500 font-medium mt-1">
+            Lacak status pengiriman produk Anda
+          </p>
+        </div>
       </div>
 
       {orders.length === 0 ? (
@@ -83,83 +75,85 @@ export async function PesananView() {
           <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 font-semibold text-lg">Belum ada pesanan</p>
           <p className="text-gray-400 text-sm mt-2">
-            Mulai berbelanja produk segar dari petani lokal
+            Pesanan yang Anda buat akan muncul di sini
           </p>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {orders.map((order) => {
             const statusInfo = STATUS_MAP[order.status];
-            const Icon = statusInfo.Icon;
+            const StatusIcon = statusInfo.Icon;
+
             return (
               <div
                 key={order.id}
                 className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
               >
-                {/* Order Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                      #{order.id.slice(-8).toUpperCase()}
+                {/* Header Pesanan */}
+                <div className="flex items-center justify-between px-6 py-4 bg-gray-50/50">
+                  <div className="flex items-center gap-4">
+                    <p className="text-xs font-bold text-gray-400 tracking-wider">
+                      ID: #{order.id.slice(-8).toUpperCase()}
                     </p>
-                    <p className="text-sm text-gray-500 font-medium mt-0.5">
-                      {new Date(order.createdAt).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${statusInfo.color}`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${statusInfo.color}`}
                     >
-                      <Icon className="w-3.5 h-3.5" />
+                      <StatusIcon className="w-3.5 h-3.5" />
                       {statusInfo.label}
                     </span>
                   </div>
+                  <p className="text-xs text-gray-400 font-medium">
+                    {new Date(order.createdAt).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
                 </div>
 
-                {/* Order Items */}
-                <div className="px-6 py-4 space-y-3">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
-                        <Image
-                          src={
-                            item.product.images?.[0] ||
-                            "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
-                          }
-                          alt={item.product.name}
-                          fill
-                          className="object-cover"
-                          sizes="56px"
-                        />
+                {/* List Item */}
+                <div className="p-6 divide-y divide-gray-50">
+                  {order.items.map((item) => {
+                    const product = item.product;
+                    return (
+                      <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex gap-5">
+                        <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden relative shrink-0">
+                          <Image
+                            src={
+                              product?.images?.[0] ||
+                              "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
+                            }
+                            alt={product?.name ?? "Produk"}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 text-sm truncate">
+                            {product?.name}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {item.quantity} {product?.unit} × Rp{" "}
+                            {item.price.toLocaleString("id-ID")}
+                          </p>
+                          <p className="text-sm font-extrabold text-emerald-700 mt-2">
+                            Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-gray-900 text-sm">{item.product.name}</p>
-                        <p className="text-xs text-gray-500 font-medium">
-                          {item.quantity} {item.product.unit} × Rp{" "}
-                          {item.price.toLocaleString("id-ID")}
-                        </p>
-                      </div>
-                      <p className="font-bold text-gray-900 text-sm shrink-0">
-                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
-                {/* Order Footer */}
-                <div className="flex items-center justify-between px-6 py-4 bg-gray-50">
-                  {order.note && (
-                    <p className="text-xs text-gray-500 font-medium italic max-w-xs truncate">
-                      Catatan: {order.note}
-                    </p>
-                  )}
-                  <div className="ml-auto text-right">
-                    <p className="text-xs font-semibold text-gray-500">Total Pembayaran</p>
-                    <p className="text-lg font-extrabold text-emerald-700">
+                {/* Footer Pesanan */}
+                <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
+                  <p className="text-xs text-gray-400">
+                    Alamat: <span className="font-medium text-gray-600">{order.deliveryAddress || "-"}</span>
+                  </p>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">Total Bayar</p>
+                    <p className="text-lg font-black text-gray-900 leading-tight">
                       Rp {order.total.toLocaleString("id-ID")}
                     </p>
                   </div>

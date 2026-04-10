@@ -1,13 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 
 export type CartItem = {
   id: string;
   name: string;
   price: number;
   quantity: number;
-  image: string | null;
+  images: string[];
   unit: string;
   farmerId: string;
   farmerName: string;
@@ -19,8 +19,8 @@ type CartContextType = {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  totalItems: number;
   totalPrice: number;
+  totalItems: number;
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
@@ -29,37 +29,43 @@ type CartContextType = {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  // Use state initializer for SSR-safe localStorage access
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (client-side only)
   useEffect(() => {
-    const saved = localStorage.getItem("agrilink_cart");
+    const saved = localStorage.getItem("cart_items");
     if (saved) {
       try {
-        setItems(() => JSON.parse(saved));
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setItems(JSON.parse(saved));
       } catch (e) {
         console.error("Failed to parse cart", e);
       }
     }
+    setIsInitialized(true);
   }, []);
 
-  // Save to localStorage on change
+  // Save to localStorage when items change, but only after initialization
   useEffect(() => {
-    localStorage.setItem("agrilink_cart", JSON.stringify(items));
-  }, [items]);
+    if (isInitialized) {
+      localStorage.setItem("cart_items", JSON.stringify(items));
+    }
+  }, [items, isInitialized]);
 
-  const addItem = (item: CartItem) => {
+  const addItem = (newItem: CartItem) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const existing = prev.find((i) => i.id === newItem.id);
       if (existing) {
         return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+          i.id === newItem.id ? { ...i, quantity: i.quantity + newItem.quantity } : i
         );
       }
-      return [...prev, item];
+      return [...prev, newItem];
     });
-    setIsCartOpen(true); // Automatically open cart when adding
+    setIsCartOpen(true);
   };
 
   const removeItem = (id: string) => {
@@ -67,35 +73,40 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(id);
-      return;
-    }
+    if (quantity < 1) return;
     setItems((prev) =>
       prev.map((i) => (i.id === id ? { ...i, quantity } : i))
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+  };
+
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
 
-  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const totalPrice = useMemo(() => 
+    items.reduce((total, item) => total + item.price * item.quantity, 0),
+  [items]);
+
+  const totalItems = useMemo(() => 
+    items.reduce((total, item) => total + item.quantity, 0),
+  [items]);
 
   return (
     <CartContext.Provider
-      value={{ 
-        items, 
-        addItem, 
-        removeItem, 
-        updateQuantity, 
-        clearCart, 
-        totalItems, 
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
         totalPrice,
+        totalItems,
         isCartOpen,
         openCart,
-        closeCart
+        closeCart,
       }}
     >
       {children}

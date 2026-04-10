@@ -3,8 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { CultivationMethod } from "@prisma/client";
-import { ActionResult } from "@/lib/types";
+import { CultivationMethod, Product } from "@prisma/client";
+import { ActionResult, ProductWithFarmer } from "@/lib/types";
 
 export type ProductInput = {
   name: string;
@@ -51,7 +51,7 @@ export async function createProduct(
         latitude: input.latitude,
         longitude: input.longitude,
         farmerId: session.user.id,
-      } as Parameters<typeof prisma.product.create>[0]["data"],
+      },
     });
 
     revalidatePath("/dashboard/farmer-produk");
@@ -61,6 +61,7 @@ export async function createProduct(
   } catch (error: unknown) {
     const err = error as Error;
     console.error("CREATE_PRODUCT_ERROR:", err);
+    
     // Cek error spesifik Prisma jika ada
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === "P2002") {
        return { success: false, error: "Nama produk ini sudah digunakan" };
@@ -101,7 +102,7 @@ export async function updateProduct(
         origin: input.origin || null,
         latitude: input.latitude,
         longitude: input.longitude,
-      } as Parameters<typeof prisma.product.update>[0]["data"],
+      },
     });
 
     revalidatePath("/dashboard/farmer-produk");
@@ -133,7 +134,7 @@ export async function deleteProduct(id: string): Promise<ActionResult<void>> {
   }
 }
 
-export async function getMyProducts() {
+export async function getMyProducts(): Promise<Product[]> {
   const session = await auth();
   if (!session) return [];
 
@@ -142,7 +143,8 @@ export async function getMyProducts() {
     orderBy: { createdAt: "desc" },
   });
 }
-export async function getStoreLocations() {
+
+export async function getStoreLocations(): Promise<ProductWithFarmer[]> {
   const products = await prisma.product.findMany({
     where: {
       latitude: { not: null },
@@ -159,5 +161,5 @@ export async function getStoreLocations() {
     }
   });
 
-  return products;
+  return products as ProductWithFarmer[];
 }

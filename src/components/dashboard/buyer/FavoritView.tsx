@@ -5,9 +5,6 @@ import { FavoriteWithProduct } from "@/lib/types";
 import { FavoriteButton } from "./FavoriteButton";
 import { Heart } from "lucide-react";
 import Image from "next/image";
-import { Product as PrismaProduct } from "@prisma/client";
-
-type ProductOverride = PrismaProduct & { images: string[]; farmer: { name: string; id: string } };
 
 export async function FavoritView() {
   const session = await auth();
@@ -23,7 +20,7 @@ export async function FavoritView() {
       },
     },
     orderBy: { createdAt: "desc" },
-  })) as unknown as (Omit<FavoriteWithProduct, "product"> & { product: ProductOverride })[];
+  })) as FavoriteWithProduct[];
 
   return (
     <div className="p-8 pb-20">
@@ -45,7 +42,8 @@ export async function FavoritView() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {favorites.map(({ product, id }) => {
-            const freshness = getFreshnessScore(product.harvestDate);
+            const harvestDate = product.harvestDate ? new Date(product.harvestDate) : null;
+            const freshness = getFreshnessScore(harvestDate);
 
             return (
               <div

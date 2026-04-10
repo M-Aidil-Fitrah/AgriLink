@@ -46,7 +46,7 @@ export async function FarmerPesananView() {
   const session = await auth();
   if (!session) return null;
 
-  const orders = await prisma.order.findMany({
+  const ordersRaw = await prisma.order.findMany({
     where: {
       items: {
         some: { product: { farmerId: session.user.id } },
@@ -61,7 +61,7 @@ export async function FarmerPesananView() {
             select: {
               id: true,
               name: true,
-              image: true,
+              images: true,
               price: true,
               unit: true,
               latitude: true,
@@ -73,6 +73,8 @@ export async function FarmerPesananView() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  const orders = ordersRaw;
 
   return (
     <div className="p-8 pb-20">
@@ -94,9 +96,9 @@ export async function FarmerPesananView() {
       ) : (
         <div className="space-y-5">
           {orders.map((order) => {
-            const statusInfo = STATUS_MAP[order.status];
+            const statusInfo = STATUS_MAP[order.status as OrderStatus];
             const StatusIcon = statusInfo.Icon;
-            const nextStatus = NEXT_STATUS[order.status];
+            const nextStatus = NEXT_STATUS[order.status as OrderStatus];
 
             return (
               <div
@@ -109,7 +111,7 @@ export async function FarmerPesananView() {
                       Pesanan #{order.id.slice(-8).toUpperCase()}
                     </p>
                     <p className="text-sm font-semibold text-gray-900 mt-0.5">
-                      Pembeli: {order.user.name ?? order.user.email}
+                      Pembeli: {order.user?.name ?? order.user?.email ?? "Pembeli Anonim"}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {new Date(order.createdAt).toLocaleDateString("id-ID", {
@@ -135,25 +137,25 @@ export async function FarmerPesananView() {
                 </div>
 
                 <div className="px-6 py-4 space-y-3">
-                  {order.items.map((item) => (
+                  {order.items?.map((item) => (
                     <div key={item.id} className="flex items-center gap-4">
                       <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
                         <Image
                           src={
-                            item.product.image ||
+                            item.product?.images?.[0] ||
                             "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
                           }
-                          alt={item.product.name}
+                          alt={item.product?.name ?? "Produk"}
                           fill
                           className="object-cover"
                           sizes="56px"
                         />
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-gray-900 text-sm">{item.product.name}</p>
+                        <p className="font-bold text-gray-900 text-sm">{item.product?.name}</p>
                         <p className="text-xs text-gray-500">
-                          {item.quantity} {item.product.unit} × Rp{" "}
-                          {item.price.toLocaleString("id-ID")}
+                          {item.quantity} {item.product?.unit} × Rp{" "}
+                          {item.price?.toLocaleString("id-ID")}
                         </p>
                       </div>
                       <p className="font-bold text-gray-900 text-sm shrink-0">
@@ -175,7 +177,7 @@ export async function FarmerPesananView() {
                   <div className="ml-auto text-right">
                     <p className="text-xs text-gray-500 font-semibold">Total</p>
                     <p className="text-lg font-extrabold text-emerald-700">
-                      Rp {order.total.toLocaleString("id-ID")}
+                      Rp {order.total?.toLocaleString("id-ID")}
                     </p>
                   </div>
                 </div>

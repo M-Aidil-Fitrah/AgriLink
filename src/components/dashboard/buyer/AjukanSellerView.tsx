@@ -195,7 +195,7 @@ export function AjukanSellerView({
             <ImageUpload
               label="Foto KTP"
               hint="Pastikan tulisan KTP terbaca jelas (JPG/PNG)"
-              onChange={setKtpPhotoUrl}
+              onChange={(val) => setKtpPhotoUrl(typeof val === 'string' ? val : val[0])}
               bucket="verifikasi-seller"
               folder="ktp"
               isPrivate={true}
@@ -203,7 +203,7 @@ export function AjukanSellerView({
             <ImageUpload
               label="Foto Selfie dengan KTP"
               hint="Foto Anda sambil memegang KTP secara jelas"
-              onChange={setSelfiePhotoUrl}
+              onChange={(val) => setSelfiePhotoUrl(typeof val === 'string' ? val : val[0])}
               bucket="verifikasi-seller"
               folder="selfie"
               isPrivate={true}
@@ -286,7 +286,7 @@ export function AjukanSellerView({
           <ImageUpload
             label="Foto Usaha / Kebun"
             hint="Foto nyata dari kebun atau tempat usaha Anda"
-            onChange={setBusinessPhotoUrl}
+            onChange={(val) => setBusinessPhotoUrl(typeof val === 'string' ? val : val[0])}
             bucket="agrilink-uploads"
             folder="verification/business"
           />

@@ -14,9 +14,12 @@ export type OrderInput = {
   }[];
   total: number;
   deliveryAddress: string;
+  deliveryLat?: number;
+  deliveryLon?: number;
+  note?: string;
 };
 
-export async function createOrderAction(input: OrderInput): Promise<ActionResult<{ id: string }>> {
+export async function createOrder(input: OrderInput): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Silakan login terlebih dahulu untuk melakukan checkout." };
@@ -28,6 +31,9 @@ export async function createOrderAction(input: OrderInput): Promise<ActionResult
         userId: session.user.id,
         total: input.total,
         deliveryAddress: input.deliveryAddress,
+        deliveryLat: input.deliveryLat,
+        deliveryLon: input.deliveryLon,
+        note: input.note,
         status: "PENDING",
         items: {
           create: input.items.map(item => ({
@@ -51,6 +57,9 @@ export async function createOrderAction(input: OrderInput): Promise<ActionResult
   }
 }
 
+// Alias for backward compatibility
+export const createOrderAction = createOrder;
+
 export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<ActionResult<void>> {
   try {
     await prisma.order.update({
@@ -59,7 +68,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
     });
     revalidatePath("/dashboard/pesanan");
     return { success: true, data: undefined };
-  } catch (error: unknown) {
+  } catch {
     return { success: false, error: "Gagal memperbarui status pesanan." };
   }
 }

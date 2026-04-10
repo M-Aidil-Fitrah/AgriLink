@@ -50,7 +50,7 @@ export async function addLocation(data: { label: string; address: string; latitu
     });
     revalidatePath("/dashboard/profil");
     return { success: true };
-  } catch (_error) {
+  } catch {
     return { error: "Gagal menambah lokasi" };
   }
 }
@@ -65,7 +65,7 @@ export async function deleteLocation(id: string) {
     });
     revalidatePath("/dashboard/profil");
     return { success: true };
-  } catch (_error) {
+  } catch {
     return { error: "Gagal menghapus lokasi" };
   }
 }

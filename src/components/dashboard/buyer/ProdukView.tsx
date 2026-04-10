@@ -1,15 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { getFreshnessScore, getFoodMilesCategory, calculateFoodMiles } from "@/lib/metrics";
-import { ProductWithFarmer } from "@/lib/types";
 import { FavoriteButton } from "./FavoriteButton";
 import { CultivationMethod } from "@prisma/client";
 import Link from "next/link";
 import Image from "next/image";
 import { AddToCartButton } from "./AddToCartButton";
-import { Product as PrismaProduct } from "@prisma/client";
-
-type ProductOverride = PrismaProduct & { images: string[]; farmer: { name: string; id: string } };
+import { ProductWithFarmer } from "@/lib/types";
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   ORGANIC: "Organik",
@@ -25,7 +22,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
   const session = await auth();
   if (!session) return null;
 
-  const products = await prisma.product.findMany({
+  const products = (await prisma.product.findMany({
     where: {
       stock: { gt: 0 },
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
@@ -35,7 +32,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
       farmer: { select: { id: true, name: true, email: true, role: true } },
     },
     orderBy: { createdAt: "desc" },
-  }) as unknown as ProductOverride[];
+  })) as ProductWithFarmer[];
 
   const userFavorites = await prisma.favorite.findMany({
     where: { userId: session.user.id },
@@ -90,7 +87,8 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {products.map((product) => {
-            const freshness = getFreshnessScore(product.harvestDate);
+            const harvestDate = product.harvestDate ? new Date(product.harvestDate) : null;
+            const freshness = getFreshnessScore(harvestDate);
             const distance =
               product.latitude != null && product.longitude != null
                 ? calculateFoodMiles(product.latitude, product.longitude, BUYER_LAT, BUYER_LON)
@@ -139,7 +137,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                       {CULTIVATION_LABELS[product.cultivationMethod]}
                     </p>
                     <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1 group-hover/title:text-emerald-600 transition-colors uppercase truncate">{product.name}</h3>
-                    <p className="text-xs text-gray-500 mb-3">{product.farmer.name}</p>
+                    <p className="text-xs text-gray-500 mb-3">{product.farmer.name || "Petani"}</p>
                   </Link>
                   <div className="mt-auto flex items-end justify-between">
                     <div>
@@ -154,7 +152,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                         name: product.name,
                         price: product.price,
                         quantity: 1,
-                        image: product.images?.[0] || null,
+                        images: product.images || [],
                         unit: product.unit,
                         farmerId: product.farmer.id,
                         farmerName: product.farmer.name || "Petani",

@@ -1,34 +1,54 @@
-import {
-  Product,
-  User,
-  Order,
-  OrderItem,
-  Favorite,
-  CultivationMethod,
-} from "@prisma/client";
+import { Product, Order, OrderItem, Role, Favorite } from "@prisma/client";
 
-// ─── Shared Utility Types ─────────────────────────────────────────────────────
-
-export type SelectUser = Pick<User, "id" | "name" | "email" | "role">;
+export type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
 
 export type ProductWithFarmer = Product & {
-  farmer: SelectUser;
-};
-
-export type OrderItemWithProduct = OrderItem & {
-  product: Pick<Product, "id" | "name" | "image" | "price" | "unit" | "latitude" | "longitude">;
-};
-
-export type OrderWithItems = Order & {
-  items: OrderItemWithProduct[];
-  user: SelectUser;
+  images: string[];
+  farmer: {
+    id: string;
+    name: string | null;
+  };
 };
 
 export type FavoriteWithProduct = Favorite & {
   product: ProductWithFarmer;
 };
 
-// ─── Food Miles ───────────────────────────────────────────────────────────────
+export type OrderWithItems = Order & {
+  user: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    role: Role;
+  };
+  items: (OrderItem & {
+    product: {
+      id: string;
+      name: string;
+      images: string[];
+      price: number;
+      unit: string;
+      latitude: number | null;
+      longitude: number | null;
+    };
+  })[];
+};
+
+export interface ProductRow {
+  id: string;
+  name: string;
+  images: string[];
+  price: number;
+  stock: number;
+  unit: string;
+  latitude: number | null;
+  longitude: number | null;
+  harvestDate: string | null;
+  farmerName: string | null;
+  origin: string | null;
+}
 
 export type FoodMilesCategory = {
   label: string;
@@ -41,29 +61,6 @@ export type FreshnessResult = {
   color: string;
 };
 
-// ─── PostGIS Raw Query Results ────────────────────────────────────────────────
-
-export type NearbyProductRow = {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  stock: number;
-  images: string[];
-  unit: string;
-  latitude: number | null;
-  longitude: number | null;
-  harvestDate: Date | null;
-  cultivationMethod: CultivationMethod;
-  origin: string | null;
-  farmerId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  distance_km: number;
-};
-
-// ─── Action Return Types ──────────────────────────────────────────────────────
-
-export type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export interface NearbyProductRow extends ProductRow {
+  distance: number;
+}

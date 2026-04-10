@@ -127,7 +127,10 @@ export default async function DashboardOverview() {
                   <Link href={`/dashboard/produk/${product.id}`} key={product.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden group flex flex-col hover:shadow-md transition-shadow">
                     <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
                       <Image
-                        src={product.image || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"}
+                        src={
+                          product.images?.[0] ||
+                          "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
+                        }
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform"

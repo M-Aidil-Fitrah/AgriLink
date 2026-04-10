@@ -23,9 +23,9 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.image,
+        images: product.images,
         unit: product.unit,
-        farmerId: product.farmer.id,
+        farmerId: product.farmerId,
         farmerName: product.farmer.name || "Petani Lokal",
         quantity: quantity,
       });
