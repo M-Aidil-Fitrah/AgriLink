@@ -7,6 +7,8 @@ import { ProductWithFarmer } from "@/lib/types";
 import { getStoreLocations } from "@/app/actions/productActions";
 import Image from "next/image";
 
+import Link from "next/link";
+
 const BUYER_LAT = 5.5483;
 const BUYER_LON = 95.3238;
 
@@ -103,8 +105,9 @@ export default async function DashboardOverview() {
       {/* Main Grid */}
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center px-1">
             <h3 className="text-xl font-bold text-gray-900">Rekomendasi Produk</h3>
+            <Link href="/dashboard/produk" className="text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors">Lihat Semua</Link>
           </div>
           {products.length === 0 ? (
             <div className="py-16 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-100">
@@ -121,7 +124,7 @@ export default async function DashboardOverview() {
                 const distCat = distance !== null ? getFoodMilesCategory(distance) : null;
 
                 return (
-                  <div key={product.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden group flex flex-col hover:shadow-md transition-shadow">
+                  <Link href={`/dashboard/produk/${product.id}`} key={product.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden group flex flex-col hover:shadow-md transition-shadow">
                     <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
                       <Image
                         src={product.image || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=400"}
@@ -144,14 +147,14 @@ export default async function DashboardOverview() {
                       </div>
                     </div>
                     <div className="p-3">
-                      <h4 className="font-bold text-gray-900 text-sm">{product.name}</h4>
+                      <h4 className="font-bold text-gray-900 text-sm group-hover:text-emerald-600 transition-colors uppercase truncate">{product.name}</h4>
                       <p className="text-xs text-gray-400 mt-0.5">{product.farmer.name}</p>
                       <p className="text-sm font-extrabold text-emerald-700 mt-2">
                         Rp {product.price.toLocaleString("id-ID")}
                         <span className="text-xs text-gray-400 font-normal ml-1">/{product.unit}</span>
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -159,7 +162,7 @@ export default async function DashboardOverview() {
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-[600px] lg:h-auto">
-          <h3 className="font-bold text-gray-900 mb-4">Peta Toko Terdekat</h3>
+          <h3 className="font-bold text-gray-900 mb-4 px-1">Peta Toko Terdekat</h3>
           <div className="flex-1 bg-gray-100 rounded-2xl overflow-hidden relative">
             <DynamicMap markers={storeLocations} />
           </div>

@@ -19,7 +19,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[99999]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-99999"
           />
 
           {/* Drawer */}
@@ -28,7 +28,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-[99999] flex flex-col"
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-99999 flex flex-col"
           >
             {/* Header */}
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">

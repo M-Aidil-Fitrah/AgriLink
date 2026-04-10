@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { MapPin, Save, Loader2, Trash2, Plus, Star, Lock, User as UserIcon } from "lucide-react";
 import { updateProfile, addLocation, deleteLocation } from "@/app/actions/profileActions";
 import { updatePassword } from "@/app/actions/passwordActions";
-import { Session } from "next-auth";
 import { Location } from "@prisma/client";
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
@@ -22,7 +21,7 @@ const MapPicker = dynamic<MapPickerProps>(
 
 import { User } from "@prisma/client";
 
-export function ProfileView({ session, user, initialLocations }: { session: Session; user: User; initialLocations: Location[] }) {
+export function ProfileView({ user, initialLocations }: { user: User; initialLocations: Location[] }) {
   const [activeTab, setActiveTab] = useState<"biodata" | "password" | "alamat">("biodata");
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);

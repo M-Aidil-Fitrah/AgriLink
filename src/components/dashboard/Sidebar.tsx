@@ -32,7 +32,7 @@ const FARMER_LINKS = [
   { name: "Profil Saya", href: "/dashboard/profil", icon: User },
 ];
 
-export function Sidebar({ user }: { user: { id: string, name: string | null, email: string | null, role: any } }) {
+export function Sidebar({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } }) {
   const isFarmer = user.role === "FARMER";
   const links = isFarmer ? FARMER_LINKS : BUYER_LINKS;
 

@@ -8,7 +8,9 @@ export function AddToCartButton({ item }: { item: CartItem }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
 
-  const handleAdd = () => {
+  const handleAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     addItem(item);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);

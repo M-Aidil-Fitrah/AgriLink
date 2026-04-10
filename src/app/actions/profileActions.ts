@@ -15,7 +15,8 @@ export async function updateProfile(data: { name: string }) {
     });
     revalidatePath("/dashboard/profil");
     return { success: true };
-  } catch (_error) {
+  } catch (error) {
+    console.error("UPDATE_BIO_ERROR:", error);
     return { error: "Gagal memperbarui profil" };
   }
 }

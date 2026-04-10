@@ -15,5 +15,5 @@ export default async function ProfilePage() {
 
   if (!user) redirect("/login");
 
-  return <ProfileView session={session} user={user} initialLocations={locations} />;
+  return <ProfileView user={user} initialLocations={locations} />;
 }

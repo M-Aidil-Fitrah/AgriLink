@@ -4,6 +4,7 @@ import { getFreshnessScore, getFoodMilesCategory, calculateFoodMiles } from "@/l
 import { ProductWithFarmer } from "@/lib/types";
 import { FavoriteButton } from "./FavoriteButton";
 import { CultivationMethod } from "@prisma/client";
+import Link from "next/link";
 import Image from "next/image";
 import { AddToCartButton } from "./AddToCartButton";
 
@@ -99,7 +100,8 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                 key={product.id}
                 className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all group flex flex-col"
               >
-                  <div className="relative w-full aspect-square">
+                <div className="relative w-full aspect-square">
+                  <Link href={`/dashboard/produk/${product.id}`}>
                     <Image
                       src={
                         product.image ||
@@ -110,6 +112,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 50vw, 25vw"
                     />
+                  </Link>
                   <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                     {product.harvestDate && (
                       <span className={`px-2 py-1 rounded-lg text-[10px] font-bold border ${freshness.color}`}>
@@ -128,11 +131,13 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                 </div>
 
                 <div className="p-4 flex flex-col flex-1">
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 mb-1">
-                    {CULTIVATION_LABELS[product.cultivationMethod]}
-                  </p>
-                  <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1">{product.name}</h3>
-                  <p className="text-xs text-gray-500 mb-3">{product.farmer.name}</p>
+                  <Link href={`/dashboard/produk/${product.id}`} className="block group/title">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 mb-1">
+                      {CULTIVATION_LABELS[product.cultivationMethod]}
+                    </p>
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1 group-hover/title:text-emerald-600 transition-colors uppercase truncate">{product.name}</h3>
+                    <p className="text-xs text-gray-500 mb-3">{product.farmer.name}</p>
+                  </Link>
                   <div className="mt-auto flex items-end justify-between">
                     <div>
                       <span className="text-base font-extrabold text-gray-900">

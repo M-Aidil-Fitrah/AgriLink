@@ -25,8 +25,14 @@ export async function createProduct(
 ): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session || session.user.role !== "FARMER") {
-    return { success: false, error: "Tidak memiliki akses" };
+    return { success: false, error: "Sesi tidak ditemukan atau Anda bukan Petani. Silakan login ulang." };
   }
+
+  // 1. Validasi Input Dasar
+  if (!input.name || input.name.trim().length === 0) return { success: false, error: "Nama produk harus diisi" };
+  if (!input.price || input.price < 0) return { success: false, error: "Harga tidak valid" };
+  if (input.stock === undefined || input.stock < 0) return { success: false, error: "Stok tidak boleh negatif" };
+  if (!input.unit) return { success: false, error: "Satuan (kg/ikat/dll) harus diisi" };
 
   try {
     const product = await prisma.product.create({
@@ -37,7 +43,9 @@ export async function createProduct(
         stock: input.stock,
         image: input.image || null,
         unit: input.unit || "kg",
-        harvestDate: input.harvestDate ? new Date(input.harvestDate) : null,
+        harvestDate: (input.harvestDate && !isNaN(new Date(input.harvestDate).getTime())) 
+          ? new Date(input.harvestDate) 
+          : null,
         cultivationMethod: input.cultivationMethod,
         origin: input.origin || null,
         latitude: input.latitude,
@@ -50,8 +58,15 @@ export async function createProduct(
     revalidatePath("/dashboard/produk");
     revalidatePath("/dashboard");
     return { success: true, data: { id: product.id } };
-  } catch {
-    return { success: false, error: "Gagal membuat produk" };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("CREATE_PRODUCT_ERROR:", err);
+    // Cek error spesifik Prisma jika ada
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === "P2002") {
+       return { success: false, error: "Nama produk ini sudah digunakan" };
+    }
+    
+    return { success: false, error: `Gagal membuat produk di database: ${err.message || "Unknown error"}` };
   }
 }
 
@@ -79,7 +94,9 @@ export async function updateProduct(
         stock: input.stock,
         image: input.image || null,
         unit: input.unit || "kg",
-        harvestDate: input.harvestDate ? new Date(input.harvestDate) : null,
+        harvestDate: (input.harvestDate && !isNaN(new Date(input.harvestDate).getTime())) 
+          ? new Date(input.harvestDate) 
+          : null,
         cultivationMethod: input.cultivationMethod,
         origin: input.origin || null,
         latitude: input.latitude,
@@ -90,7 +107,8 @@ export async function updateProduct(
     revalidatePath("/dashboard/farmer-produk");
     revalidatePath("/dashboard/produk");
     return { success: true, data: undefined };
-  } catch {
+  } catch (error: unknown) {
+    console.error("UPDATE_PRODUCT_ERROR:", error);
     return { success: false, error: "Gagal memperbarui produk" };
   }
 }
@@ -109,7 +127,8 @@ export async function deleteProduct(id: string): Promise<ActionResult<void>> {
     revalidatePath("/dashboard/farmer-produk");
     revalidatePath("/dashboard/produk");
     return { success: true, data: undefined };
-  } catch {
+  } catch (error: unknown) {
+    console.error("DELETE_PRODUCT_ERROR:", error);
     return { success: false, error: "Gagal menghapus produk" };
   }
 }

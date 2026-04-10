@@ -101,6 +101,7 @@ model Location {
   latitude  Float
   longitude Float
   isPrimary Boolean @default(false)
+  geog      Unsupported("geography(Point, 4326)")?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -124,6 +125,7 @@ model Product {
 
   latitude  Float?
   longitude Float?
+  geog      Unsupported("geography(Point, 4326)")?
 
   farmerId String
   farmer   User   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
@@ -150,6 +152,7 @@ model Order {
   deliveryAddress String?
   deliveryLat     Float?
   deliveryLon     Float?
+  geog            Unsupported("geography(Point, 4326)")?
 
   items OrderItem[]
 

@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
-import { uploadImage, getImageUrl } from "@/lib/supabase";
+import { uploadImageAction } from "@/app/actions/uploadActions";
+import { getImageUrl } from "@/lib/supabase";
 import Image from "next/image";
 
 interface ImageUploadProps {
@@ -49,21 +50,25 @@ export function ImageUpload({
 
     setIsUploading(true);
     try {
-      const fileName = `${folder}/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-      const path = await uploadImage(file, bucket, fileName);
+      const formData = new FormData();
+      formData.append("file", file);
       
-      // If public, we can store full URL or just path. 
-      // For consistency with private, let's store the full public URL for products, 
-      // and path for private ones that need signing.
-      if (isPrivate) {
-        onChange(path);
-      } else {
-        const fullPublicUrl = await getImageUrl(path, bucket, false);
-        onChange(fullPublicUrl || path);
+      const result = await uploadImageAction(formData, bucket, folder);
+      
+      if (!result.success) {
+        throw new Error(result.error);
       }
-    } catch (error) {
-      console.error("Upload failed", error);
-      alert("Gagal mengunggah gambar. Silakan coba lagi.");
+
+      // If public, we can store full URL or just path. 
+      if (isPrivate) {
+        onChange(result.path || "");
+      } else {
+        onChange(result.url || result.path || "");
+      }
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error("Upload failed", err);
+      alert(`Gagal mengunggah gambar: ${err.message || "Silakan coba lagi"}`);
       setPreview(null);
     } finally {
       setIsUploading(false);

@@ -37,7 +37,8 @@ export async function updatePassword(data: { oldPass: string; newPass: string; c
     });
 
     return { success: true };
-  } catch (_error) {
+  } catch (error) {
+    console.error("GANTI_PASSWORD_ERROR:", error);
     return { error: "Gagal memperbarui password" };
   }
 }

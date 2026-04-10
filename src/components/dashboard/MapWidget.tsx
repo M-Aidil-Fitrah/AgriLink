@@ -11,12 +11,12 @@ const MAP_CENTER: [number, number] = [5.5483, 95.3238];
 
 type MapItem = {
     id: string;
-    name: string;
+    name?: string;
     latitude: number | null;
     longitude: number | null;
-    price: number;
-    unit: string;
-    farmer: { name: string };
+    price?: number;
+    unit?: string;
+    farmer?: { name: string | null };
 };
 
 export default function MapWidget({ markers = [] }: { markers?: MapItem[] }) {
@@ -27,7 +27,13 @@ export default function MapWidget({ markers = [] }: { markers?: MapItem[] }) {
 
   useEffect(() => {
     if (!iconFixed.current) {
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      // Define internal interface for Leaflet private property workaround
+      interface LeafletIconPrototype extends L.Icon.Default {
+        _getIconUrl?: unknown;
+      }
+      
+      delete (L.Icon.Default.prototype as LeafletIconPrototype)._getIconUrl;
+      
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
         iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -35,16 +41,20 @@ export default function MapWidget({ markers = [] }: { markers?: MapItem[] }) {
       });
       iconFixed.current = true;
     }
-    setMounted(true);
+    
+    const timeout = setTimeout(() => {
+        setMounted(true);
+    }, 0);
 
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation([position.coords.latitude, position.coords.longitude]);
-        },
-        () => console.warn("Geolocation denied")
-      );
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setLocation([position.coords.latitude, position.coords.longitude]);
+            },
+            () => console.warn("Geolocation denied")
+        );
     }
+    return () => clearTimeout(timeout);
   }, []);
 
   const toggleFullscreen = () => {
@@ -57,7 +67,7 @@ export default function MapWidget({ markers = [] }: { markers?: MapItem[] }) {
     <div className={`relative w-full h-full transition-all duration-500 overflow-hidden ${isFullscreen ? '' : 'rounded-2xl border border-gray-100'}`}>
         <button 
            onClick={toggleFullscreen}
-           className="absolute top-4 right-4 z-[999] p-2 bg-white/90 backdrop-blur shadow-lg rounded-xl text-emerald-700 hover:bg-white transition-all"
+           className="absolute top-4 right-4 z-999 p-2 bg-white/90 backdrop-blur shadow-lg rounded-xl text-emerald-700 hover:bg-white transition-all"
         >
             {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
         </button>
@@ -91,13 +101,15 @@ export default function MapWidget({ markers = [] }: { markers?: MapItem[] }) {
                     <Popup maxWidth={200}>
                         <div className="font-sans p-1 space-y-2">
                            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 uppercase tracking-wider">
-                                <Store className="w-3 h-3" /> {m.farmer.name}
+                                <Store className="w-3 h-3" /> {m.farmer?.name || "Petani Lokal"}
                            </div>
                            <h4 className="font-extrabold text-gray-900 leading-tight">{m.name}</h4>
-                           <div className="flex items-center justify-between pt-1 border-t border-gray-50">
-                               <span className="text-sm font-black text-emerald-700">Rp {m.price.toLocaleString("id-ID")}</span>
-                               <span className="text-[10px] text-gray-400 font-bold">/{m.unit}</span>
-                           </div>
+                           {m.price !== undefined && (
+                             <div className="flex items-center justify-between pt-1 border-t border-gray-50">
+                                 <span className="text-sm font-black text-emerald-700">Rp {m.price.toLocaleString("id-ID")}</span>
+                                 <span className="text-[10px] text-gray-400 font-bold">/{m.unit}</span>
+                             </div>
+                           )}
                         </div>
                     </Popup>
                 </Marker>
@@ -115,7 +127,7 @@ export default function MapWidget({ markers = [] }: { markers?: MapItem[] }) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-[99999] bg-white"
+            className="fixed inset-0 z-99999 bg-white"
           >
             {mapContent}
           </motion.div>

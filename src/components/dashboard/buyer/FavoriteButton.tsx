@@ -15,6 +15,7 @@ export function FavoriteButton({
 
   function handleClick(e: React.MouseEvent) {
     e.preventDefault();
+    e.stopPropagation();
     startTransition(() => {
       toggleFavorite(productId);
     });

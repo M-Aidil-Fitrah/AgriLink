@@ -3,13 +3,12 @@
 import { useState } from "react";
 import { Search, ShoppingCart, LogOut } from "lucide-react";
 import { LocationDisplay } from "./LocationDisplay";
-import { Session } from "next-auth";
 import { logout } from "@/app/actions/authActions";
 import { useCart } from "@/context/CartContext";
 import { CartDrawer } from "./buyer/CartDrawer";
 import { NotificationDropdown } from "./NotificationDropdown";
 
-export function TopHeader({ user }: { user: { id: string, name: string | null, email: string | null, role: any } }) {
+export function TopHeader({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } }) {
   const { totalItems } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
 
