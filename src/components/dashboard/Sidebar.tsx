@@ -37,7 +37,7 @@ export function Sidebar({ user }: { user: { id: string, name: string | null, ema
   const links = isFarmer ? FARMER_LINKS : BUYER_LINKS;
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-100 flex flex-col pt-6 pb-6 shadow-sm z-20 shrink-0">
+    <aside className="w-64 bg-white border-r border-gray-100 flex flex-col pt-6 pb-6 shadow-sm z-800 shrink-0">
       <div className="px-6 mb-8 flex flex-col items-center text-center">
         <Image
           src="/logo_agrilink.png"

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { ActionResult } from "@/lib/types";
+import { OrderStatus } from "@prisma/client";
 
 export type OrderInput = {
   items: {
@@ -47,5 +48,18 @@ export async function createOrderAction(input: OrderInput): Promise<ActionResult
     const err = error as Error;
     console.error("CREATE_ORDER_ERROR:", err);
     return { success: false, error: `Gagal membuat pesanan: ${err.message || "Unknown error"}` };
+  }
+}
+
+export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<ActionResult<void>> {
+  try {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status }
+    });
+    revalidatePath("/dashboard/pesanan");
+    return { success: true, data: undefined };
+  } catch (error: unknown) {
+    return { success: false, error: "Gagal memperbarui status pesanan." };
   }
 }

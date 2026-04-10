@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/context/CartContext";
+import { CartDrawer } from "@/components/dashboard/buyer/CartDrawer";
 
 const jakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -12,8 +14,6 @@ export const metadata: Metadata = {
   title: "Agrilink - Marketplace Pertanian Berkelanjutan",
   description: "Menghubungkan petani langsung dengan konsumen.",
 };
-
-import { CartProvider } from "@/context/CartContext";
 
 export default function RootLayout({
   children,
@@ -28,9 +28,9 @@ export default function RootLayout({
       >
         <CartProvider>
           {children}
+          <CartDrawer />
         </CartProvider>
       </body>
     </html>
   );
 }
-

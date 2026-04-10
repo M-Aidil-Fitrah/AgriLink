@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { OrderWithItems } from "@/lib/types";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, Product as PrismaProduct } from "@prisma/client";
 import { Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
 import Image from "next/image";
+
+type ProductOverride = Omit<PrismaProduct, "image"> & { images: string[] };
 
 const STATUS_MAP: Record<
   OrderStatus,
@@ -40,7 +42,7 @@ export async function PesananView() {
   const session = await auth();
   if (!session) return null;
 
-  const orders = (await prisma.order.findMany({
+  const ordersRaw = (await prisma.order.findMany({
     where: { userId: session.user.id },
     include: {
       user: { select: { id: true, name: true, email: true, role: true } },
@@ -50,7 +52,7 @@ export async function PesananView() {
             select: {
               id: true,
               name: true,
-              image: true,
+              images: true,
               price: true,
               unit: true,
               latitude: true,
@@ -61,7 +63,11 @@ export async function PesananView() {
       },
     },
     orderBy: { createdAt: "desc" },
-  })) as OrderWithItems[];
+  }));
+
+  const orders = ordersRaw as unknown as (Omit<OrderWithItems, "items"> & { 
+    items: (Omit<OrderWithItems["items"][0], "product"> & { product: ProductOverride })[] 
+  })[];
 
   return (
     <div className="p-8 pb-20">
@@ -121,7 +127,7 @@ export async function PesananView() {
                       <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
                         <Image
                           src={
-                            item.product.image ||
+                            item.product.images?.[0] ||
                             "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"
                           }
                           alt={item.product.name}

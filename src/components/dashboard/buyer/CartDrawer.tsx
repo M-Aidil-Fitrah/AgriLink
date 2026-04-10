@@ -6,20 +6,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
+export function CartDrawer() {
+  const { items, removeItem, updateQuantity, totalPrice, totalItems, isCartOpen, closeCart } = useCart();
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isCartOpen && (
         <>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-99999"
+            onClick={closeCart}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-99998"
           />
 
           {/* Drawer */}
@@ -34,14 +34,14 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                  <ShoppingCart className="w-5 h-5" />
+                   <ShoppingCart className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-gray-900">Keranjang Belanja</h3>
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{totalItems} Produk dipilih</p>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-900">
+              <button onClick={closeCart} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-900">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -57,7 +57,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     <p className="text-gray-900 font-bold">Keranjang Kosong</p>
                     <p className="text-sm text-gray-500 mt-1 max-w-[200px]">Mulai belanja produk segar langsung dari petani lokal.</p>
                   </div>
-                  <button onClick={onClose} className="mt-4 px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow-sm hover:bg-emerald-700 transition-all">
+                  <button onClick={closeCart} className="mt-4 px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow-sm hover:bg-emerald-700 transition-all">
                     Lihat Produk
                   </button>
                 </div>
@@ -121,7 +121,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 </div>
                 <Link
                   href="/dashboard/checkout"
-                  onClick={onClose}
+                  onClick={closeCart}
                   className="w-full py-4 bg-emerald-600 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-[0.98]"
                 >
                   Checkout Sekarang

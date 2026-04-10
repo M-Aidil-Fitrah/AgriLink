@@ -1,19 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { Search, ShoppingCart, LogOut } from "lucide-react";
 import { LocationDisplay } from "./LocationDisplay";
 import { logout } from "@/app/actions/authActions";
 import { useCart } from "@/context/CartContext";
-import { CartDrawer } from "./buyer/CartDrawer";
 import { NotificationDropdown } from "./NotificationDropdown";
 
 export function TopHeader({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } }) {
-  const { totalItems } = useCart();
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { totalItems, openCart } = useCart();
 
   return (
-    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-10 shrink-0">
+    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-800 shrink-0">
 
       <div className="w-full max-w-xl relative">
         <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -27,19 +24,16 @@ export function TopHeader({ user }: { user: { id: string, name: string | null, e
         <LocationDisplay />
         <NotificationDropdown />
         <button 
-          onClick={() => setIsCartOpen(true)}
-          className="relative text-gray-500 hover:text-gray-900 transition-colors"
+          onClick={openCart}
+          className="relative text-gray-500 hover:text-gray-900 transition-colors p-2 rounded-full hover:bg-gray-100"
         >
           <ShoppingCart className="w-5 h-5" />
           {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white animate-in zoom-in duration-300">
+            <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white animate-in zoom-in duration-300">
               {totalItems}
             </span>
           )}
         </button>
-
-        <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-
 
         <div className="h-6 w-px bg-gray-200 mx-2"></div>
 

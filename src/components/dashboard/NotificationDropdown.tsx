@@ -47,8 +47,8 @@ export function NotificationDropdown() {
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-20" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-3 w-80 bg-white rounded-3xl border border-gray-100 shadow-2xl z-30 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-999" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 mt-3 w-80 bg-white rounded-3xl border border-gray-100 shadow-2xl z-1000 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-4 border-b border-gray-50 flex items-center justify-between">
                <h4 className="font-extrabold text-gray-900 text-sm">Notifikasi</h4>
                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{unreadCount} Baru</span>

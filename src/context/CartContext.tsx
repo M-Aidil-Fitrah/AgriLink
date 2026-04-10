@@ -21,19 +21,22 @@ type CartContextType = {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("agrilink_cart");
     if (saved) {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setItems(() => JSON.parse(saved));
       } catch (e) {
         console.error("Failed to parse cart", e);
@@ -56,6 +59,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, item];
     });
+    setIsCartOpen(true); // Automatically open cart when adding
   };
 
   const removeItem = (id: string) => {
@@ -73,13 +77,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const clearCart = () => setItems([]);
+  const openCart = () => setIsCartOpen(true);
+  const closeCart = () => setIsCartOpen(false);
 
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}
+      value={{ 
+        items, 
+        addItem, 
+        removeItem, 
+        updateQuantity, 
+        clearCart, 
+        totalItems, 
+        totalPrice,
+        isCartOpen,
+        openCart,
+        closeCart
+      }}
     >
       {children}
     </CartContext.Provider>
