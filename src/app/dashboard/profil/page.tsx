@@ -2,12 +2,18 @@ import { ProfileView } from "@/components/dashboard/ProfileView";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getMyLocations } from "@/app/actions/profileActions";
+import { prisma } from "@/lib/prisma";
 
 export default async function ProfilePage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const locations = await getMyLocations();
+  const [locations, user] = await Promise.all([
+    getMyLocations(),
+    prisma.user.findUnique({ where: { id: session.user.id } })
+  ]);
 
-  return <ProfileView session={session} initialLocations={locations} />;
+  if (!user) redirect("/login");
+
+  return <ProfileView session={session} user={user} initialLocations={locations} />;
 }

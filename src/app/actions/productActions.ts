@@ -123,3 +123,22 @@ export async function getMyProducts() {
     orderBy: { createdAt: "desc" },
   });
 }
+export async function getStoreLocations() {
+  const products = await prisma.product.findMany({
+    where: {
+      latitude: { not: null },
+      longitude: { not: null },
+      stock: { gt: 0 }
+    },
+    include: {
+      farmer: {
+        select: {
+          id: true,
+          name: true,
+        }
+      }
+    }
+  });
+
+  return products;
+}

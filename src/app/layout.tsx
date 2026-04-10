@@ -23,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
+        suppressHydrationWarning
         className={`${jakartaSans.variable} ${jakartaSans.className} antialiased selection:bg-emerald-200 selection:text-emerald-900`}
       >
         <CartProvider>

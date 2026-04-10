@@ -1,9 +1,10 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Package, Heart, TreePine, Star } from "lucide-react";
+import { Package, Heart, TreePine, ShoppingCart } from "lucide-react";
 import { DynamicMap } from "./DynamicMap";
 import { calculateFoodMiles, getFoodMilesCategory, getFreshnessScore } from "@/lib/metrics";
 import { ProductWithFarmer } from "@/lib/types";
+import { getStoreLocations } from "@/app/actions/productActions";
 import Image from "next/image";
 
 const BUYER_LAT = 5.5483;
@@ -13,7 +14,7 @@ export default async function DashboardOverview() {
   const session = await auth();
   if (!session) return null;
 
-  const [orders, favorites, products] = await Promise.all([
+  const [ordersCount, favorites, products, spending, itemsCount, storeLocations] = await Promise.all([
     prisma.order.count({ where: { userId: session.user.id } }),
     prisma.favorite.count({ where: { userId: session.user.id } }),
     prisma.product.findMany({
@@ -22,7 +23,19 @@ export default async function DashboardOverview() {
       include: { farmer: { select: { id: true, name: true, email: true, role: true } } },
       orderBy: { createdAt: "desc" },
     }) as Promise<ProductWithFarmer[]>,
+    prisma.order.aggregate({
+      where: { userId: session.user.id },
+      _sum: { total: true },
+    }),
+    prisma.orderItem.aggregate({
+        where: { order: { userId: session.user.id } },
+        _sum: { quantity: true }
+    }),
+    getStoreLocations()
   ]);
+
+  const totalSpent = spending._sum.total ?? 0;
+  const totalBought = itemsCount._sum.quantity ?? 0;
 
   const userName = session.user.name?.split(" ")[0] ?? "Teman";
 
@@ -72,10 +85,10 @@ export default async function DashboardOverview() {
       {/* Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {[
-          { label: "Pesanan", value: orders.toString(), sub: "Seluruh transaksi", Icon: Package, color: "text-blue-500", bg: "bg-blue-50" },
+          { label: "Pesanan", value: ordersCount.toString(), sub: "Seluruh transaksi", Icon: Package, color: "text-blue-500", bg: "bg-blue-50" },
           { label: "Favorit", value: favorites.toString(), sub: "Tersimpan", Icon: Heart, color: "text-red-500", bg: "bg-red-50" },
-          { label: "Kontribusi", value: "Rp 0", sub: "Ke petani lokal", Icon: TreePine, color: "text-emerald-500", bg: "bg-emerald-50" },
-          { label: "Skor Segar", value: "—", sub: "Rata-rata produk", Icon: Star, color: "text-amber-500", bg: "bg-amber-50" },
+          { label: "Total Pengeluaran", value: `Rp ${totalSpent.toLocaleString("id-ID")}`, sub: "Ke petani lokal", Icon: TreePine, color: "text-emerald-500", bg: "bg-emerald-50" },
+          { label: "Total Pembelian", value: totalBought.toString(), sub: "Produk terbeli", Icon: ShoppingCart, color: "text-amber-500", bg: "bg-amber-50" },
         ].map((metric) => (
           <div key={metric.label} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
             <div className={`w-10 h-10 ${metric.bg} rounded-xl flex items-center justify-center ${metric.color} mb-4`}>
@@ -88,8 +101,8 @@ export default async function DashboardOverview() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 space-y-4">
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold text-gray-900">Rekomendasi Produk</h3>
           </div>
@@ -145,10 +158,10 @@ export default async function DashboardOverview() {
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col min-h-[300px]">
-          <h3 className="font-bold text-gray-900 mb-4">Peta Produk Terdekat</h3>
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-[600px] lg:h-auto">
+          <h3 className="font-bold text-gray-900 mb-4">Peta Toko Terdekat</h3>
           <div className="flex-1 bg-gray-100 rounded-2xl overflow-hidden relative">
-            <DynamicMap />
+            <DynamicMap markers={storeLocations} />
           </div>
         </div>
       </div>

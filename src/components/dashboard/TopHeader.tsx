@@ -9,8 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { CartDrawer } from "./buyer/CartDrawer";
 import { NotificationDropdown } from "./NotificationDropdown";
 
-export function TopHeader({ session }: { session: Session }) {
-  const user = session.user;
+export function TopHeader({ user }: { user: { id: string, name: string | null, email: string | null, role: any } }) {
   const { totalItems } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
 

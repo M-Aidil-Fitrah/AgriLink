@@ -4,14 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-export async function updateProfile(data: { name: string; email: string }) {
+export async function updateProfile(data: { name: string }) {
   const session = await auth();
   if (!session) return { error: "Tidak terautentikasi" };
 
   try {
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { name: data.name, email: data.email },
+      data: { name: data.name },
     });
     revalidatePath("/dashboard/profil");
     return { success: true };

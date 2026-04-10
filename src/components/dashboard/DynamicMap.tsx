@@ -11,6 +11,8 @@ const MapWidgetComponent = dynamic(() => import("@/components/dashboard/MapWidge
   )
 });
 
-export function DynamicMap() {
-  return <MapWidgetComponent />;
+export function DynamicMap({ markers = [] }: { markers?: any[] }) {
+  // We use any[] here to avoid circular dependencies with product types, 
+  // but the underlying MapWidget handles the actual drawing.
+  return <MapWidgetComponent markers={markers} />;
 }

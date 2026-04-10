@@ -66,7 +66,7 @@ export async function FarmerDashboardView() {
             color: "text-amber-600",
           },
           {
-            label: "Produk Berlokas",
+            label: "Produk Berlokasi",
             value: `${productsWithLocation}`,
             Icon: MapPin,
             bg: "bg-purple-50",

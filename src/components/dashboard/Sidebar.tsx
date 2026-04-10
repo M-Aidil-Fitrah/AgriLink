@@ -32,8 +32,8 @@ const FARMER_LINKS = [
   { name: "Profil Saya", href: "/dashboard/profil", icon: User },
 ];
 
-export function Sidebar({ role }: { role?: string }) {
-  const isFarmer = role === "FARMER";
+export function Sidebar({ user }: { user: { id: string, name: string | null, email: string | null, role: any } }) {
+  const isFarmer = user.role === "FARMER";
   const links = isFarmer ? FARMER_LINKS : BUYER_LINKS;
 
   return (

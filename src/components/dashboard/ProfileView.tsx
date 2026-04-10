@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MapPin, Save, Loader2, Trash2, Plus, Star } from "lucide-react";
+import { MapPin, Save, Loader2, Trash2, Plus, Star, Lock, User as UserIcon } from "lucide-react";
 import { updateProfile, addLocation, deleteLocation } from "@/app/actions/profileActions";
+import { updatePassword } from "@/app/actions/passwordActions";
 import { Session } from "next-auth";
 import { Location } from "@prisma/client";
 import dynamic from "next/dynamic";
@@ -19,8 +20,10 @@ const MapPicker = dynamic<MapPickerProps>(
   { ssr: false, loading: () => <div className="h-48 w-full bg-gray-100 animate-pulse rounded-2xl" /> }
 );
 
-export function ProfileView({ session, initialLocations }: { session: Session; initialLocations: Location[] }) {
-  const [activeTab, setActiveTab] = useState<"biodata" | "alamat">("biodata");
+import { User } from "@prisma/client";
+
+export function ProfileView({ session, user, initialLocations }: { session: Session; user: User; initialLocations: Location[] }) {
+  const [activeTab, setActiveTab] = useState<"biodata" | "password" | "alamat">("biodata");
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -33,13 +36,31 @@ export function ProfileView({ session, initialLocations }: { session: Session; i
     const fd = new FormData(e.currentTarget);
     const data = {
       name: fd.get("name") as string,
-      email: fd.get("email") as string,
     };
 
     startTransition(async () => {
       const res = await updateProfile(data);
       if (res.error) setMessage({ type: "error", text: res.error });
       else setMessage({ type: "success", text: "Profil berhasil diperbarui!" });
+    });
+  };
+
+  const handleUpdatePassword = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const data = {
+      oldPass: fd.get("oldPass") as string,
+      newPass: fd.get("newPass") as string,
+      confirmPass: fd.get("confirmPass") as string,
+    };
+
+    startTransition(async () => {
+      const res = await updatePassword(data);
+      if (res.error) setMessage({ type: "error", text: res.error });
+      else {
+          setMessage({ type: "success", text: "Password berhasil diperbarui!" });
+          (e.target as HTMLFormElement).reset();
+      }
     });
   };
 
@@ -67,20 +88,29 @@ export function ProfileView({ session, initialLocations }: { session: Session; i
     <div className="p-8 pb-20 max-w-4xl">
       <div className="mb-8">
         <h2 className="text-3xl font-extrabold text-gray-900">Pengaturan Profil</h2>
-        <p className="text-gray-500 font-medium">Kelola informasi pribadi dan alamat pengiriman Anda</p>
+        <p className="text-gray-500 font-medium">Kelola informasi pribadi, keamanan, dan alamat pengiriman Anda</p>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 p-1.5 rounded-2xl w-fit mb-8">
+      <div className="flex flex-wrap gap-1 bg-gray-100 p-1.5 rounded-2xl w-fit mb-8">
         <button
-          onClick={() => setActiveTab("biodata")}
-          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "biodata" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+          onClick={() => { setActiveTab("biodata"); setMessage(null); }}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "biodata" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
         >
+          <UserIcon className="w-4 h-4" />
           Biodata
         </button>
         <button
-          onClick={() => setActiveTab("alamat")}
-          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "alamat" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+          onClick={() => { setActiveTab("password"); setMessage(null); }}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "password" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
         >
+          <Lock className="w-4 h-4" />
+          Ganti Password
+        </button>
+        <button
+          onClick={() => { setActiveTab("alamat"); setMessage(null); }}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "alamat" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+        >
+          <MapPin className="w-4 h-4" />
           Buku Alamat
         </button>
       </div>
@@ -91,16 +121,16 @@ export function ProfileView({ session, initialLocations }: { session: Session; i
         </div>
       )}
 
-      {activeTab === "biodata" ? (
-        <form onSubmit={handleUpdateProfile} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
-          <div className="grid grid-cols-2 gap-6">
+      {activeTab === "biodata" && (
+        <form onSubmit={handleUpdateProfile} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Nama Lengkap</label>
-              <input name="name" defaultValue={session.user.name || ""} required className="w-full px-5 py-3.5 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-2xl text-sm font-bold text-gray-900 outline-none transition-all" />
+              <input name="name" defaultValue={user.name || ""} required className="w-full px-5 py-3.5 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-2xl text-sm font-bold text-gray-900 outline-none transition-all" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Email</label>
-              <input name="email" defaultValue={session.user.email || ""} required type="email" className="w-full px-5 py-3.5 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-2xl text-sm font-bold text-gray-900 outline-none transition-all" />
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Email <span className="text-[10px] lowercase text-gray-400 font-medium">(Read Only)</span></label>
+              <input name="email" defaultValue={user.email || ""} readOnly className="w-full px-5 py-3.5 bg-gray-100 border border-gray-100 rounded-2xl text-sm font-bold text-gray-400 cursor-not-allowed outline-none" />
             </div>
           </div>
           <button disabled={isPending} type="submit" className="flex items-center gap-2 px-8 py-3.5 bg-emerald-600 text-white font-extrabold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50">
@@ -108,8 +138,33 @@ export function ProfileView({ session, initialLocations }: { session: Session; i
             Simpan Perubahan
           </button>
         </form>
-      ) : (
-        <div className="space-y-6">
+      )}
+
+      {activeTab === "password" && (
+        <form onSubmit={handleUpdatePassword} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="grid grid-cols-1 gap-6 max-w-md">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Password Lama</label>
+              <input name="oldPass" type="password" required className="w-full px-5 py-3.5 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-2xl text-sm font-bold text-gray-900 outline-none transition-all" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Password Baru</label>
+              <input name="newPass" type="password" required className="w-full px-5 py-3.5 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-2xl text-sm font-bold text-gray-900 outline-none transition-all" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Ulangi Password Baru</label>
+              <input name="confirmPass" type="password" required className="w-full px-5 py-3.5 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-2xl text-sm font-bold text-gray-900 outline-none transition-all" />
+            </div>
+          </div>
+          <button disabled={isPending} type="submit" className="flex items-center gap-2 px-8 py-3.5 bg-emerald-600 text-white font-extrabold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50">
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+            Perbarui Password
+          </button>
+        </form>
+      )}
+
+      {activeTab === "alamat" && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <button 
             onClick={() => setShowAddLoc(true)}
             className="w-full py-4 border-2 border-dashed border-gray-200 rounded-3xl flex items-center justify-center gap-2 text-gray-500 font-bold hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700 transition-all group"
@@ -125,10 +180,10 @@ export function ProfileView({ session, initialLocations }: { session: Session; i
                   <button onClick={() => setShowAddLoc(false)} className="text-emerald-600 hover:text-emerald-800"><Star className="w-5 h-5 fill-current" /></button>
                </div>
                <div className="p-8 space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div className="space-y-1.5">
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Label Alamat</label>
-                        <input value={newLoc.label} onChange={(e) => setNewLoc({...newLoc, label: e.target.value})} placeholder="Rumah, Kantor, dll" className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-200" />
+                        <input value={newLoc.label} onChange={(e) => setNewLoc({...newLoc, label: e.target.value})} placeholder="Contoh: Rumah, Kantor, Kost" className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-200" />
                      </div>
                      <div className="flex items-end pb-1">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -139,7 +194,7 @@ export function ProfileView({ session, initialLocations }: { session: Session; i
                   </div>
                   <div className="space-y-1.5">
                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Alamat Lengkap</label>
-                     <textarea value={newLoc.address} onChange={(e) => setNewLoc({...newLoc, address: e.target.value})} rows={2} className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-200" />
+                     <textarea value={newLoc.address} onChange={(e) => setNewLoc({...newLoc, address: e.target.value})} rows={2} placeholder="Sebutkan jalan, nomor rumah, RT/RW, dan patokan..." className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-200 resize-none" />
                   </div>
                   <div className="space-y-1.5">
                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Pin Lokasi Peta</label>
