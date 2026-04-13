@@ -6,10 +6,10 @@ export function LoginView() {
     <div className="relative h-screen w-full overflow-hidden bg-gray-950 flex flex-col items-center justify-center">
       <div className="absolute inset-0 w-full h-full z-0">
         <Image
-          src="https://images.unsplash.com/photo-1595841696677-6479ff3f62eb?q=80&w=2000&auto=format&fit=crop"
+          src="/images/auth/login.jfif"
           alt="Agriculture landscape"
           fill
-          className="object-cover opacity-50"
+          className="object-cover opacity-60"
           priority
           sizes="100vw"
         />

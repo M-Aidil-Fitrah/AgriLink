@@ -13,6 +13,9 @@ const jakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Agrilink - Marketplace Pertanian Berkelanjutan",
   description: "Menghubungkan petani langsung dengan konsumen.",
+  icons: {
+    icon: "/logo_agrilink.png",
+  },
 };
 
 export default function RootLayout({
