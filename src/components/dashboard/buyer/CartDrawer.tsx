@@ -9,6 +9,11 @@ import { motion, AnimatePresence } from "framer-motion";
 export function CartDrawer() {
   const { items, removeItem, updateQuantity, totalPrice, totalItems, isCartOpen, closeCart } = useCart();
 
+  const getImageUrl = (path: string) => {
+    if (!path || path.startsWith("http") || path.startsWith("blob:")) return path;
+    return `https://osfmxafgxfasdfjyqvgt.supabase.co/storage/v1/object/public/agrilink-uploads/${path}`;
+  };
+
   return (
     <AnimatePresence>
       {isCartOpen && (
@@ -66,7 +71,7 @@ export function CartDrawer() {
                   <div key={item.id} className="flex gap-4 group">
                     <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden relative shrink-0 border border-gray-100">
                       <Image 
-                        src={item.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
+                        src={getImageUrl(item.images?.[0] || "") || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
                         alt={item.name} 
                         fill 
                         className="object-cover"

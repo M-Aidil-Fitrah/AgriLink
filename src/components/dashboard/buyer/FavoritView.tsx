@@ -10,7 +10,7 @@ export async function FavoritView() {
   const session = await auth();
   if (!session) return null;
 
-  const favorites = (await prisma.favorite.findMany({
+  const favoritesRaw = (await prisma.favorite.findMany({
     where: { userId: session.user.id },
     include: {
       product: {
@@ -32,6 +32,17 @@ export async function FavoritView() {
     },
     orderBy: { createdAt: "desc" },
   })) as FavoriteWithProduct[];
+
+  // Resolve image paths to URLs
+  const { supabaseServer } = await import("@/lib/supabaseServer");
+  const favorites = favoritesRaw.map((fav) => {
+    const images = (fav.product.images as string[] || []).map((path) => {
+      if (path.startsWith("http")) return path;
+      const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
+      return publicUrl;
+    });
+    return { ...fav, product: { ...fav.product, images } };
+  });
 
   return (
     <div className="p-6 pb-20 max-w-[1400px] mx-auto">

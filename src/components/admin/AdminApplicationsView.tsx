@@ -160,7 +160,7 @@ function ApplicationCard({ app }: { app: ApplicationWithUser }) {
               <div className="mt-4">
                 <p className="text-xs text-gray-400 font-semibold mb-1">Foto Usaha</p>
                 <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden">
-                  <Image src={app.businessPhotoUrl} alt="Foto usaha" fill className="object-cover" sizes="300px" />
+                  <SecureImage src={app.businessPhotoUrl} bucket="agrilink-uploads" alt="Foto usaha" fill className="object-cover" sizes="300px" />
                 </div>
               </div>
             </div>

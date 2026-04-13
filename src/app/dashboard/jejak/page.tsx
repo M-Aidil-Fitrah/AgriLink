@@ -20,18 +20,29 @@ export default async function JejakPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const productRows = products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    images: p.images,
-    price: p.price,
-    stock: p.stock,
-    unit: p.unit,
-    latitude: p.latitude,
-    longitude: p.longitude,
-    harvestDate: p.harvestDate ? p.harvestDate.toISOString() : null,
-    farmerName: p.farmer.sellerApplication?.businessName || p.farmer.name || "Petani",
-    origin: p.origin || p.farmer.sellerApplication?.businessAddress || "Lokasi tidak diketahui",
+  // Resolve image paths to URLs
+  const { supabaseServer } = await import("@/lib/supabaseServer");
+
+  const productRows = await Promise.all(products.map(async (p) => {
+    const images = (p.images as string[] || []).map((path) => {
+      if (path.startsWith("http")) return path;
+      const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
+      return publicUrl;
+    });
+
+    return {
+      id: p.id,
+      name: p.name,
+      images: images,
+      price: p.price,
+      stock: p.stock,
+      unit: p.unit,
+      latitude: p.latitude,
+      longitude: p.longitude,
+      harvestDate: p.harvestDate ? p.harvestDate.toISOString() : null,
+      farmerName: p.farmer.sellerApplication?.businessName || p.farmer.name || "Petani",
+      origin: p.origin || p.farmer.sellerApplication?.businessAddress || "Lokasi tidak diketahui",
+    };
   }));
 
   return <JejakView products={productRows} />;

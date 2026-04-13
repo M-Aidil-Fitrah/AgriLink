@@ -21,7 +21,7 @@ export default async function DashboardOverview() {
   const session = await auth();
   if (!session) return null;
 
-  const [ordersCount, favorites, products, spending, itemsCount] = await Promise.all([
+    const [ordersCount, favorites, productsRaw, spending, itemsCount] = await Promise.all([
     prisma.order.count({ where: { userId: session.user.id } }),
     prisma.favorite.count({ where: { userId: session.user.id } }),
     prisma.product.findMany({
@@ -52,6 +52,17 @@ export default async function DashboardOverview() {
         _sum: { quantity: true }
     }),
   ]);
+
+  // Resolve image paths to URLs
+  const { supabaseServer } = await import("@/lib/supabaseServer");
+  const products = productsRaw.map((product) => {
+    const images = (product.images as string[] || []).map((path) => {
+      if (path.startsWith("http")) return path;
+      const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
+      return publicUrl;
+    });
+    return { ...product, images };
+  });
 
   const totalSpent = spending._sum.total ?? 0;
   const totalBought = itemsCount._sum.quantity ?? 0;

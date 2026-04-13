@@ -137,10 +137,57 @@ export async function getAllApplications() {
   const session = await auth();
   if (!session || session.user.role !== "ADMIN") return [];
 
-  return prisma.sellerApplication.findMany({
-    include: {
-      user: { select: { id: true, name: true, email: true, role: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const apps = await prisma.sellerApplication.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Generate signed URLs for private photos on the server
+    const { supabaseServer } = await import("@/lib/supabaseServer");
+    
+    const enrichedApps = await Promise.all(apps.map(async (app) => {
+      // 1. KTP Signed URL
+      let ktpUrl = app.ktpPhotoUrl;
+      if (app.ktpPhotoUrl && !app.ktpPhotoUrl.startsWith('http')) {
+        const { data } = await supabaseServer.storage
+          .from("verifikasi-seller")
+          .createSignedUrl(app.ktpPhotoUrl, 3600);
+        if (data) ktpUrl = data.signedUrl;
+      }
+
+      // 2. Selfie Signed URL
+      let selfieUrl = app.selfiePhotoUrl;
+      if (app.selfiePhotoUrl && !app.selfiePhotoUrl.startsWith('http')) {
+        const { data } = await supabaseServer.storage
+          .from("verifikasi-seller")
+          .createSignedUrl(app.selfiePhotoUrl, 3600);
+        if (data) selfieUrl = data.signedUrl;
+      }
+
+      // 3. Business Photo (Public or Private depending on bucket)
+      let businessUrl = app.businessPhotoUrl;
+      if (app.businessPhotoUrl && !app.businessPhotoUrl.startsWith('http')) {
+        const { data: { publicUrl } } = supabaseServer.storage
+          .from("agrilink-uploads")
+          .getPublicUrl(app.businessPhotoUrl);
+        businessUrl = publicUrl;
+      }
+
+      return {
+        ...app,
+        ktpPhotoUrl: ktpUrl,
+        selfiePhotoUrl: selfieUrl,
+        businessPhotoUrl: businessUrl
+      };
+    }));
+
+    return enrichedApps;
+  } catch (error) {
+    console.error("GET_ALL_APPLICATIONS_ERROR:", error);
+    // Jika koneksi terputus, Prisma mungkin butuh direfresh atau ini masalah sementara
+    return [];
+  }
 }

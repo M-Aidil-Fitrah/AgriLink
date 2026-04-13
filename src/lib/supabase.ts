@@ -9,21 +9,33 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * Mendapatkan URL Publik atau Signed URL untuk Storage
  */
 export async function getImageUrl(path: string, bucket: string, isPrivate: boolean = false) {
-  if (isPrivate) {
-    // Generate signed URL valid for 1 hour
-    const { data, error } = await supabase.storage
+  if (!path) return null;
+
+  try {
+    if (isPrivate) {
+      console.log(`[Storage] Mencoba membuat Signed URL untuk: ${bucket}/${path}`);
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(path, 3600);
+      
+      if (error) {
+        console.error(`[Storage Error] Gagal Signed URL (${bucket}):`, error);
+        // Fallback ke public URL jika signed gagal, siapa tahu bucket sebenarnya publik
+        const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
+        return publicUrl;
+      }
+      return data.signedUrl;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
       .from(bucket)
-      .createSignedUrl(path, 3600);
-    
-    if (error) return null;
-    return data.signedUrl;
+      .getPublicUrl(path);
+
+    return publicUrl;
+  } catch (err) {
+    console.error(`[Storage Crash] Exception in getImageUrl:`, err);
+    return null;
   }
-
-  const { data: { publicUrl } } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(path);
-
-  return publicUrl;
 }
 
 /**

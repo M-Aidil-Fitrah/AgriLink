@@ -23,7 +23,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
   const session = await auth();
   if (!session) return null;
 
-  const products = (await prisma.product.findMany({
+  const productsRaw = (await prisma.product.findMany({
     where: {
       stock: { gt: 0 },
       ...(q ? {
@@ -60,6 +60,17 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
     },
     orderBy: { createdAt: "desc" },
   })) as ProductWithFarmer[];
+
+  // Resolve image paths to URLs
+  const { supabaseServer } = await import("@/lib/supabaseServer");
+  const products = productsRaw.map((product) => {
+    const images = (product.images as string[] || []).map((path) => {
+      if (path.startsWith("http")) return path;
+      const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
+      return publicUrl;
+    });
+    return { ...product, images };
+  });
 
   const userFavorites = await prisma.favorite.findMany({
     where: { userId: session.user.id },
