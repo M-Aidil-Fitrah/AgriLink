@@ -5,7 +5,17 @@ export default async function JejakPage() {
   const products = await prisma.product.findMany({
     where: { stock: { gt: 0 } },
     include: {
-      farmer: { select: { name: true } },
+      farmer: { 
+        select: { 
+          name: true,
+          sellerApplication: {
+            select: {
+              businessName: true,
+              businessAddress: true
+            }
+          }
+        } 
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -20,8 +30,8 @@ export default async function JejakPage() {
     latitude: p.latitude,
     longitude: p.longitude,
     harvestDate: p.harvestDate ? p.harvestDate.toISOString() : null,
-    farmerName: p.farmer.name,
-    origin: p.origin,
+    farmerName: p.farmer.sellerApplication?.businessName || p.farmer.name || "Petani",
+    origin: p.origin || p.farmer.sellerApplication?.businessAddress || "Lokasi tidak diketahui",
   }));
 
   return <JejakView products={productRows} />;

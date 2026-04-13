@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AddToCartButton } from "./AddToCartButton";
 import { ProductWithFarmer } from "@/lib/types";
+import { MapPin } from "lucide-react";
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   ORGANIC: "Organik",
@@ -25,11 +26,37 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
   const products = (await prisma.product.findMany({
     where: {
       stock: { gt: 0 },
-      ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
+      ...(q ? {
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { origin: { contains: q, mode: "insensitive" } },
+          {
+            farmer: {
+              sellerApplication: {
+                OR: [
+                  { businessName: { contains: q, mode: "insensitive" } },
+                  { businessAddress: { contains: q, mode: "insensitive" } },
+                ]
+              }
+            }
+          }
+        ]
+      } : {}),
       ...(method ? { cultivationMethod: method as CultivationMethod } : {}),
     },
     include: {
-      farmer: { select: { id: true, name: true } },
+      farmer: { 
+        select: { 
+          id: true, 
+          name: true,
+          sellerApplication: {
+            select: {
+              businessName: true,
+              businessAddress: true
+            }
+          }
+        } 
+      },
     },
     orderBy: { createdAt: "desc" },
   })) as ProductWithFarmer[];
@@ -46,43 +73,45 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
         <div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Katalog Produk</h2>
           <p className="text-sm text-gray-500 font-medium">
-            {products.length} produk dari petani lokal
+            {products.length} produk dari mitra petani kami
           </p>
         </div>
-        <form method="GET" className="flex gap-2">
+        <form method="GET" className="flex items-center gap-2">
           <input
             name="q"
             defaultValue={q}
-            placeholder="Cari produk..."
-            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-emerald-500 w-48 shadow-sm"
+            placeholder="Cari produk, toko, atau lokasi..."
+            className="px-4 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-bold text-gray-900 placeholder:text-gray-400 placeholder:font-semibold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all w-full sm:w-64 md:w-72 shadow-sm"
           />
           <select
             name="method"
             defaultValue={method}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 outline-none focus:border-emerald-500 shadow-sm"
+            className="px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm"
           >
-            <option value="">Semua</option>
+            <option value="">Semua Filter</option>
             {Object.entries(CULTIVATION_LABELS).map(([val, label]) => (
               <option key={val} value={val}>{label}</option>
             ))}
           </select>
-          <button type="submit" className="px-5 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition-all shadow-md">
-            Filter
+          <button type="submit" className="px-5 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition-all shadow-md focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 shrink-0">
+            Cari
           </button>
         </form>
       </div>
 
       {products.length === 0 ? (
         <div className="py-20 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-          <p className="text-sm text-gray-500 font-medium">Produk tidak tersedia</p>
+          <p className="text-sm text-gray-500 font-medium">Produk tidak ditemukan sesuai kata kunci Anda</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {products.map((product) => {
-            const distance = product.latitude != null && product.longitude != null
-                ? calculateFoodMiles(product.latitude, product.longitude, BUYER_LAT, BUYER_LON)
-                : null;
+             const _distance = product.latitude != null && product.longitude != null 
+                 ? calculateFoodMiles(product.latitude, product.longitude, BUYER_LAT, BUYER_LON) 
+                 : null;
             const isFavorited = favoritedIds.has(product.id);
+            const businessName = product.farmer.sellerApplication?.businessName || product.farmer.name || "Petani";
+            const location = product.origin || product.farmer.sellerApplication?.businessAddress || "Lokasi tidak diketahui";
 
             return (
               <div key={product.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
@@ -96,7 +125,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                       sizes="(max-width: 640px) 50vw, 20vw"
                     />
                   </Link>
-                  <div className="absolute top-2 left-2">
+                  <div className="absolute top-2 left-2 flex gap-1 items-start flex-col">
                     <span className="px-2 py-0.5 bg-white/90 backdrop-blur-sm rounded-lg text-[9px] font-bold text-emerald-800 uppercase tracking-wider shadow-sm border border-emerald-50">
                       {CULTIVATION_LABELS[product.cultivationMethod]}
                     </span>
@@ -109,9 +138,15 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                 <div className="p-3.5 flex flex-col flex-1">
                   <Link href={`/dashboard/produk/${product.id}`} className="mb-3">
                     <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover:text-emerald-600 transition-colors uppercase truncate tracking-tight">{product.name}</h3>
-                    <div className="flex items-center gap-1.5 mt-1 opacity-70">
-                       <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
-                       <p className="text-[10px] font-semibold text-gray-500 truncate">{product.farmer.name || "Petani"}</p>
+                    <div className="flex flex-col gap-1 mt-1.5 opacity-80">
+                       <div className="flex items-center gap-1.5">
+                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0"></div>
+                         <p className="text-[10px] font-bold text-gray-700 truncate uppercase mt-0.5">{businessName}</p>
+                       </div>
+                       <div className="flex items-center gap-1 text-gray-500">
+                         <MapPin className="w-2.5 h-2.5 shrink-0" />
+                         <p className="text-[9px] font-bold truncate tracking-wide">{location}</p>
+                       </div>
                     </div>
                   </Link>
 
@@ -132,7 +167,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
                         images: product.images || [],
                         unit: product.unit,
                         farmerId: product.farmer.id,
-                        farmerName: product.farmer.name || "Petani",
+                        farmerName: businessName,
                       }}
                     />
                   </div>

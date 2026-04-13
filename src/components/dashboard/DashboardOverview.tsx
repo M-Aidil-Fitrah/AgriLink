@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Package, Heart, TreePine, ShoppingCart } from "lucide-react";
+import { Package, Heart, TreePine, ShoppingCart, MapPin } from "lucide-react";
 import { calculateFoodMiles } from "@/lib/metrics";
 import { ProductWithFarmer } from "@/lib/types";
 import Image from "next/image";
@@ -27,7 +27,20 @@ export default async function DashboardOverview() {
     prisma.product.findMany({
       take: 4,
       where: { stock: { gt: 0 } },
-      include: { farmer: { select: { id: true, name: true } } },
+      include: { 
+        farmer: { 
+          select: { 
+            id: true, 
+            name: true,
+            sellerApplication: {
+              select: {
+                businessName: true,
+                businessAddress: true
+              }
+            } 
+          } 
+        } 
+      },
       orderBy: { createdAt: "desc" },
     }) as Promise<ProductWithFarmer[]>,
     prisma.order.aggregate({
@@ -102,44 +115,55 @@ export default async function DashboardOverview() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {products.map((product) => (
-            <div key={product.id} className="group bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
-              <div className="relative aspect-16/11 rounded-t-2xl overflow-hidden bg-gray-50">
-                <Link href={`/dashboard/produk/${product.id}`}>
-                  <Image 
-                    src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
-                    alt={product.name} 
-                    fill 
-                    className="object-cover group-hover:scale-105 transition-all duration-300"
-                    sizes="(max-width: 640px) 50vw, 25vw"
-                  />
-                </Link>
-                <div className="absolute top-2 left-2">
-                  <span className="px-1.5 py-0.5 bg-white/90 backdrop-blur-sm rounded-md text-[8px] font-bold text-emerald-800 uppercase shadow-sm">
-                    {CULTIVATION_LABELS[product.cultivationMethod]}
-                  </span>
-                </div>
-              </div>
-              <div className="p-3 flex flex-col flex-1">
-                <Link href={`/dashboard/produk/${product.id}`} className="mb-2">
-                  <h4 className="font-bold text-gray-900 text-[11px] truncate uppercase tracking-tight leading-none group-hover:text-emerald-600 transition-colors">{product.name}</h4>
-                  <div className="flex items-center gap-1.5 mt-1.5 opacity-70">
-                    <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
-                    <p className="text-[9px] font-semibold text-gray-500 truncate">{product.farmer.name || "Petani"}</p>
+          {products.map((product) => {
+             const businessName = product.farmer.sellerApplication?.businessName || product.farmer.name || "Petani";
+             const location = product.origin || product.farmer.sellerApplication?.businessAddress || "Lokasi tidak diketahui";
+             
+             return (
+              <div key={product.id} className="group bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
+                <div className="relative aspect-16/11 rounded-t-2xl overflow-hidden bg-gray-50">
+                  <Link href={`/dashboard/produk/${product.id}`}>
+                    <Image 
+                      src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
+                      alt={product.name} 
+                      fill 
+                      className="object-cover group-hover:scale-105 transition-all duration-300"
+                      sizes="(max-width: 640px) 50vw, 25vw"
+                    />
+                  </Link>
+                  <div className="absolute top-2 left-2 flex flex-col gap-1">
+                    <span className="px-1.5 py-0.5 bg-white/90 backdrop-blur-sm rounded-md text-[8px] font-bold text-emerald-800 uppercase shadow-sm">
+                      {CULTIVATION_LABELS[product.cultivationMethod]}
+                    </span>
                   </div>
-                </Link>
-                <div className="mt-auto pt-2 border-t border-gray-50 flex items-center justify-between">
-                  <div>
-                    <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-0.5">Mulai Dari</p>
-                    <div className="flex items-baseline gap-0.5">
-                      <span className="text-xs font-black text-emerald-700">Rp {product.price.toLocaleString("id-ID")}</span>
-                      <span className="text-[8px] font-bold text-gray-400">/{product.unit}</span>
+                </div>
+                <div className="p-3 flex flex-col flex-1">
+                  <Link href={`/dashboard/produk/${product.id}`} className="mb-2">
+                    <h4 className="font-bold text-gray-900 text-[11px] truncate uppercase tracking-tight leading-none group-hover:text-emerald-600 transition-colors">{product.name}</h4>
+                    <div className="flex flex-col gap-1 mt-1.5 opacity-80">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0"></div>
+                        <p className="text-[9px] font-bold text-gray-700 truncate uppercase mt-0.5">{businessName}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-500">
+                         <MapPin className="w-2.5 h-2.5 shrink-0" />
+                         <p className="text-[8px] font-bold truncate tracking-wide">{location}</p>
+                      </div>
+                    </div>
+                  </Link>
+                  <div className="mt-auto pt-2 border-t border-gray-50 flex items-center justify-between">
+                    <div>
+                      <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-0.5">Mulai Dari</p>
+                      <div className="flex items-baseline gap-0.5">
+                        <span className="text-xs font-black text-emerald-700">Rp {product.price.toLocaleString("id-ID")}</span>
+                        <span className="text-[8px] font-bold text-gray-400">/{product.unit}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

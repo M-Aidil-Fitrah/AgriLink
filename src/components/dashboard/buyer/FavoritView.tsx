@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { FavoriteWithProduct } from "@/lib/types";
 import { FavoriteButton } from "./FavoriteButton";
-import { Heart } from "lucide-react";
+import { Heart, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -15,7 +15,18 @@ export async function FavoritView() {
     include: {
       product: {
         include: {
-          farmer: { select: { id: true, name: true } },
+          farmer: { 
+            select: { 
+              id: true, 
+              name: true,
+              sellerApplication: {
+                select: {
+                  businessName: true,
+                  businessAddress: true
+                }
+              }
+            } 
+          },
         },
       },
     },
@@ -38,7 +49,11 @@ export async function FavoritView() {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {favorites.map(({ product, id }) => (
+          {favorites.map(({ product, id }) => {
+            const businessName = product.farmer.sellerApplication?.businessName || product.farmer.name || "Petani";
+            const location = product.origin || product.farmer.sellerApplication?.businessAddress || "Lokasi tidak diketahui";
+
+            return (
             <div key={id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
               <div className="relative aspect-16/11 rounded-t-2xl overflow-hidden bg-gray-50">
                 <Link href={`/dashboard/produk/${product.id}`} className="block h-full">
@@ -52,7 +67,16 @@ export async function FavoritView() {
               <div className="p-3.5 flex flex-col flex-1">
                 <Link href={`/dashboard/produk/${product.id}`} className="mb-3">
                   <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover:text-emerald-600 truncate uppercase tracking-tight">{product.name}</h3>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase mt-1 leading-none">{product.farmer.name}</p>
+                  <div className="flex flex-col gap-1 mt-1.5 opacity-80">
+                     <div className="flex items-center gap-1.5">
+                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0"></div>
+                       <p className="text-[10px] font-bold text-gray-700 truncate uppercase mt-0.5">{businessName}</p>
+                     </div>
+                     <div className="flex items-center gap-1 text-gray-500">
+                       <MapPin className="w-2.5 h-2.5 shrink-0" />
+                       <p className="text-[9px] font-bold truncate tracking-wide">{location}</p>
+                     </div>
+                  </div>
                 </Link>
                 
                 <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-50">
@@ -69,7 +93,7 @@ export async function FavoritView() {
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>

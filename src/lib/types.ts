@@ -9,6 +9,10 @@ export type ProductWithFarmer = Product & {
   farmer: {
     id: string;
     name: string | null;
+    sellerApplication: {
+      businessName: string;
+      businessAddress: string;
+    } | null;
   };
 };
 
