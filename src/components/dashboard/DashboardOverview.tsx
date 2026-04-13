@@ -104,7 +104,7 @@ export default async function DashboardOverview() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {products.map((product) => (
             <div key={product.id} className="group bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
-              <div className="relative w-full aspect-[16/11] bg-gray-50 overflow-hidden">
+              <div className="relative aspect-16/11 rounded-t-2xl overflow-hidden bg-gray-50">
                 <Link href={`/dashboard/produk/${product.id}`}>
                   <Image 
                     src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 

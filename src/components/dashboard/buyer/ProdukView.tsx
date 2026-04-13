@@ -86,7 +86,7 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
 
             return (
               <div key={product.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
-                <div className="relative w-full aspect-[16/11] overflow-hidden">
+                <div className="relative w-full aspect-16/11 overflow-hidden">
                   <Link href={`/dashboard/produk/${product.id}`}>
                     <Image
                       src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"}

@@ -103,7 +103,7 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {computed.map((p) => (
           <div key={p.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
-            <div className="relative w-full aspect-[16/11] bg-gray-100 overflow-hidden">
+            <div className="relative w-full aspect-16/11 bg-gray-100 overflow-hidden">
               <Image src={p.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform" />
               {p.distance !== null && (
                 <div className="absolute top-2 left-2">

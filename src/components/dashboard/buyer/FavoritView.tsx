@@ -40,7 +40,7 @@ export async function FavoritView() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {favorites.map(({ product, id }) => (
             <div key={id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
-              <div className="relative w-full aspect-[16/11] bg-gray-100 overflow-hidden">
+              <div className="relative aspect-16/11 rounded-t-2xl overflow-hidden bg-gray-50">
                 <Link href={`/dashboard/produk/${product.id}`} className="block h-full">
                   <Image src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"} alt={product.name} fill className="object-cover group-hover:scale-105 transition-transform" />
                 </Link>

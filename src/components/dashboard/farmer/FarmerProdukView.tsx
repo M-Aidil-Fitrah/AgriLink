@@ -52,7 +52,7 @@ export async function FarmerProdukView() {
 
             return (
               <div key={product.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
-                <div className="relative w-full aspect-[16/11] overflow-hidden">
+                <div className="relative w-full aspect-16/11 overflow-hidden">
                   <Image
                     src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"}
                     alt={product.name}
