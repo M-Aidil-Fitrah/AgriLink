@@ -11,6 +11,8 @@ AgriLink merupakan aplikasi marketplace berbasis web yang dirancang untuk menghu
 
 Platform ini mengakomodasi dua jenis pengguna utama, yaitu petani sebagai penjual dan masyarakat umum sebagai pembeli. Dengan pendekatan tersebut, AgriLink berupaya memotong rantai distribusi yang panjang sehingga petani memperoleh keuntungan yang lebih adil, sementara konsumen mendapatkan produk yang lebih segar dengan harga yang kompetitif.
 
+Selain itu, sistem ini dikembangkan dengan pendekatan sustainable agriculture yang mengintegrasikan informasi penting seperti asal produk, jarak distribusi, serta tingkat kesegaran produk untuk meningkatkan transparansi kepada konsumen .
+
 ⚙️ Cara Kerja Sistem
 👨‍🌾 Sisi Petani
 
@@ -19,32 +21,35 @@ Petani dapat menggunakan sistem untuk:
 Membuat dan mengelola toko
 Menambahkan produk hasil pertanian
 Mengatur harga dan stok barang
-Melihat pesanan yang masuk
+Menampilkan informasi produk (lokasi, tanggal panen, metode budidaya)
 🛒 Sisi Pembeli
 
 Pengguna umum dapat:
 
-Mencari produk pertanian berdasarkan kategori atau lokasi
-Melihat detail produk dan informasi penjual
+Mencari produk berdasarkan kategori dan lokasi
+Melihat informasi detail produk (asal, kesegaran, jarak distribusi)
 Melakukan pemesanan produk
 Memantau status transaksi
 🚀 Fitur Utama
 Pencarian Produk Dinamis
-Memungkinkan pengguna menemukan produk berdasarkan filter tertentu.
+Memungkinkan pengguna menemukan produk secara efisien.
 Manajemen Toko Petani
-Petani dapat mengelola toko dan produk secara mandiri.
-Sistem Transaksi
-Mendukung proses pembelian dari pemilihan produk hingga checkout.
-Dashboard Pengguna
-Menampilkan informasi aktivitas seperti data produk dan pesanan.
-Antarmuka Responsif
-Dirancang agar optimal pada berbagai perangkat.
+Petani dapat mengelola produk secara mandiri.
+Traceability Produk
+Menampilkan asal produk, tanggal panen, dan metode budidaya.
+Food Miles Indicator
+Menampilkan estimasi jarak distribusi antara petani dan pembeli.
+Freshness Score
+Mengukur tingkat kesegaran produk berdasarkan selisih hari panen dan pembelian.
+Dashboard Admin
+Menampilkan statistik pengguna dan transaksi.
 🛠️ Teknologi yang Digunakan
 Framework : Next.js
 Bahasa Pemrograman : TypeScript
 Library UI : React
 Styling : CSS / Tailwind
-Database : (sesuaikan dengan implementasi)
+Backend : Next.js API / Node.js
+Database : PostgreSQL / MongoDB (disesuaikan implementasi)
 📊 Perancangan Sistem
 🧩 Entity Relationship Diagram (ERD)
 <p align="center"> <img src="https://github.com/user-attachments/assets/0d543ace-8173-480d-9fdb-51e513fb2e0e" width="75%"> </p>
@@ -59,11 +64,26 @@ Database : (sesuaikan dengan implementasi)
 <p align="center"> <img src="https://github.com/user-attachments/assets/0e23c52c-cdbe-4db3-8671-b368673516f9" width="55%"> </p>
 📌 Flowchart Pembeli
 <p align="center"> <img src="https://github.com/user-attachments/assets/72472785-186b-476d-b495-b04159feaa18" width="55%"> </p>
+🧪 Status Pengembangan (Minggu ke-7 / UTS)
+
+Pada tahap ini, sistem telah mencapai fase Minimum Viable Product (MVP) dengan capaian sebagai berikut:
+
+Sistem autentikasi pengguna (login & registrasi)
+Fitur dasar marketplace (listing produk & detail produk)
+Dashboard sederhana untuk petani
+Struktur database dan relasi utama telah terimplementasi
+Repository GitHub dan struktur proyek telah tersedia
+Diagram sistem (DFD, ERD, LRS) telah disusun
+Flowchart dan algoritma utama telah dirancang
+
+Tahap ini menandai bahwa sistem sudah dapat dijalankan (running system) sesuai dengan target UTS .
+
 🎯 Tujuan Pengembangan
 Meningkatkan akses pasar bagi petani lokal
 Mengurangi ketergantungan terhadap perantara
-Mendorong transparansi harga produk
-Mendukung ekosistem pertanian berkelanjutan
+Mendorong transparansi informasi produk
+Mendukung sistem pertanian berkelanjutan
+Mengimplementasikan konsep traceability dan sustainability dalam marketplace
 ⚙️ Cara Menjalankan Proyek
 # Clone repository
 git clone https://github.com/M-Aidil-Fitrah/AgriLink.git
