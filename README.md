@@ -1,6 +1,6 @@
 🌱 AgriLink – Sustainable Agriculture Marketplace
 📚 Tugas Proyek Mata Kuliah Proyek Perangkat Lunak
-👥 Disusun oleh:
+👥 Disusun oleh
 Muhammad Aidil Fitrah
 NIM: 2308107010035
 Muhammad Nazlul Ramadhyan
@@ -42,27 +42,18 @@ Menampilkan aktivitas seperti produk dan pesanan.
 Antarmuka Responsif
 Tampilan tetap optimal di berbagai perangkat.
 🛠️ Teknologi yang Digunakan
-Framework : Next.js
-Bahasa : TypeScript
-Library UI : React
-Styling : CSS / Tailwind
-Database : (sesuaikan dengan implementasi proyek)
+Framework: Next.js
+Bahasa: TypeScript
+Library UI: React
+Styling: CSS / Tailwind
+Database: (sesuaikan dengan project kamu)
 📊 Perancangan Sistem
 🧩 ERD (Entity Relationship Diagram)
 <p align="center"> <img src="https://github.com/user-attachments/assets/0d543ace-8173-480d-9fdb-51e513fb2e0e" width="80%"> </p>
-
-Menjelaskan hubungan antar entitas seperti user, produk, dan transaksi.
-
 🗃️ LRS (Logical Record Structure)
 <p align="center"> <img src="https://github.com/user-attachments/assets/6742949c-9019-4ef4-9512-818ca3e47143" width="80%"> </p>
-
-Menggambarkan struktur tabel database beserta relasi kunci.
-
 🔄 DFD (Data Flow Diagram)
 <p align="center"> <img src="https://github.com/user-attachments/assets/ea97e7ad-9d04-49ad-aaed-a63bc3c7d549" width="80%"> </p>
-
-Menunjukkan alur data dari pengguna hingga ke sistem penyimpanan.
-
 🔁 Flowchart
 📌 Flowchart Registrasi
 <p align="center"> <img src="https://github.com/user-attachments/assets/1b3847ca-2169-4c48-92da-5102c517ac4a" width="60%"> </p>
@@ -70,9 +61,6 @@ Menunjukkan alur data dari pengguna hingga ke sistem penyimpanan.
 <p align="center"> <img src="https://github.com/user-attachments/assets/0e23c52c-cdbe-4db3-8671-b368673516f9" width="60%"> </p>
 📌 Flowchart Pembeli
 <p align="center"> <img src="https://github.com/user-attachments/assets/72472785-186b-476d-b495-b04159feaa18" width="60%"> </p>
-
-Mengilustrasikan alur proses utama dalam sistem.
-
 🎯 Tujuan Pengembangan
 Meningkatkan akses pasar bagi petani lokal
 Mengurangi ketergantungan pada perantara
