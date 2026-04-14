@@ -3,7 +3,6 @@ import { TopHeader } from "@/components/dashboard/TopHeader";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { CartProvider } from "@/context/CartContext";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -18,18 +17,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/login");
 
   return (
-    <CartProvider>
-      <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-        <Sidebar user={user} />
-        <main className="flex-1 flex flex-col overflow-hidden relative">
-          <TopHeader user={user} />
-          <div className="flex-1 overflow-y-auto w-full flex justify-center">
-              <div className="w-full max-w-[1400px]">
-                 {children}
-              </div>
-          </div>
-        </main>
-      </div>
-    </CartProvider>
+    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
+      <Sidebar user={user} />
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        <TopHeader user={user} />
+        <div className="flex-1 overflow-y-auto w-full flex justify-center">
+            <div className="w-full max-w-[1400px]">
+               {children}
+            </div>
+        </div>
+      </main>
+    </div>
   );
 }
