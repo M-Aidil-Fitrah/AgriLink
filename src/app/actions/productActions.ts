@@ -163,3 +163,57 @@ export async function getStoreLocations(): Promise<ProductWithFarmer[]> {
 
   return products as ProductWithFarmer[];
 }
+
+export async function searchProducts(query: string): Promise<ProductWithFarmer[]> {
+  if (!query || query.trim().length < 2) return [];
+
+  const productsRaw = await prisma.product.findMany({
+    where: {
+      OR: [
+        { name: { contains: query, mode: "insensitive" } },
+        { origin: { contains: query, mode: "insensitive" } },
+        {
+          farmer: {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              {
+                sellerApplication: {
+                  businessName: { contains: query, mode: "insensitive" },
+                },
+              },
+            ],
+          },
+        },
+      ],
+      stock: { gt: 0 },
+    },
+    include: {
+      farmer: {
+        select: {
+          id: true,
+          name: true,
+          sellerApplication: {
+            select: {
+              businessName: true,
+              businessAddress: true,
+            },
+          },
+        },
+      },
+    },
+    take: 10,
+    orderBy: { createdAt: "desc" },
+  });
+
+  const { supabaseServer } = await import("@/lib/supabaseServer");
+  const products = productsRaw.map((product) => {
+    const images = (product.images as string[] || []).map((path) => {
+      if (path.startsWith("http")) return path;
+      const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
+      return publicUrl;
+    });
+    return { ...product, images };
+  });
+
+  return products as any[];
+}

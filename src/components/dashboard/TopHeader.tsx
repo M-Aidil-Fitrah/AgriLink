@@ -1,10 +1,11 @@
 "use client";
 
-import { Search, ShoppingCart, LogOut } from "lucide-react";
+import { ShoppingCart, LogOut } from "lucide-react";
 import { LocationDisplay } from "./LocationDisplay";
 import { logout } from "@/app/actions/authActions";
 import { useCart } from "@/context/CartContext";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { SearchBar } from "./SearchBar";
 
 export function TopHeader({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } }) {
   const { totalItems, openCart } = useCart();
@@ -12,14 +13,7 @@ export function TopHeader({ user }: { user: { id: string, name: string | null, e
   return (
     <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-800 shrink-0">
 
-      <div className="w-full max-w-xl relative">
-        <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          placeholder="Cari produk segar, petani, atau lokasi..."
-          className="w-full bg-gray-100/50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 text-gray-900 text-sm font-medium rounded-full pl-12 pr-4 py-2.5 outline-none transition-all"
-        />
-      </div>
+      <SearchBar />
       <div className="flex items-center gap-5 ml-4">
         <LocationDisplay />
         <NotificationDropdown />
