@@ -1,11 +1,12 @@
 🌱 AgriLink – Sustainable Agriculture Marketplace
 📚 Tugas Proyek Mata Kuliah Proyek Perangkat Lunak
-
-Disusun oleh:
-
-Muhammad Aidil Fitrah (2308107010035)
-Muhammad Nazlul Ramadhyan (2308107010036)
-Naufal Farrel Syafilan (2308107010058)
+👥 Disusun oleh:
+Muhammad Aidil Fitrah
+NIM: 2308107010035
+Muhammad Nazlul Ramadhyan
+NIM: 2308107010036
+Naufal Farrel Syafilan
+NIM: 2308107010058
 📝 Deskripsi Sistem
 
 AgriLink adalah aplikasi marketplace berbasis web yang dirancang untuk menghubungkan petani langsung dengan konsumen dalam satu platform terpadu. Sistem ini berfokus pada distribusi hasil pertanian yang lebih efisien, transparan, dan mendukung konsep pertanian berkelanjutan.
@@ -45,14 +46,23 @@ Framework : Next.js
 Bahasa : TypeScript
 Library UI : React
 Styling : CSS / Tailwind
-Database : (sesuaikan dengan project kamu, misalnya MySQL / MongoDB / Firebase)
+Database : (sesuaikan dengan implementasi proyek)
 📊 Perancangan Sistem
 🧩 ERD (Entity Relationship Diagram)
-<p align="center"> <img src="https://github.com/user-attachments/assets/0d543ace-8173-480d-9fdb-51e513fb2e0e" width="80%"> </p> Menjelaskan hubungan antar entitas seperti user, produk, dan transaksi.
+<p align="center"> <img src="https://github.com/user-attachments/assets/0d543ace-8173-480d-9fdb-51e513fb2e0e" width="80%"> </p>
+
+Menjelaskan hubungan antar entitas seperti user, produk, dan transaksi.
+
 🗃️ LRS (Logical Record Structure)
-<p align="center"> <img src="https://github.com/user-attachments/assets/6742949c-9019-4ef4-9512-818ca3e47143" width="80%"> </p> Menggambarkan struktur tabel database beserta relasi kunci.
+<p align="center"> <img src="https://github.com/user-attachments/assets/6742949c-9019-4ef4-9512-818ca3e47143" width="80%"> </p>
+
+Menggambarkan struktur tabel database beserta relasi kunci.
+
 🔄 DFD (Data Flow Diagram)
-<p align="center"> <img src="https://github.com/user-attachments/assets/ea97e7ad-9d04-49ad-aaed-a63bc3c7d549" width="80%"> </p> Menunjukkan alur data dari pengguna hingga ke sistem penyimpanan.
+<p align="center"> <img src="https://github.com/user-attachments/assets/ea97e7ad-9d04-49ad-aaed-a63bc3c7d549" width="80%"> </p>
+
+Menunjukkan alur data dari pengguna hingga ke sistem penyimpanan.
+
 🔁 Flowchart
 📌 Flowchart Registrasi
 <p align="center"> <img src="https://github.com/user-attachments/assets/1b3847ca-2169-4c48-92da-5102c517ac4a" width="60%"> </p>
