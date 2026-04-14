@@ -34,7 +34,9 @@ Selain itu, sistem ini mengintegrasikan konsep sustainable agriculture, melalui 
 Asal produk
 Jarak distribusi
 Tingkat kesegaran produk
+
 ⚙️ Cara Kerja Sistem
+
 👨‍🌾 Sisi Petani
 
 Petani dapat menggunakan sistem untuk:
@@ -51,6 +53,7 @@ Mencari produk berdasarkan kategori dan lokasi
 Melihat informasi detail produk (asal, kesegaran, jarak distribusi)
 Melakukan pemesanan produk
 Memantau status transaksi
+
 🚀 Fitur Utama
 Pencarian Produk Dinamis
 Memungkinkan pengguna menemukan produk secara cepat dan efisien
@@ -64,6 +67,7 @@ Freshness Score
 Mengukur tingkat kesegaran berdasarkan selisih hari panen
 Dashboard Admin
 Menampilkan statistik pengguna dan transaksi
+
 🛠️ Teknologi yang Digunakan
 Framework : Next.js
 Bahasa Pemrograman : TypeScript
@@ -71,6 +75,7 @@ Library UI : React
 Styling : CSS / Tailwind
 Backend : Next.js API / Node.js
 Database : PostgreSQL
+
 📊 Perancangan Sistem
 🧩 Entity Relationship Diagram (ERD)
 <p align="center"> <img src="https://github.com/user-attachments/assets/0d543ace-8173-480d-9fdb-51e513fb2e0e" width="75%"> </p>
@@ -94,12 +99,15 @@ Mengurangi ketergantungan terhadap perantara
 Mendorong transparansi informasi produk
 Mendukung pertanian berkelanjutan
 Mengimplementasikan konsep traceability & sustainability
+
 📄 Dokumen Pendukung
 📘 User Requirement Document (URD)
 https://docs.google.com/document/d/1w1JcOjfCY90XgQjiL-b7IVcGOMHj7iU-jtpBoPvsBLQ/edit?usp=sharing
 📗 Dokumen Analisis Sistem
 https://docs.google.com/document/d/1dfHx8PzCHnCt9IX82Oufw17IqljvWLxdCAHS6oKTa4c/edit?usp=sharing
 ⚙️ Cara Menjalankan Proyek
+
+
 # Clone repository
 git clone https://github.com/M-Aidil-Fitrah/AgriLink.git
 
