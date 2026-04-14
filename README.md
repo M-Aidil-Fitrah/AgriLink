@@ -1,5 +1,6 @@
 🌱 AgriLink – Sustainable Agriculture Marketplace
 📚 Tugas Proyek Mata Kuliah Proyek Perangkat Lunak
+
 👥 Tim Pengembang
 Nama	NIM
 Muhammad Aidil Fitrah	2308107010035
@@ -7,6 +8,8 @@ Muhammad Aidil Fitrah	2308107010035
 Muhammad Nazlul Ramadhyan	2308107010036
 
 Naufal Farrel Syafilan	2308107010058
+
+
 📝 Deskripsi Sistem
 
 AgriLink merupakan aplikasi marketplace berbasis web yang dirancang untuk menghubungkan petani secara langsung dengan konsumen dalam satu platform terpadu. Sistem ini berfokus pada peningkatan efisiensi distribusi hasil pertanian, transparansi harga, serta mendukung praktik pertanian berkelanjutan.
@@ -24,6 +27,7 @@ Membuat dan mengelola toko
 Menambahkan produk hasil pertanian
 Mengatur harga dan stok barang
 Menampilkan informasi produk (lokasi, tanggal panen, metode budidaya)
+
 🛒 Sisi Pembeli
 
 Pengguna umum dapat:
@@ -32,6 +36,7 @@ Mencari produk berdasarkan kategori dan lokasi
 Melihat informasi detail produk (asal, kesegaran, jarak distribusi)
 Melakukan pemesanan produk
 Memantau status transaksi
+
 🚀 Fitur Utama
 Pencarian Produk Dinamis
 Memungkinkan pengguna menemukan produk secara efisien.
@@ -45,13 +50,15 @@ Freshness Score
 Mengukur tingkat kesegaran produk berdasarkan selisih hari panen dan pembelian.
 Dashboard Admin
 Menampilkan statistik pengguna dan transaksi.
+
 🛠️ Teknologi yang Digunakan
 Framework : Next.js
 Bahasa Pemrograman : TypeScript
 Library UI : React
 Styling : CSS / Tailwind
 Backend : Next.js API / Node.js
-Database : PostgreSQL / MongoDB (disesuaikan implementasi)
+Database : PostgreSQL 
+
 📊 Perancangan Sistem
 🧩 Entity Relationship Diagram (ERD)
 <p align="center"> <img src="https://github.com/user-attachments/assets/0d543ace-8173-480d-9fdb-51e513fb2e0e" width="75%"> </p>
