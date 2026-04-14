@@ -1,4 +1,4 @@
-<img width="3414" height="1756" alt="LRS PPL" src="https://github.com/user-attachments/assets/87a73a1b-b460-4ff1-ada8-575a43672961" />🌱 AgriLink – Sustainable Agriculture Marketplace
+🌱 AgriLink – Sustainable Agriculture Marketplace
 Tugas Proyek Mata Kuliah Proyek Perangkat Lunak
 
 Disusun oleh:
