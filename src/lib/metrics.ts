@@ -1,7 +1,9 @@
 import { FoodMilesCategory, FreshnessResult } from "./types";
 
 /**
- * Haversine formula – menghitung jarak dua titik dalam km.
+ * Haversine formula – menghitung jarak garis lurus dua titik dalam km.
+ * Menggunakan circuity factor 1.23 sebagai estimasi koreksi jalan darat.
+ * (rata-rata empiris jaringan jalan perkotaan Indonesia)
  */
 export function calculateFoodMiles(
   lat1: number,
@@ -18,8 +20,43 @@ export function calculateFoodMiles(
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
-  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  // Kalikan dengan circuity factor 1.23 untuk estimasi jarak via jalan
+  const rawKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return parseFloat((rawKm * 1.23).toFixed(1));
 }
+
+/**
+ * Menghitung jarak rute perjalanan nyata (jalan darat) menggunakan OSRM API.
+ * Jika API gagal/rate-limit, akan fallback menggunakan faktor rute (Haversine * 1.35).
+ */
+export async function calculateRoadDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): Promise<number> {
+  try {
+    const response = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`,
+      { next: { revalidate: 3600 } } // Cache 1 jam, cegah rate limit
+    );
+    if (!response.ok) throw new Error("OSRM Rate limit or error");
+    
+    const data = await response.json();
+    if (data.code !== "Ok" || !data.routes || data.routes.length === 0) {
+      throw new Error("No route found");
+    }
+    
+    // Distance in meters, convert to KM with 1 decimal place
+    const distanceKm = data.routes[0].distance / 1000;
+    return parseFloat(distanceKm.toFixed(1));
+  } catch (error) {
+    // Fallback: calculateFoodMiles sudah menyertakan circuity factor 1.23
+    const estimated = calculateFoodMiles(lat1, lon1, lat2, lon2);
+    return estimated;
+  }
+}
+
 
 /**
  * Klasifikasi jarak Food Miles.

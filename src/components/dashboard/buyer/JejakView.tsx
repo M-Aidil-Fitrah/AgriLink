@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { calculateFoodMiles, getFoodMilesCategory } from "@/lib/metrics";
+import { useEffect, useState } from "react";
+import { calculateRoadDistance, getFoodMilesCategory } from "@/lib/metrics";
 import { FoodMilesCategory, ProductRow } from "@/lib/types";
-import { MapPin, Leaf, AlertCircle, ArrowRight } from "lucide-react";
+import { MapPin, Leaf, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -16,14 +16,13 @@ export function JejakView({ products }: { products: ProductRow[] }) {
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLon, setUserLon] = useState<number | null>(null);
   const [locationError, setLocationError] = useState(false);
+  const [computed, setComputed] = useState<ProductWithMetrics[]>([]);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserLat(5.5483);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserLon(95.3238);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocationError(true);
       return;
     }
@@ -41,23 +40,32 @@ export function JejakView({ products }: { products: ProductRow[] }) {
     );
   }, []);
 
-  const computed = useMemo(() => {
-    if (userLat === null || userLon === null) return [];
+  useEffect(() => {
+    async function calculateAllDistances() {
+      if (userLat === null || userLon === null || products.length === 0) return;
+      
+      setIsCalculating(true);
+      const results = await Promise.all(
+        products.map(async (p) => {
+          let distance: number | null = null;
+          if (p.latitude != null && p.longitude != null) {
+            // Memanggil JARAK JALAN ASLI via OSRM
+            distance = await calculateRoadDistance(p.latitude, p.longitude, userLat, userLon);
+          }
+          const distanceCat = distance !== null ? getFoodMilesCategory(distance) : null;
+          return { ...p, distance, distanceCat };
+        })
+      );
 
-    const result: ProductWithMetrics[] = products.map((p) => {
-      const distance =
-        p.latitude != null && p.longitude != null
-          ? calculateFoodMiles(p.latitude, p.longitude, userLat, userLon)
-          : null;
-      const distanceCat = distance !== null ? getFoodMilesCategory(distance) : null;
-      return { ...p, distance, distanceCat };
-    });
+      setComputed(results.sort((a, b) => {
+        if (a.distance === null) return 1;
+        if (b.distance === null) return -1;
+        return a.distance - b.distance;
+      }));
+      setIsCalculating(false);
+    }
 
-    return result.sort((a, b) => {
-      if (a.distance === null) return 1;
-      if (b.distance === null) return -1;
-      return a.distance - b.distance;
-    });
+    calculateAllDistances();
   }, [userLat, userLon, products]);
 
   const validDistances = computed
@@ -65,16 +73,24 @@ export function JejakView({ products }: { products: ProductRow[] }) {
     .filter((d): d is number => d !== null);
   const avgMiles =
     validDistances.length > 0
-      ? Math.round(validDistances.reduce((a, b) => a + b, 0) / validDistances.length)
+      ? parseFloat((validDistances.reduce((a, b) => a + b, 0) / validDistances.length).toFixed(1))
       : null;
 
   return (
     <div className="p-6 pb-20 max-w-[1400px] mx-auto">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Traceability</h2>
-        <p className="text-sm text-gray-400 font-medium">
-          Ditelusuri dari lahan petani ke lokasi Anda
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Traceability</h2>
+          <p className="text-sm text-gray-400 font-medium">
+            Ditelusuri dari lahan petani ke lokasi Anda
+          </p>
+        </div>
+        {isCalculating && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 animate-pulse">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-xs font-bold uppercase tracking-wider">Menghitung Jarak Jalan Nyata...</span>
+          </div>
+        )}
       </div>
 
       {avgMiles !== null && (
@@ -105,21 +121,21 @@ export function JejakView({ products }: { products: ProductRow[] }) {
           <div key={p.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
             <div className="relative w-full aspect-16/11 bg-gray-100 overflow-hidden">
               <Image src={p.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform" />
-              {p.distance !== null && (
-                <div className="absolute top-2 left-2">
-                  <span className="px-2 py-0.5 bg-black/50 backdrop-blur-md rounded-lg text-[9px] font-black text-white shadow-sm border border-white/20 uppercase">
-                    {p.distance} KM
-                  </span>
-                </div>
-              )}
             </div>
 
             <div className="p-3.5 flex flex-col flex-1">
               <div className="mb-4">
                 <h4 className="font-bold text-gray-900 text-sm truncate uppercase tracking-tight">{p.name}</h4>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                   <MapPin className="w-2.5 h-2.5 text-emerald-500" />
-                   <p className="text-[10px] text-gray-400 font-bold uppercase truncate">{p.origin || "Lokasi Petani"}</p>
+                <div className="flex flex-col gap-1 mt-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="w-2.5 h-2.5 text-emerald-500" />
+                    <p className="text-[10px] text-gray-400 font-bold uppercase truncate">{p.origin || "Lokasi Petani"}</p>
+                  </div>
+                  {p.distance !== null && (
+                    <p className="text-[10px] text-emerald-600 font-bold">
+                      {p.distance.toFixed(1).replace(".", ",")} km dari lokasi Anda
+                    </p>
+                  )}
                 </div>
               </div>
 

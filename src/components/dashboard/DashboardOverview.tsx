@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Package, Heart, TreePine, ShoppingCart, MapPin } from "lucide-react";
-import { calculateFoodMiles } from "@/lib/metrics";
+import { calculateFoodMiles, calculateRoadDistance } from "@/lib/metrics";
 import { ProductWithFarmer } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,7 +21,7 @@ export default async function DashboardOverview() {
   const session = await auth();
   if (!session) return null;
 
-    const [ordersCount, favorites, productsRaw, spending, itemsCount] = await Promise.all([
+  const [ordersCount, favorites, productsRaw, spending, itemsCount] = await Promise.all([
     prisma.order.count({ where: { userId: session.user.id } }),
     prisma.favorite.count({ where: { userId: session.user.id } }),
     prisma.product.findMany({
@@ -52,6 +52,19 @@ export default async function DashboardOverview() {
         _sum: { quantity: true }
     }),
   ]);
+
+  // Hitung jarak terdekat secara nyata via jalan menggunakan OSRM/Fallback
+  const distances = await Promise.all(
+    productsRaw.map(async (p) => {
+      if (p.latitude != null && p.longitude != null) {
+        return await calculateRoadDistance(p.latitude, p.longitude, BUYER_LAT, BUYER_LON);
+      }
+      return null;
+    })
+  );
+  
+  const validDistances = distances.filter((d) => d !== null) as number[];
+  const minDistance = validDistances.length > 0 ? Math.min(...validDistances) : null;
 
   // Resolve image paths to URLs
   const { supabaseServer } = await import("@/lib/supabaseServer");
@@ -86,11 +99,13 @@ export default async function DashboardOverview() {
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 min-w-[200px]">
            <div className="w-11 h-11 rounded-full border-2 border-emerald-500 bg-emerald-50 flex items-center justify-center shrink-0">
-              <span className="text-xs font-black text-gray-900">5.2</span>
+              <span className="text-xs font-black text-gray-900">{minDistance ?? "-"}</span>
            </div>
            <div>
               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Jarak Terdekat</p>
-              <p className="text-xs font-bold text-gray-800 mt-1">Sangat Dekat</p>
+              <p className="text-xs font-bold text-gray-800 mt-1">
+                {minDistance !== null ? `${minDistance} km dari lokasi Anda` : "Belum tersedia"}
+              </p>
            </div>
         </div>
       </div>
