@@ -106,13 +106,15 @@ Mengimplementasikan konsep traceability & sustainability
 
 
 📄 Dokumen Pendukung
+
 📘 User Requirement Document (URD)
 https://docs.google.com/document/d/1w1JcOjfCY90XgQjiL-b7IVcGOMHj7iU-jtpBoPvsBLQ/edit?usp=sharing
+
 📗 Dokumen Analisis Sistem
 https://docs.google.com/document/d/1dfHx8PzCHnCt9IX82Oufw17IqljvWLxdCAHS6oKTa4c/edit?usp=sharing
+
+
 ⚙️ Cara Menjalankan Proyek
-
-
 # Clone repository
 git clone https://github.com/M-Aidil-Fitrah/AgriLink.git
 
