@@ -8,8 +8,10 @@ export default async function PetaPage() {
     <div className="h-[calc(100vh-80px)] p-6">
       <div className="h-full bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
         <div className="p-6 border-b border-gray-100">
-          <h2 className="text-2xl font-extrabold text-gray-900">Peta Sebaran Petani</h2>
-          <p className="text-sm text-gray-500 font-medium">Temukan lokasi petani lokal di sekitar Anda dan lihat produk segar yang mereka tawarkan.</p>
+          <h2 className="text-2xl font-extrabold text-gray-900">Peta Sebaran Toko</h2>
+          <p className="text-sm text-gray-500 font-medium">
+            Temukan lokasi toko petani lokal di sekitar Anda dan lihat produk segar yang mereka tawarkan.
+          </p>
         </div>
         <div className="flex-1 relative">
           <DynamicMap markers={storeLocations} />

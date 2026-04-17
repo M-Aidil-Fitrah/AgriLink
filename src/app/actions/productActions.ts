@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { CultivationMethod, Product } from "@prisma/client";
-import { ActionResult, ProductWithFarmer } from "@/lib/types";
+import { ActionResult, SellerLocation } from "@/lib/types";
 
 export type ProductInput = {
   name: string;
@@ -16,8 +16,6 @@ export type ProductInput = {
   harvestDate: string;
   cultivationMethod: CultivationMethod;
   origin: string;
-  latitude: number | null;
-  longitude: number | null;
 };
 
 export async function createProduct(
@@ -43,13 +41,11 @@ export async function createProduct(
         stock: input.stock,
         images: input.images,
         unit: input.unit || "kg",
-        harvestDate: (input.harvestDate && !isNaN(new Date(input.harvestDate).getTime())) 
-          ? new Date(input.harvestDate) 
+        harvestDate: (input.harvestDate && !isNaN(new Date(input.harvestDate).getTime()))
+          ? new Date(input.harvestDate)
           : null,
         cultivationMethod: input.cultivationMethod,
         origin: input.origin || null,
-        latitude: input.latitude,
-        longitude: input.longitude,
         farmerId: session.user.id,
       },
     });
@@ -61,12 +57,11 @@ export async function createProduct(
   } catch (error: unknown) {
     const err = error as Error;
     console.error("CREATE_PRODUCT_ERROR:", err);
-    
-    // Cek error spesifik Prisma jika ada
-    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === "P2002") {
-       return { success: false, error: "Nama produk ini sudah digunakan" };
+
+    if (err && typeof err === "object" && "code" in err && (err as { code: string }).code === "P2002") {
+      return { success: false, error: "Nama produk ini sudah digunakan" };
     }
-    
+
     return { success: false, error: `Gagal membuat produk di database: ${err.message || "Unknown error"}` };
   }
 }
@@ -95,13 +90,11 @@ export async function updateProduct(
         stock: input.stock,
         images: input.images,
         unit: input.unit || "kg",
-        harvestDate: (input.harvestDate && !isNaN(new Date(input.harvestDate).getTime())) 
-          ? new Date(input.harvestDate) 
+        harvestDate: (input.harvestDate && !isNaN(new Date(input.harvestDate).getTime()))
+          ? new Date(input.harvestDate)
           : null,
         cultivationMethod: input.cultivationMethod,
         origin: input.origin || null,
-        latitude: input.latitude,
-        longitude: input.longitude,
       },
     });
 
@@ -144,27 +137,47 @@ export async function getMyProducts(): Promise<Product[]> {
   });
 }
 
-export async function getStoreLocations(): Promise<ProductWithFarmer[]> {
-  const products = await prisma.product.findMany({
+/**
+ * Returns seller locations from their SellerApplication (not product coordinates).
+ */
+export async function getStoreLocations(): Promise<SellerLocation[]> {
+  const sellers = await prisma.sellerApplication.findMany({
     where: {
+      status: "APPROVED",
       latitude: { not: null },
       longitude: { not: null },
-      stock: { gt: 0 }
     },
-    include: {
-      farmer: {
-        select: {
-          id: true,
-          name: true,
-        }
-      }
-    }
+    select: {
+      userId: true,
+      businessName: true,
+      businessAddress: true,
+      businessType: true,
+      mainCommodity: true,
+      latitude: true,
+      longitude: true,
+      businessPhotoUrl: true,
+    },
   });
 
-  return products as ProductWithFarmer[];
+  return sellers as SellerLocation[];
 }
 
-export async function searchProducts(query: string): Promise<ProductWithFarmer[]> {
+export async function searchProducts(query: string): Promise<{
+  id: string;
+  name: string;
+  images: string[];
+  price: number;
+  unit: string;
+  origin: string | null;
+  farmer: {
+    id: string;
+    name: string | null;
+    sellerApplication: {
+      businessName: string;
+      businessAddress: string;
+    } | null;
+  };
+}[]> {
   if (!query || query.trim().length < 2) return [];
 
   const productsRaw = await prisma.product.findMany({
@@ -187,7 +200,13 @@ export async function searchProducts(query: string): Promise<ProductWithFarmer[]
       ],
       stock: { gt: 0 },
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      images: true,
+      price: true,
+      unit: true,
+      origin: true,
       farmer: {
         select: {
           id: true,
@@ -206,14 +225,12 @@ export async function searchProducts(query: string): Promise<ProductWithFarmer[]
   });
 
   const { supabaseServer } = await import("@/lib/supabaseServer");
-  const products = productsRaw.map((product) => {
-    const images = (product.images as string[] || []).map((path) => {
+  return productsRaw.map((product) => {
+    const images = (product.images as string[]).map((path) => {
       if (path.startsWith("http")) return path;
       const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
       return publicUrl;
     });
     return { ...product, images };
   });
-
-  return products as any[];
 }

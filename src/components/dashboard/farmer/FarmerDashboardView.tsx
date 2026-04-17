@@ -6,14 +6,18 @@ export async function FarmerDashboardView() {
   const session = await auth();
   if (!session) return null;
 
-  const [products, orders] = await Promise.all([
+  const [products, orders, sellerApp] = await Promise.all([
     prisma.product.findMany({
       where: { farmerId: session.user.id },
-      select: { id: true, stock: true, latitude: true, longitude: true },
+      select: { id: true, stock: true },
     }),
     prisma.order.findMany({
       where: { items: { some: { product: { farmerId: session.user.id } } } },
       select: { id: true, total: true, status: true, createdAt: true },
+    }),
+    prisma.sellerApplication.findFirst({
+      where: { userId: session.user.id },
+      select: { latitude: true, longitude: true },
     }),
   ]);
 
@@ -21,9 +25,7 @@ export async function FarmerDashboardView() {
   const activeOrders = orders.filter(
     (o) => o.status === "PENDING" || o.status === "PROCESSING" || o.status === "SHIPPED"
   ).length;
-  const productsWithLocation = products.filter(
-    (p) => p.latitude != null && p.longitude != null
-  ).length;
+  const hasLocation = sellerApp?.latitude != null && sellerApp?.longitude != null;
   const userName = session.user.name?.split(" ")[0] ?? "Petani";
 
   return (
@@ -66,8 +68,8 @@ export async function FarmerDashboardView() {
             color: "text-amber-600",
           },
           {
-            label: "Produk Berlokasi",
-            value: `${productsWithLocation}`,
+            label: "Lokasi Usaha",
+            value: hasLocation ? "Aktif" : "Belum",
             Icon: MapPin,
             bg: "bg-purple-50",
             color: "text-purple-600",

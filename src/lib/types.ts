@@ -34,8 +34,6 @@ export type OrderWithItems = Order & {
       images: string[];
       price: number;
       unit: string;
-      latitude: number | null;
-      longitude: number | null;
     };
   })[];
 };
@@ -47,11 +45,13 @@ export interface ProductRow {
   price: number;
   stock: number;
   unit: string;
-  latitude: number | null;
-  longitude: number | null;
   harvestDate: string | null;
   farmerName: string | null;
+  farmerId: string;
   origin: string | null;
+  // Seller location (from SellerApplication)
+  sellerLat: number | null;
+  sellerLon: number | null;
 }
 
 export type FoodMilesCategory = {
@@ -67,4 +67,30 @@ export type FreshnessResult = {
 
 export interface NearbyProductRow extends ProductRow {
   distance: number;
+}
+
+/** Represents a seller's business location (from SellerApplication) */
+export interface SellerLocation {
+  userId: string;
+  businessName: string;
+  businessAddress: string;
+  businessType: string;
+  mainCommodity: string;
+  latitude: number;
+  longitude: number;
+  businessPhotoUrl: string;
+}
+
+/** Seller info with product counts for the Toko page */
+export interface SellerWithProducts {
+  userId: string;
+  businessName: string;
+  businessAddress: string;
+  businessType: string;
+  mainCommodity: string;
+  description: string;
+  businessPhotoUrl: string;
+  latitude: number | null;
+  longitude: number | null;
+  productCount: number;
 }

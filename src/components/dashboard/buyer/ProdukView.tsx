@@ -1,12 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { calculateFoodMiles } from "@/lib/metrics";
 import { FavoriteButton } from "./FavoriteButton";
 import { CultivationMethod } from "@prisma/client";
 import Link from "next/link";
 import Image from "next/image";
 import { AddToCartButton } from "./AddToCartButton";
-import { ProductWithFarmer } from "@/lib/types";
 import { MapPin } from "lucide-react";
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
@@ -16,57 +14,66 @@ const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   OTHER: "Lainnya",
 };
 
-const BUYER_LAT = 5.5483;
-const BUYER_LON = 95.3238;
-
 export async function ProdukView({ q, method }: { q?: string; method?: string }) {
   const session = await auth();
   if (!session) return null;
 
-  const productsRaw = (await prisma.product.findMany({
+  const productsRaw = await prisma.product.findMany({
     where: {
       stock: { gt: 0 },
-      ...(q ? {
-        OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          { origin: { contains: q, mode: "insensitive" } },
-          {
-            farmer: {
-              sellerApplication: {
-                OR: [
-                  { businessName: { contains: q, mode: "insensitive" } },
-                  { businessAddress: { contains: q, mode: "insensitive" } },
-                ]
-              }
-            }
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" } },
+              { origin: { contains: q, mode: "insensitive" } },
+              {
+                farmer: {
+                  sellerApplication: {
+                    OR: [
+                      { businessName: { contains: q, mode: "insensitive" } },
+                      { businessAddress: { contains: q, mode: "insensitive" } },
+                    ],
+                  },
+                },
+              },
+            ],
           }
-        ]
-      } : {}),
+        : {}),
       ...(method ? { cultivationMethod: method as CultivationMethod } : {}),
     },
-    include: {
-      farmer: { 
-        select: { 
-          id: true, 
+    select: {
+      id: true,
+      name: true,
+      images: true,
+      price: true,
+      stock: true,
+      unit: true,
+      cultivationMethod: true,
+      origin: true,
+      farmer: {
+        select: {
+          id: true,
           name: true,
           sellerApplication: {
             select: {
               businessName: true,
-              businessAddress: true
-            }
-          }
-        } 
+              businessAddress: true,
+            },
+          },
+        },
       },
     },
     orderBy: { createdAt: "desc" },
-  })) as ProductWithFarmer[];
+  });
 
   // Resolve image paths to URLs
   const { supabaseServer } = await import("@/lib/supabaseServer");
   const products = productsRaw.map((product) => {
-    const images = (product.images as string[] || []).map((path) => {
+    const images = (product.images as string[]).map((path) => {
       if (path.startsWith("http")) return path;
-      const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
+      const {
+        data: { publicUrl },
+      } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
       return publicUrl;
     });
     return { ...product, images };
@@ -101,10 +108,15 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
           >
             <option value="">Semua Filter</option>
             {Object.entries(CULTIVATION_LABELS).map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
+              <option key={val} value={val}>
+                {label}
+              </option>
             ))}
           </select>
-          <button type="submit" className="px-5 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition-all shadow-md focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 shrink-0">
+          <button
+            type="submit"
+            className="px-5 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition-all shadow-md focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 shrink-0"
+          >
             Cari
           </button>
         </form>
@@ -112,24 +124,35 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
 
       {products.length === 0 ? (
         <div className="py-20 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-          <p className="text-sm text-gray-500 font-medium">Produk tidak ditemukan sesuai kata kunci Anda</p>
+          <p className="text-sm text-gray-500 font-medium">
+            Produk tidak ditemukan sesuai kata kunci Anda
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {products.map((product) => {
-             const _distance = product.latitude != null && product.longitude != null 
-                 ? calculateFoodMiles(product.latitude, product.longitude, BUYER_LAT, BUYER_LON) 
-                 : null;
             const isFavorited = favoritedIds.has(product.id);
-            const businessName = product.farmer.sellerApplication?.businessName || product.farmer.name || "Petani";
-            const location = product.origin || product.farmer.sellerApplication?.businessAddress || "Lokasi tidak diketahui";
+            const businessName =
+              product.farmer.sellerApplication?.businessName ||
+              product.farmer.name ||
+              "Petani";
+            const location =
+              product.origin ||
+              product.farmer.sellerApplication?.businessAddress ||
+              "Lokasi tidak diketahui";
 
             return (
-              <div key={product.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
+              <div
+                key={product.id}
+                className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
+              >
                 <div className="relative w-full aspect-16/11 overflow-hidden">
                   <Link href={`/dashboard/produk/${product.id}`}>
                     <Image
-                      src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"}
+                      src={
+                        product.images[0] ||
+                        "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=300"
+                      }
                       alt={product.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -148,34 +171,42 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
 
                 <div className="p-3.5 flex flex-col flex-1">
                   <Link href={`/dashboard/produk/${product.id}`} className="mb-3">
-                    <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover:text-emerald-600 transition-colors uppercase truncate tracking-tight">{product.name}</h3>
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover:text-emerald-600 transition-colors uppercase truncate tracking-tight">
+                      {product.name}
+                    </h3>
                     <div className="flex flex-col gap-1 mt-1.5 opacity-80">
-                       <div className="flex items-center gap-1.5">
-                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0"></div>
-                         <p className="text-[10px] font-bold text-gray-700 truncate uppercase mt-0.5">{businessName}</p>
-                       </div>
-                       <div className="flex items-center gap-1 text-gray-500">
-                         <MapPin className="w-2.5 h-2.5 shrink-0" />
-                         <p className="text-[9px] font-bold truncate tracking-wide">{location}</p>
-                       </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
+                        <p className="text-[10px] font-bold text-gray-700 truncate uppercase mt-0.5">
+                          {businessName}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <MapPin className="w-2.5 h-2.5 shrink-0" />
+                        <p className="text-[9px] font-bold truncate tracking-wide">{location}</p>
+                      </div>
                     </div>
                   </Link>
 
                   <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-50">
                     <div>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">Harga</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">
+                        Harga
+                      </p>
                       <div className="flex items-baseline gap-0.5">
-                        <span className="text-sm font-black text-emerald-700">Rp {product.price.toLocaleString("id-ID")}</span>
+                        <span className="text-sm font-black text-emerald-700">
+                          Rp {product.price.toLocaleString("id-ID")}
+                        </span>
                         <span className="text-[9px] font-bold text-gray-400">/ {product.unit}</span>
                       </div>
                     </div>
-                    <AddToCartButton 
+                    <AddToCartButton
                       item={{
                         id: product.id,
                         name: product.name,
                         price: product.price,
                         quantity: 1,
-                        images: product.images || [],
+                        images: product.images,
                         unit: product.unit,
                         farmerId: product.farmer.id,
                         farmerName: businessName,

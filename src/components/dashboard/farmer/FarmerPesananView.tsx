@@ -64,8 +64,6 @@ export async function FarmerPesananView() {
               images: true,
               price: true,
               unit: true,
-              latitude: true,
-              longitude: true,
             },
           },
         },

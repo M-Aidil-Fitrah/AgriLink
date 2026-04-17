@@ -14,6 +14,7 @@ import {
 const BUYER_LINKS = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Produk", href: "/dashboard/produk", icon: PackageSearch },
+  { name: "Toko", href: "/dashboard/toko", icon: Store },
   { name: "Peta", href: "/dashboard/peta", icon: Map },
   { name: "Pesanan", href: "/dashboard/pesanan", icon: ShoppingBag },
   { name: "Favorit", href: "/dashboard/favorit", icon: Heart },

@@ -50,7 +50,7 @@ export async function calculateRoadDistance(
     // Distance in meters, convert to KM with 1 decimal place
     const distanceKm = data.routes[0].distance / 1000;
     return parseFloat(distanceKm.toFixed(1));
-  } catch (error) {
+  } catch {
     // Fallback: calculateFoodMiles sudah menyertakan circuity factor 1.23
     const estimated = calculateFoodMiles(lat1, lon1, lat2, lon2);
     return estimated;

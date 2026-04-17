@@ -3,14 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, MapPin, Store, Leaf, X, Loader2 } from "lucide-react";
 import { searchProducts } from "@/app/actions/productActions";
-import { ProductWithFarmer } from "@/lib/types";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export function SearchBar() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<ProductWithFarmer[]>([]);
+  const [results, setResults] = useState<Awaited<ReturnType<typeof searchProducts>>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -137,7 +136,7 @@ export function SearchBar() {
                     <Search className="w-6 h-6 text-gray-400" />
                 </div>
                 <p className="text-sm font-semibold text-gray-900">Tidak ada hasil ditemukan</p>
-                <p className="text-xs text-gray-500 mt-1">Coba kata kunci lain untuk "{query}"</p>
+                <p className="text-xs text-gray-500 mt-1">Coba kata kunci lain untuk &quot;{query}&quot;</p>
               </div>
             ) : null}
           </div>
@@ -149,7 +148,7 @@ export function SearchBar() {
                 onClick={() => setIsOpen(false)}
                 className="block w-full text-center py-2 text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:bg-white rounded-lg transition-all"
               >
-                Lihat Semua Hasil Untuk "{query}"
+                Lihat Semua Hasil Untuk &quot;{query}&quot;
               </Link>
             </div>
           )}

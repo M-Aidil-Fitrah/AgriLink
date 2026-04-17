@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import Link from "next/link";
 import { DeleteProductButton } from "./DeleteProductButton";
-import { Package, Plus, Pencil, MapPin } from "lucide-react";
+import { Package, Plus, Pencil } from "lucide-react";
 import { CultivationMethod } from "@prisma/client";
 import Image from "next/image";
 
@@ -59,7 +59,6 @@ export async function FarmerProdukView() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {products.map((product) => {
-            const hasLocation = product.latitude != null && product.longitude != null;
 
             return (
               <div key={product.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
@@ -75,11 +74,6 @@ export async function FarmerProdukView() {
                     <span className="px-2 py-0.5 bg-white/90 backdrop-blur-sm rounded-lg text-[9px] font-bold text-emerald-800 uppercase shadow-sm">
                       {CULTIVATION_LABELS[product.cultivationMethod]}
                     </span>
-                    {hasLocation && (
-                      <span className="px-2 py-0.5 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase shadow-sm flex items-center gap-1">
-                        <MapPin className="w-2.5 h-2.5" />
-                      </span>
-                    )}
                   </div>
                   <div className="absolute bottom-2 right-2">
                     <div className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-white/50">

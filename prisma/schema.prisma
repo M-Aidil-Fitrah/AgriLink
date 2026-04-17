@@ -123,10 +123,6 @@ model Product {
   cultivationMethod CultivationMethod @default(CONVENTIONAL)
   origin            String?
 
-  latitude  Float?
-  longitude Float?
-  geog      Unsupported("geography(Point, 4326)")?
-
   farmerId String
   farmer   User   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
 
@@ -137,7 +133,6 @@ model Product {
   updatedAt DateTime @updatedAt
 
   @@index([farmerId])
-  @@index([name])
   @@index([cultivationMethod])
 }
 

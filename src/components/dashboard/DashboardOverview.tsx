@@ -1,8 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Package, Heart, TreePine, ShoppingCart, MapPin } from "lucide-react";
-import { calculateFoodMiles, calculateRoadDistance } from "@/lib/metrics";
-import { ProductWithFarmer } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
 import { CultivationMethod } from "@prisma/client";
@@ -14,9 +12,6 @@ const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
   OTHER: "Lainnya",
 };
 
-const BUYER_LAT = 5.5483;
-const BUYER_LON = 95.3238;
-
 export default async function DashboardOverview() {
   const session = await auth();
   if (!session) return null;
@@ -27,49 +22,43 @@ export default async function DashboardOverview() {
     prisma.product.findMany({
       take: 4,
       where: { stock: { gt: 0 } },
-      include: { 
-        farmer: { 
-          select: { 
-            id: true, 
+      select: {
+        id: true,
+        name: true,
+        images: true,
+        price: true,
+        unit: true,
+        cultivationMethod: true,
+        origin: true,
+        farmer: {
+          select: {
+            id: true,
             name: true,
             sellerApplication: {
               select: {
                 businessName: true,
-                businessAddress: true
-              }
-            } 
-          } 
-        } 
+                businessAddress: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
-    }) as Promise<ProductWithFarmer[]>,
+    }),
     prisma.order.aggregate({
       where: { userId: session.user.id },
       _sum: { total: true },
     }),
     prisma.orderItem.aggregate({
-        where: { order: { userId: session.user.id } },
-        _sum: { quantity: true }
+      where: { order: { userId: session.user.id } },
+      _sum: { quantity: true },
     }),
   ]);
-
-  // Hitung jarak terdekat secara nyata via jalan menggunakan OSRM/Fallback
-  const distances = await Promise.all(
-    productsRaw.map(async (p) => {
-      if (p.latitude != null && p.longitude != null) {
-        return await calculateRoadDistance(p.latitude, p.longitude, BUYER_LAT, BUYER_LON);
-      }
-      return null;
-    })
-  );
-  
-  const validDistances = distances.filter((d) => d !== null) as number[];
-  const minDistance = validDistances.length > 0 ? Math.min(...validDistances) : null;
 
   // Resolve image paths to URLs
   const { supabaseServer } = await import("@/lib/supabaseServer");
   const products = productsRaw.map((product) => {
-    const images = (product.images as string[] || []).map((path) => {
+    const images = (product.images as string[]).map((path) => {
       if (path.startsWith("http")) return path;
       const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
       return publicUrl;
@@ -98,15 +87,13 @@ export default async function DashboardOverview() {
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 min-w-[200px]">
-           <div className="w-11 h-11 rounded-full border-2 border-emerald-500 bg-emerald-50 flex items-center justify-center shrink-0">
-              <span className="text-xs font-black text-gray-900">{minDistance ?? "-"}</span>
-           </div>
-           <div>
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Jarak Terdekat</p>
-              <p className="text-xs font-bold text-gray-800 mt-1">
-                {minDistance !== null ? `${minDistance} km dari lokasi Anda` : "Belum tersedia"}
-              </p>
-           </div>
+          <div className="w-11 h-11 rounded-full border-2 border-emerald-500 bg-emerald-50 flex items-center justify-center shrink-0">
+            <Package className="w-5 h-5 text-emerald-700" />
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Total Pesanan</p>
+            <p className="text-sm font-bold text-gray-800 mt-1">{ordersCount} pesanan</p>
+          </div>
         </div>
       </div>
 
@@ -115,7 +102,7 @@ export default async function DashboardOverview() {
         {[
           { label: "Pesanan", value: ordersCount.toString(), Icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Favorit", value: favorites.toString(), Icon: Heart, color: "text-red-500", bg: "bg-red-50" },
-          { label: "Total Belanja", value: `Rp ${(totalSpent/1000).toFixed(0)}rb`, Icon: TreePine, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Total Belanja", value: `Rp ${(totalSpent / 1000).toFixed(0)}rb`, Icon: TreePine, color: "text-emerald-600", bg: "bg-emerald-50" },
           { label: "Pembelian", value: `${totalBought} Pack`, Icon: ShoppingCart, color: "text-amber-500", bg: "bg-amber-50" },
         ].map((metric) => (
           <div key={metric.label} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-all">
@@ -130,29 +117,37 @@ export default async function DashboardOverview() {
         ))}
       </div>
 
-      {/* Balanced 1-Row Recommendation Block */}
+      {/* Product Recommendations */}
       <div className="space-y-4">
         <div className="flex justify-between items-center px-1">
           <h3 className="text-base font-bold text-gray-900 tracking-tight flex items-center gap-2">
             <span className="w-1 h-4 bg-emerald-500 rounded-full"></span>
             Produk Terbaru
           </h3>
-          <Link href="/dashboard/produk" className="text-[10px] font-black text-emerald-600 uppercase tracking-widest border-b border-emerald-200 pb-0.5">Lihat Semua</Link>
+          <Link href="/dashboard/produk" className="text-[10px] font-black text-emerald-600 uppercase tracking-widest border-b border-emerald-200 pb-0.5">
+            Lihat Semua
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {products.map((product) => {
-             const businessName = product.farmer.sellerApplication?.businessName || product.farmer.name || "Petani";
-             const location = product.origin || product.farmer.sellerApplication?.businessAddress || "Lokasi tidak diketahui";
-             
-             return (
+            const businessName =
+              product.farmer.sellerApplication?.businessName ||
+              product.farmer.name ||
+              "Petani";
+            const location =
+              product.origin ||
+              product.farmer.sellerApplication?.businessAddress ||
+              "Lokasi tidak diketahui";
+
+            return (
               <div key={product.id} className="group bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
                 <div className="relative aspect-16/11 rounded-t-2xl overflow-hidden bg-gray-50">
                   <Link href={`/dashboard/produk/${product.id}`}>
-                    <Image 
-                      src={product.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} 
-                      alt={product.name} 
-                      fill 
+                    <Image
+                      src={product.images[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"}
+                      alt={product.name}
+                      fill
                       className="object-cover group-hover:scale-105 transition-all duration-300"
                       sizes="(max-width: 640px) 50vw, 25vw"
                     />
@@ -165,15 +160,17 @@ export default async function DashboardOverview() {
                 </div>
                 <div className="p-3 flex flex-col flex-1">
                   <Link href={`/dashboard/produk/${product.id}`} className="mb-2">
-                    <h4 className="font-bold text-gray-900 text-[11px] truncate uppercase tracking-tight leading-none group-hover:text-emerald-600 transition-colors">{product.name}</h4>
+                    <h4 className="font-bold text-gray-900 text-[11px] truncate uppercase tracking-tight leading-none group-hover:text-emerald-600 transition-colors">
+                      {product.name}
+                    </h4>
                     <div className="flex flex-col gap-1 mt-1.5 opacity-80">
                       <div className="flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0"></div>
                         <p className="text-[9px] font-bold text-gray-700 truncate uppercase mt-0.5">{businessName}</p>
                       </div>
                       <div className="flex items-center gap-1 text-gray-500">
-                         <MapPin className="w-2.5 h-2.5 shrink-0" />
-                         <p className="text-[8px] font-bold truncate tracking-wide">{location}</p>
+                        <MapPin className="w-2.5 h-2.5 shrink-0" />
+                        <p className="text-[8px] font-bold truncate tracking-wide">{location}</p>
                       </div>
                     </div>
                   </Link>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { calculateRoadDistance, getFoodMilesCategory } from "@/lib/metrics";
 import { FoodMilesCategory, ProductRow } from "@/lib/types";
-import { MapPin, Leaf, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { Leaf, MapPin, Truck, ChevronRight, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -15,15 +15,15 @@ type ProductWithMetrics = ProductRow & {
 export function JejakView({ products }: { products: ProductRow[] }) {
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLon, setUserLon] = useState<number | null>(null);
-  const [locationError, setLocationError] = useState(false);
   const [computed, setComputed] = useState<ProductWithMetrics[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) {
-      setUserLat(5.5483);
-      setUserLon(95.3238);
-      setLocationError(true);
+      setTimeout(() => {
+        setUserLat(5.5483);
+        setUserLon(95.3238);
+      }, 0);
       return;
     }
 
@@ -33,9 +33,10 @@ export function JejakView({ products }: { products: ProductRow[] }) {
         setUserLon(pos.coords.longitude);
       },
       () => {
-        setUserLat(5.5483);
-        setUserLon(95.3238);
-        setLocationError(true);
+        setTimeout(() => {
+          setUserLat(5.5483);
+          setUserLon(95.3238);
+        }, 0);
       }
     );
   }, []);
@@ -48,9 +49,9 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       const results = await Promise.all(
         products.map(async (p) => {
           let distance: number | null = null;
-          if (p.latitude != null && p.longitude != null) {
+          if (p.sellerLat != null && p.sellerLon != null) {
             // Memanggil JARAK JALAN ASLI via OSRM
-            distance = await calculateRoadDistance(p.latitude, p.longitude, userLat, userLon);
+            distance = await calculateRoadDistance(p.sellerLat, p.sellerLon, userLat, userLon);
           }
           const distanceCat = distance !== null ? getFoodMilesCategory(distance) : null;
           return { ...p, distance, distanceCat };
