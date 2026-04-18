@@ -16,7 +16,6 @@ const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
 
 export async function ProdukView({ q, method }: { q?: string; method?: string }) {
   const session = await auth();
-  if (!session) return null;
 
   const productsRaw = await prisma.product.findMany({
     where: {
@@ -79,10 +78,10 @@ export async function ProdukView({ q, method }: { q?: string; method?: string })
     return { ...product, images };
   });
 
-  const userFavorites = await prisma.favorite.findMany({
+  const userFavorites = session?.user?.id ? await prisma.favorite.findMany({
     where: { userId: session.user.id },
     select: { productId: true },
-  });
+  }) : [];
   const favoritedIds = new Set(userFavorites.map((f) => f.productId));
 
   return (

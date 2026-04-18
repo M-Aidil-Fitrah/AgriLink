@@ -6,15 +6,12 @@ import { prisma } from "@/lib/prisma";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  if (!session) redirect("/login");
-
-  // Fetch fresh user data from DB to ensure name/profile is always up-to-date
-  const user = await prisma.user.findUnique({
+  
+  // Fetch fresh user data from DB if session exists
+  const user = session?.user?.id ? await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { id: true, name: true, email: true, role: true }
-  });
-
-  if (!user) redirect("/login");
+  }) : null;
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">

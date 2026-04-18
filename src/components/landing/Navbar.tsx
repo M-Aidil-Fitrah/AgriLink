@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-export function Navbar() {
+export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -34,16 +34,28 @@ export function Navbar() {
             Agrilink
           </span>
         </Link>
-
-        {/* Remove navigation links as per requirement */}
         
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="hidden sm:block px-5 py-2.5 text-sm font-bold text-gray-700 hover:text-emerald-600 transition-colors">
-            Masuk
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="text-sm font-bold text-gray-600 hover:text-emerald-600 transition-colors">
+            Belanja Sekarang
           </Link>
-          <Link href="/register" className="px-5 py-2.5 bg-gray-900 hover:bg-emerald-600 text-white text-sm font-bold rounded-full transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-            Bergabung
-          </Link>
+
+          <div className="flex items-center gap-3">
+            {isLoggedIn ? (
+              <Link href="/dashboard" className="px-6 py-2.5 bg-gray-900 hover:bg-emerald-600 text-white text-sm font-bold rounded-full transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                Ke Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="hidden sm:block px-5 py-2.5 text-sm font-bold text-gray-700 hover:text-emerald-600 transition-colors">
+                  Masuk
+                </Link>
+                <Link href="/register" className="px-5 py-2.5 bg-gray-900 hover:bg-emerald-600 text-white text-sm font-bold rounded-full transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                  Bergabung
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </motion.nav>

@@ -6,10 +6,10 @@ import { Leaf } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-export function LandingView() {
+export function LandingView({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   return (
     <div className="min-h-screen bg-white selection:bg-emerald-100 selection:text-emerald-900 flex flex-col pt-24 font-sans text-gray-900">
-      <Navbar />
+      <Navbar isLoggedIn={isLoggedIn} />
       
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-6 md:px-12 py-16 lg:py-24 grid lg:grid-cols-2 gap-16 items-center">

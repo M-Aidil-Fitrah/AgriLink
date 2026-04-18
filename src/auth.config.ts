@@ -7,7 +7,16 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const protectedPaths = ['/admin', '/dashboard'];
+      const protectedPaths = [
+        '/admin',
+        '/dashboard/profil',
+        '/dashboard/favorit',
+        '/dashboard/pesanan',
+        '/dashboard/checkout',
+        '/dashboard/ajukan-seller',
+        '/dashboard/notifikasi',
+        '/dashboard/farmer-produk'
+      ];
       const isProtected = protectedPaths.some((p) => nextUrl.pathname.startsWith(p));
 
       if (isProtected) {

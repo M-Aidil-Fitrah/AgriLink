@@ -14,11 +14,11 @@ const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
 
 export default async function DashboardOverview() {
   const session = await auth();
-  if (!session) return null;
+  const userId = session?.user?.id;
 
   const [ordersCount, favorites, productsRaw, spending, itemsCount] = await Promise.all([
-    prisma.order.count({ where: { userId: session.user.id } }),
-    prisma.favorite.count({ where: { userId: session.user.id } }),
+    userId ? prisma.order.count({ where: { userId } }) : Promise.resolve(0),
+    userId ? prisma.favorite.count({ where: { userId } }) : Promise.resolve(0),
     prisma.product.findMany({
       take: 4,
       where: { stock: { gt: 0 } },
@@ -45,14 +45,14 @@ export default async function DashboardOverview() {
       },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.order.aggregate({
-      where: { userId: session.user.id },
+    userId ? prisma.order.aggregate({
+      where: { userId },
       _sum: { total: true },
-    }),
-    prisma.orderItem.aggregate({
-      where: { order: { userId: session.user.id } },
+    }) : Promise.resolve({ _sum: { total: null } }),
+    userId ? prisma.orderItem.aggregate({
+      where: { order: { userId } },
       _sum: { quantity: true },
-    }),
+    }) : Promise.resolve({ _sum: { quantity: null } }),
   ]);
 
   // Resolve image paths to URLs
@@ -68,7 +68,7 @@ export default async function DashboardOverview() {
 
   const totalSpent = spending._sum.total ?? 0;
   const totalBought = itemsCount._sum.quantity ?? 0;
-  const userName = session.user.name?.split(" ")[0] ?? "Teman";
+  const userName = session?.user?.name?.split(" ")[0] ?? "Teman";
 
   return (
     <div className="p-6 pb-20 max-w-[1400px] mx-auto space-y-8">

@@ -33,9 +33,54 @@ const FARMER_LINKS = [
   { name: "Profil Saya", href: "/dashboard/profil", icon: User },
 ];
 
-export function Sidebar({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } }) {
-  const isFarmer = user.role === "FARMER";
-  const links = isFarmer ? FARMER_LINKS : BUYER_LINKS;
+export function Sidebar({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } | null }) {
+  const isFarmer = user?.role === "FARMER";
+  
+  // Define public links that everyone can see
+  const publicLinks = [
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Produk", href: "/dashboard/produk", icon: PackageSearch },
+    { name: "Toko", href: "/dashboard/toko", icon: Store },
+    { name: "Peta", href: "/dashboard/peta", icon: Map },
+    { name: "Jejak", href: "/dashboard/jejak", icon: Activity },
+  ];
+
+  // Define private links that require login
+  const privateLinks = isFarmer ? [
+    { name: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Produk Saya", href: "/dashboard/farmer-produk", icon: PackageSearch },
+    { name: "Pesanan Masuk", href: "/dashboard/pesanan", icon: ShoppingBag },
+    { name: "Profil Saya", href: "/dashboard/profil", icon: User },
+  ] : [
+    { name: "Pesanan", href: "/dashboard/pesanan", icon: ShoppingBag },
+    { name: "Favorit", href: "/dashboard/favorit", icon: Heart },
+    { name: "Profil", href: "/dashboard/profil", icon: User },
+  ];
+
+  const links = user ? (isFarmer ? privateLinks : [...publicLinks.filter(pl => pl.name !== "Dashboard"), ...privateLinks].sort((a,b) => {
+    // Keep Dashboard at top
+    if (a.name === "Dashboard") return -1;
+    if (b.name === "Dashboard") return 1;
+    return 0;
+  })) : publicLinks;
+
+  // Better way to manage links for clarity:
+  const getSidebarLinks = () => {
+    if (!user) return publicLinks;
+    if (isFarmer) return privateLinks;
+    return [
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Produk", href: "/dashboard/produk", icon: PackageSearch },
+      { name: "Toko", href: "/dashboard/toko", icon: Store },
+      { name: "Peta", href: "/dashboard/peta", icon: Map },
+      { name: "Pesanan", href: "/dashboard/pesanan", icon: ShoppingBag },
+      { name: "Favorit", href: "/dashboard/favorit", icon: Heart },
+      { name: "Jejak", href: "/dashboard/jejak", icon: Activity },
+      { name: "Profil", href: "/dashboard/profil", icon: User },
+    ];
+  };
+
+  const finalLinks = getSidebarLinks();
 
   return (
     <aside className="w-64 bg-white border-r border-gray-100 flex flex-col pt-6 pb-6 shadow-sm z-800 shrink-0">
@@ -53,8 +98,8 @@ export function Sidebar({ user }: { user: { id: string, name: string | null, ema
         </p>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1">
-        {links.map((item) => (
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+        {finalLinks.map((item) => (
           <Link
             key={item.name}
             href={item.href}
@@ -66,7 +111,7 @@ export function Sidebar({ user }: { user: { id: string, name: string | null, ema
         ))}
       </nav>
 
-      {/* Seller application link for buyers only */}
+      {/* Seller application link for buyers/guests only */}
       {!isFarmer && (
         <div className="px-4 mt-4 pt-4 border-t border-gray-100">
           {BUYER_SECONDARY_LINKS.map((item) => (
