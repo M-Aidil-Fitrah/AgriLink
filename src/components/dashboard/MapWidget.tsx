@@ -7,15 +7,12 @@ import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { 
   Maximize2, 
   Minimize2, 
-  Navigation, 
   Store, 
   Search, 
   SlidersHorizontal, 
   ChevronRight, 
   MapPin,
-  ExternalLink,
   ChevronLeft,
-  Home,
   Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,8 +20,32 @@ import type { SellerLocation } from "@/lib/types";
 import Link from "next/link";
 import Image from "next/image";
 import { calculateFoodMiles } from "@/lib/metrics";
+import MarkerClusterGroup from "react-leaflet-cluster";
 
 const MAP_CENTER: [number, number] = [5.5483, 95.3238];
+
+// Custom Cluster Icon
+const createClusterCustomIcon = (cluster: L.MarkerCluster) => {
+  const count = cluster.getChildCount();
+  let size = 'w-10 h-10';
+  if (count > 10) size = 'w-12 h-12';
+  if (count > 50) size = 'w-14 h-14';
+
+  return L.divIcon({
+    html: `
+      <div class="${size} bg-emerald-500 rounded-full flex items-center justify-center border-4 border-white shadow-xl transform transition-transform hover:scale-110 active:scale-95 group">
+        <div class="flex flex-col items-center">
+          <span class="text-white text-[12px] font-black leading-none">${count}</span>
+          <span class="text-white text-[6px] font-bold uppercase tracking-tighter opacity-80 leading-none mt-0.5">Toko</span>
+        </div>
+        <!-- Pulse Effect -->
+        <div class="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-20 -z-10 group-hover:animate-none"></div>
+      </div>
+    `,
+    className: 'custom-marker-cluster',
+    iconSize: L.point(40, 40, true),
+  });
+};
 
 // Custom Modern Icons
 const createModernMarker = (name: string, distance?: number, isSelected: boolean = false, isUser: boolean = false): L.DivIcon => {
@@ -123,7 +144,9 @@ export default function MapWidget({
       iconFixed.current = true;
     }
 
-    setMounted(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
 
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -135,10 +158,12 @@ export default function MapWidget({
         () => console.warn("Geolocation denied")
       );
     }
+
+    return () => clearTimeout(timer);
   }, []);
 
   const filteredMarkers = useMemo(() => {
-    let result = markers
+    const result = markers
       .filter(m => 
         (m.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.mainCommodity.toLowerCase().includes(searchQuery.toLowerCase())) &&
@@ -257,7 +282,7 @@ export default function MapWidget({
                            <button
                              key={opt.id}
                              onClick={() => {
-                               setSortBy(opt.id as any);
+                               setSortBy(opt.id as "distance" | "products" | "name");
                                setShowFilters(false);
                              }}
                              className={`w-full flex items-center gap-3 p-3 rounded-xl text-[11px] font-black uppercase tracking-tight transition-all ${
@@ -389,61 +414,69 @@ export default function MapWidget({
              <Marker position={userLocation} icon={createUserIcon()} interactive={false} />
           )}
 
-          {/* Seller Markers */}
-          {filteredMarkers.map((m) => (
-            <Marker 
-              key={m.userId} 
-              position={[m.latitude, m.longitude]} 
-              icon={createModernMarker(m.businessName, m.distance, selectedId === m.userId)}
-              eventHandlers={{
-                click: () => setSelectedId(m.userId)
-              }}
-            >
-              <Popup closeButton={false} minWidth={320} className="modern-popup">
-                <div className="overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col sm:flex-row aspect-video sm:aspect-auto">
-                  {/* Photo Header (Left side for 4:3 look) */}
-                  <div className="relative w-full sm:w-32 h-32 sm:h-auto bg-emerald-50 shrink-0 border-r border-emerald-50/10">
-                    {m.businessPhotoUrl ? (
-                      <Image src={getImageUrl(m.businessPhotoUrl)} alt={m.businessName} fill className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-emerald-50">
-                         <Store className="w-8 h-8 text-emerald-200" />
+          {/* Seller Markers with Clustering */}
+          <MarkerClusterGroup
+            chunkedLoading
+            iconCreateFunction={createClusterCustomIcon}
+            spiderfyOnMaxZoom={true}
+            showCoverageOnHover={false}
+            maxClusterRadius={60}
+          >
+            {filteredMarkers.map((m) => (
+              <Marker 
+                key={m.userId} 
+                position={[m.latitude, m.longitude]} 
+                icon={createModernMarker(m.businessName, m.distance, selectedId === m.userId)}
+                eventHandlers={{
+                  click: () => setSelectedId(m.userId)
+                }}
+              >
+                <Popup closeButton={false} minWidth={320} className="modern-popup">
+                  <div className="overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col sm:flex-row aspect-video sm:aspect-auto">
+                    {/* Photo Header (Left side for 4:3 look) */}
+                    <div className="relative w-full sm:w-32 h-32 sm:h-auto bg-emerald-50 shrink-0 border-r border-emerald-50/10">
+                      {m.businessPhotoUrl ? (
+                        <Image src={getImageUrl(m.businessPhotoUrl)} alt={m.businessName} fill className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-emerald-50">
+                           <Store className="w-8 h-8 text-emerald-200" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 flex-1 flex flex-col justify-between min-w-0">
+                      <div>
+                         <div className="flex items-center gap-2 mb-1">
+                            <span className="px-1.5 py-0.5 bg-emerald-100 rounded text-[6px] font-black text-emerald-700 uppercase tracking-widest">
+                               {m.businessType}
+                            </span>
+                         </div>
+                         <h4 className="font-black text-emerald-900 text-[13px] leading-tight uppercase tracking-tighter truncate">
+                            {m.businessName}
+                         </h4>
+                         <p className="text-[8px] font-bold text-gray-400 flex items-center gap-1 leading-none uppercase tracking-tighter truncate mt-0.5">
+                            <MapPin className="w-2 h-2" /> {m.businessAddress}
+                         </p>
                       </div>
-                    )}
-                  </div>
 
-                  <div className="p-4 flex-1 flex flex-col justify-between min-w-0">
-                    <div>
-                       <div className="flex items-center gap-2 mb-1">
-                          <span className="px-1.5 py-0.5 bg-emerald-100 rounded text-[6px] font-black text-emerald-700 uppercase tracking-widest">
-                             {m.businessType}
-                          </span>
-                       </div>
-                       <h4 className="font-black text-emerald-900 text-[13px] leading-tight uppercase tracking-tighter truncate">
-                          {m.businessName}
-                       </h4>
-                       <p className="text-[8px] font-bold text-gray-400 flex items-center gap-1 leading-none uppercase tracking-tighter truncate mt-0.5">
-                          <MapPin className="w-2 h-2" /> {m.businessAddress}
-                       </p>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                       <div className="flex flex-col">
-                          <span className="text-[6px] font-black text-emerald-600/50 uppercase leading-none">Total Produk</span>
-                          <span className="text-[8px] font-black text-emerald-600">{m.productCount} Item</span>
-                       </div>
-                       <Link
-                        href={`/dashboard/toko/${m.userId}`}
-                        className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-emerald-700 transition-all text-center flex items-center justify-center active:scale-95 shadow-md shadow-emerald-200"
-                      >
-                        BUKA TOKO
-                      </Link>
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                         <div className="flex flex-col">
+                            <span className="text-[6px] font-black text-emerald-600/50 uppercase leading-none">Total Produk</span>
+                            <span className="text-[8px] font-black text-emerald-600">{m.productCount} Item</span>
+                         </div>
+                         <Link
+                          href={`/dashboard/toko/${m.userId}`}
+                          className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-emerald-700 transition-all text-center flex items-center justify-center active:scale-95 shadow-md shadow-emerald-200"
+                        >
+                          BUKA TOKO
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                </Popup>
+              </Marker>
+            ))}
+          </MarkerClusterGroup>
         </MapContainer>
       </div>
     </div>

@@ -1,7 +1,6 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopHeader } from "@/components/dashboard/TopHeader";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

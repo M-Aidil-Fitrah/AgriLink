@@ -11,63 +11,29 @@ import {
   User,
 } from "lucide-react";
 
-const BUYER_LINKS = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Produk", href: "/dashboard/produk", icon: PackageSearch },
-  { name: "Toko", href: "/dashboard/toko", icon: Store },
-  { name: "Peta", href: "/dashboard/peta", icon: Map },
-  { name: "Pesanan", href: "/dashboard/pesanan", icon: ShoppingBag },
-  { name: "Favorit", href: "/dashboard/favorit", icon: Heart },
-  { name: "Jejak", href: "/dashboard/jejak", icon: Activity },
-  { name: "Profil", href: "/dashboard/profil", icon: User },
-];
-
 const BUYER_SECONDARY_LINKS = [
   { name: "Ajukan Menjadi Seller", href: "/dashboard/ajukan-seller", icon: Store },
 ];
 
-const FARMER_LINKS = [
-  { name: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Produk Saya", href: "/dashboard/farmer-produk", icon: PackageSearch },
-  { name: "Pesanan Masuk", href: "/dashboard/pesanan", icon: ShoppingBag },
-  { name: "Profil Saya", href: "/dashboard/profil", icon: User },
-];
+
 
 export function Sidebar({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } | null }) {
   const isFarmer = user?.role === "FARMER";
   
-  // Define public links that everyone can see
-  const publicLinks = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Produk", href: "/dashboard/produk", icon: PackageSearch },
-    { name: "Toko", href: "/dashboard/toko", icon: Store },
-    { name: "Peta", href: "/dashboard/peta", icon: Map },
-    { name: "Jejak", href: "/dashboard/jejak", icon: Activity },
-  ];
-
-  // Define private links that require login
-  const privateLinks = isFarmer ? [
-    { name: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Produk Saya", href: "/dashboard/farmer-produk", icon: PackageSearch },
-    { name: "Pesanan Masuk", href: "/dashboard/pesanan", icon: ShoppingBag },
-    { name: "Profil Saya", href: "/dashboard/profil", icon: User },
-  ] : [
-    { name: "Pesanan", href: "/dashboard/pesanan", icon: ShoppingBag },
-    { name: "Favorit", href: "/dashboard/favorit", icon: Heart },
-    { name: "Profil", href: "/dashboard/profil", icon: User },
-  ];
-
-  const links = user ? (isFarmer ? privateLinks : [...publicLinks.filter(pl => pl.name !== "Dashboard"), ...privateLinks].sort((a,b) => {
-    // Keep Dashboard at top
-    if (a.name === "Dashboard") return -1;
-    if (b.name === "Dashboard") return 1;
-    return 0;
-  })) : publicLinks;
-
-  // Better way to manage links for clarity:
   const getSidebarLinks = () => {
-    if (!user) return publicLinks;
-    if (isFarmer) return privateLinks;
+    if (!user) return [
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Produk", href: "/dashboard/produk", icon: PackageSearch },
+      { name: "Toko", href: "/dashboard/toko", icon: Store },
+      { name: "Peta", href: "/dashboard/peta", icon: Map },
+      { name: "Jejak", href: "/dashboard/jejak", icon: Activity },
+    ];
+    if (isFarmer) return [
+      { name: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Produk Saya", href: "/dashboard/farmer-produk", icon: PackageSearch },
+      { name: "Pesanan Masuk", href: "/dashboard/pesanan", icon: ShoppingBag },
+      { name: "Profil Saya", href: "/dashboard/profil", icon: User },
+    ];
     return [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { name: "Produk", href: "/dashboard/produk", icon: PackageSearch },

@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { reviewSellerApplication } from "@/app/actions/sellerApplicationActions";
 import { SellerApplication, User, SellerApplicationStatus } from "@prisma/client";
 import { CheckCircle, XCircle, Clock, MapPin, Phone, Building, ChevronDown, ChevronUp } from "lucide-react";
-import Image from "next/image";
 import { SecureImage } from "@/components/SecureImage";
 
 type ApplicationWithUser = SellerApplication & {

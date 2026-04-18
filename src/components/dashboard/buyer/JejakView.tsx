@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { calculateRoadDistance, getFoodMilesCategory } from "@/lib/metrics";
 import { FoodMilesCategory, ProductRow } from "@/lib/types";
-import { Leaf, MapPin, Truck, ChevronRight, ArrowRight, Loader2 } from "lucide-react";
+import { Leaf, MapPin, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 

@@ -176,10 +176,12 @@ export function ImageUpload({
         {previews.map((src, idx) => (
           <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border border-gray-100 group">
             {/* Pakai tag img biasa saja jika Blob agar terhindar dari error filter Next.js Image */}
-            <img
+            <Image
               src={src}
               alt={`Preview ${idx + 1}`}
-              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+              fill
+              className="object-cover transition-transform group-hover:scale-105"
+              unoptimized
             />
             <button
               type="button"
