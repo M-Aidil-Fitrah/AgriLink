@@ -79,6 +79,7 @@ export interface SellerLocation {
   latitude: number;
   longitude: number;
   businessPhotoUrl: string;
+  productCount: number;
 }
 
 /** Seller info with product counts for the Toko page */

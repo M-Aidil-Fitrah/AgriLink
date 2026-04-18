@@ -15,6 +15,6 @@ const MapWidgetComponent = dynamic(() => import("@/components/dashboard/MapWidge
   ),
 });
 
-export function DynamicMap({ markers = [] }: { markers?: SellerLocation[] }) {
-  return <MapWidgetComponent markers={markers} />;
+export function DynamicMap({ markers = [], isMapPage = false }: { markers?: SellerLocation[], isMapPage?: boolean }) {
+  return <MapWidgetComponent markers={markers} isMapPage={isMapPage} />;
 }

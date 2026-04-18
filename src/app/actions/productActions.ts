@@ -156,10 +156,29 @@ export async function getStoreLocations(): Promise<SellerLocation[]> {
       latitude: true,
       longitude: true,
       businessPhotoUrl: true,
+      user: {
+        select: {
+          _count: {
+            select: { products: { where: { stock: { gt: 0 } } } }
+          }
+        }
+      }
     },
   });
 
-  return sellers as SellerLocation[];
+  return sellers
+    .filter(s => s.latitude !== null && s.longitude !== null)
+    .map(s => ({
+      userId: s.userId,
+      businessName: s.businessName,
+      businessAddress: s.businessAddress,
+      businessType: s.businessType,
+      mainCommodity: s.mainCommodity,
+      latitude: Number(s.latitude),
+      longitude: Number(s.longitude),
+      businessPhotoUrl: s.businessPhotoUrl as string,
+      productCount: s.user._count.products
+    }));
 }
 
 export async function searchProducts(query: string): Promise<{

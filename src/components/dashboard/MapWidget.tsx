@@ -1,57 +1,112 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect, useRef, useState, useMemo } from "react";
-import { Maximize2, Minimize2, Navigation, Store } from "lucide-react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { 
+  Maximize2, 
+  Minimize2, 
+  Navigation, 
+  Store, 
+  Search, 
+  SlidersHorizontal, 
+  ChevronRight, 
+  MapPin,
+  ExternalLink,
+  ChevronLeft,
+  Home,
+  Trash2
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SellerLocation } from "@/lib/types";
 import Link from "next/link";
+import Image from "next/image";
+import { calculateFoodMiles } from "@/lib/metrics";
 
 const MAP_CENTER: [number, number] = [5.5483, 95.3238];
 
-// Custom Icons
+// Custom Modern Icons
+const createModernMarker = (name: string, distance?: number, isSelected: boolean = false, isUser: boolean = false): L.DivIcon => {
+  const themeColor = isUser ? "bg-blue-600" : "bg-emerald-500";
+  const borderColor = isUser ? "border-blue-200" : (isSelected ? "border-emerald-500" : "border-emerald-100");
+  const textColor = isUser ? "text-blue-900" : "text-emerald-900";
+  
+  return L.divIcon({
+    className: "modern-marker",
+    html: `
+      <div class="relative flex flex-col items-center group">
+        <!-- Main Bubble -->
+        <div class="flex items-center gap-2.5 bg-white border-2 ${borderColor} pl-1.5 pr-4 py-1.5 rounded-full shadow-xl transition-all duration-300 hover:-translate-y-1 active:scale-95 group-hover:shadow-2xl">
+          <div class="w-8 h-8 ${themeColor} rounded-full flex items-center justify-center text-white shadow-sm shrink-0">
+            ${isUser 
+              ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
+              : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>'
+            }
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-[12px] font-black ${textColor} leading-none truncate tracking-tight uppercase mb-1.5">${name}</span>
+            ${distance !== undefined ? `<span class="text-[9px] font-bold ${isUser ? 'text-blue-600/60' : 'text-emerald-600/70'} leading-none">${distance.toLocaleString('id-ID')} km dari lokasi</span>` : ''}
+          </div>
+        </div>
+        <!-- Pointed Tip (Tail) -->
+        <div class="w-3 h-3 bg-white border-b-2 border-r-2 ${borderColor} rotate-45 -mt-1.5 shadow-sm z-[-1]"></div>
+      </div>
+    `,
+    iconSize: [200, 60],
+    iconAnchor: [100, 60], // Point precisely to the tip (Center-Bottom)
+    popupAnchor: [0, -45]
+  });
+};
+
 const createUserIcon = (): L.DivIcon => {
-  return L.divIcon({
-    className: "custom-marker",
-    html: `
-      <div class="relative flex items-center justify-center p-4">
-        <div class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-40"></div>
-        <div class="relative inline-flex h-5 w-5 rounded-full bg-blue-600 border-2 border-white shadow-lg flex items-center justify-center">
-            <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
-        </div>
-      </div>
-    `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-  });
+  return createModernMarker("LOKASI ANDA", undefined, false, true);
 };
 
-const createFarmerIcon = (): L.DivIcon => {
-  return L.divIcon({
-    className: "custom-marker",
-    html: `
-      <div class="relative flex flex-col items-center group transition-all duration-300">
-        <div class="relative bg-emerald-600 text-white p-2 rounded-2xl shadow-xl border border-white/20 transform group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-store"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>
-        </div>
-        <div class="w-2 h-2 bg-emerald-600 rotate-45 -mt-1 shadow-lg"></div>
-      </div>
-    `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 40],
-  });
-};
+// Map Controller for FlyTo
+function MapController({ center, zoom }: { center: [number, number], zoom?: number }) {
+  const map = useMap();
+  useEffect(() => {
+    // Validate coordinates to prevent NaN crashes
+    if (isNaN(center[0]) || isNaN(center[1])) return;
+    
+    map.flyTo(center, zoom || map.getZoom(), {
+      duration: 1.5,
+      easeLinearity: 0.25
+    });
+  }, [center, zoom, map]);
+  return null;
+}
 
-export default function MapWidget({ markers = [] }: { markers?: SellerLocation[] }) {
+export default function MapWidget({ 
+  markers = [], 
+  isMapPage = false 
+}: { 
+  markers?: SellerLocation[],
+  isMapPage?: boolean
+}) {
   const iconFixed = useRef(false);
   const [mounted, setMounted] = useState(false);
-  const [location, setLocation] = useState<[number, number]>(MAP_CENTER);
+  const [userLocation, setUserLocation] = useState<[number, number]>(MAP_CENTER);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(MAP_CENTER);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [sortBy, setSortBy] = useState<"distance" | "products" | "name">("distance");
+  const [showFilters, setShowFilters] = useState(false);
 
-  const userIcon = useMemo(() => createUserIcon(), []);
-  const farmerIcon = useMemo(() => createFarmerIcon(), []);
+  const resetFilters = useCallback(() => {
+    setSearchQuery("");
+    setSelectedId(null);
+    setSortBy("distance");
+    setMapCenter(userLocation);
+  }, [userLocation]);
+
+  const getImageUrl = (path: string) => {
+    if (!path || path.startsWith("http")) return path;
+    return `https://osfmxafgxfasdfjyqvgt.supabase.co/storage/v1/object/public/agrilink-uploads/${path}`;
+  };
 
   useEffect(() => {
     if (!iconFixed.current) {
@@ -68,96 +123,329 @@ export default function MapWidget({ markers = [] }: { markers?: SellerLocation[]
       iconFixed.current = true;
     }
 
-    const timeout = setTimeout(() => setMounted(true), 0);
+    setMounted(true);
 
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation([position.coords.latitude, position.coords.longitude]);
+          const loc: [number, number] = [position.coords.latitude, position.coords.longitude];
+          setUserLocation(loc);
+          setMapCenter(loc);
         },
         () => console.warn("Geolocation denied")
       );
     }
-    return () => clearTimeout(timeout);
   }, []);
 
-  if (!mounted)
-    return (
-      <div className="w-full h-full bg-slate-50 rounded-2xl animate-pulse flex items-center justify-center border border-slate-100">
-        <span className="text-slate-400 font-medium">Inisialisasi Peta...</span>
-      </div>
-    );
+  const filteredMarkers = useMemo(() => {
+    let result = markers
+      .filter(m => 
+        (m.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.mainCommodity.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        !isNaN(m.latitude) && !isNaN(m.longitude)
+      )
+      .map(m => ({
+        ...m,
+        distance: calculateFoodMiles(userLocation[0], userLocation[1], m.latitude, m.longitude)
+      }));
+
+    if (sortBy === "distance") {
+      result.sort((a, b) => a.distance - b.distance);
+    } else if (sortBy === "products") {
+      result.sort((a, b) => b.productCount - a.productCount);
+    } else if (sortBy === "name") {
+      result.sort((a, b) => a.businessName.localeCompare(b.businessName));
+    }
+
+    return result;
+  }, [markers, searchQuery, userLocation, sortBy]);
+
+  const hasInteraction = searchQuery.length > 0 || selectedId !== null;
+
+  const handleStoreSelect = useCallback((store: SellerLocation) => {
+    if (isNaN(store.latitude) || isNaN(store.longitude)) return;
+    setSelectedId(store.userId);
+    setMapCenter([store.latitude, store.longitude]);
+  }, []);
+
+  if (!mounted) return (
+    <div className="w-full h-full bg-slate-50 rounded-2xl animate-pulse flex items-center justify-center border border-slate-100">
+      <span className="text-slate-400 font-medium">Inisialisasi Peta Modern...</span>
+    </div>
+  );
+
+  const sidebarVisible = isMapPage || isFullscreen;
 
   const mapContent = (
-    <div className={`relative w-full h-full transition-all duration-500 overflow-hidden ${isFullscreen ? "" : "rounded-3xl shadow-xl"}`}>
-      <button
-        onClick={() => setIsFullscreen(!isFullscreen)}
-        className="absolute top-6 right-6 z-1000 p-3 bg-white/80 backdrop-blur-xl shadow-2xl rounded-2xl text-emerald-700 hover:bg-white transition-all border border-white hover:scale-105 active:scale-95"
-        title={isFullscreen ? "Minimize" : "Full Screen"}
-      >
-        {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-      </button>
-
-      <MapContainer
-        center={location}
-        zoom={13}
-        scrollWheelZoom={true}
-        className="w-full h-full z-0"
-        zoomControl={false}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        />
-
-        {/* User Location */}
-        <Marker position={location} icon={userIcon}>
-          <Popup closeButton={false} minWidth={180}>
-            <div className="p-4 bg-white/50 backdrop-blur-sm">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
-                  <Navigation className="w-4 h-4 fill-current" />
-                </div>
+    <div className="relative w-full h-full flex overflow-hidden font-sans">
+      {/* Sidebar List */}
+      <AnimatePresence>
+        {sidebarVisible && showSidebar && (
+          <motion.div
+            initial={{ x: -400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -400, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="w-full max-w-[380px] bg-white border-r border-gray-100 z-10 flex flex-col shadow-2xl relative"
+          >
+            <div className="p-6 space-y-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-blue-600 uppercase tracking-widest leading-none mb-1">Posisi Anda</p>
-                  <p className="text-sm font-extrabold text-slate-800">Sedang Di Sini</p>
+                  <h2 className="text-xl font-black text-gray-900 tracking-tight">Sebaran Pasar</h2>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                    {hasInteraction ? `${filteredMarkers.length} Toko Terdeteksi` : "Cari Untuk Melihat Toko"}
+                  </p>
+                </div>
+                {!isFullscreen && (
+                   <button onClick={() => setShowSidebar(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                      <ChevronLeft className="w-5 h-5 text-gray-400" />
+                   </button>
+                )}
+              </div>
+
+              {/* Search & Filter */}
+              <div className="space-y-3 relative">
+                <div className="flex gap-2">
+                   <div className="relative group flex-1">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        type="text"
+                        placeholder="Cari toko atau produk..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-900 placeholder:text-gray-400 placeholder:font-semibold outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                      />
+                   </div>
+                   {hasInteraction && (
+                      <button 
+                         onClick={resetFilters}
+                         className="px-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition-colors border border-red-100 flex items-center justify-center gap-2 group leading-none"
+                         title="Reset Filter"
+                      >
+                         <Trash2 className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform" />
+                         <div className="flex flex-col items-start">
+                            <span className="text-[9px] font-black uppercase">Reset</span>
+                            <span className="text-[9px] font-bold uppercase">filter</span>
+                         </div>
+                      </button>
+                   )}
+                </div>
+                
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all font-sans"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    Urutkan & Filter: {sortBy === 'distance' ? 'Terdekat' : sortBy === 'products' ? 'Produk Terbanyak' : 'Nama A-Z'}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showFilters && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 shadow-2xl rounded-2xl p-4 z-50 space-y-2"
+                      >
+                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-3">Pilih Pengurutan</p>
+                         {[
+                           { id: 'distance', label: 'Jarak Terdekat', icon: MapPin },
+                           { id: 'products', label: 'Produk Terbanyak', icon: Store },
+                           { id: 'name', label: 'Nama Toko (A-Z)', icon: ChevronRight },
+                         ].map((opt) => (
+                           <button
+                             key={opt.id}
+                             onClick={() => {
+                               setSortBy(opt.id as any);
+                               setShowFilters(false);
+                             }}
+                             className={`w-full flex items-center gap-3 p-3 rounded-xl text-[11px] font-black uppercase tracking-tight transition-all ${
+                               sortBy === opt.id ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'hover:bg-gray-50 text-gray-600'
+                             }`}
+                           >
+                             <opt.icon className="w-4 h-4" />
+                             {opt.label}
+                           </button>
+                         ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
-          </Popup>
-        </Marker>
 
-        {/* Seller Markers */}
-        {markers.map((m) => (
-          <Marker key={m.userId} position={[m.latitude, m.longitude]} icon={farmerIcon}>
-            <Popup closeButton={false} minWidth={220}>
-              <div className="overflow-hidden">
-                <div className="bg-emerald-600 p-4 text-white">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                      {m.businessType}
-                    </span>
+            {/* Store List */}
+            <div className="flex-1 overflow-y-auto px-2 space-y-1 pb-10 custom-scrollbar">
+               {hasInteraction ? (
+                 <>
+                    {filteredMarkers.map((m) => (
+                      <motion.div
+                         key={m.userId}
+                         onClick={() => handleStoreSelect(m)}
+                         className={`flex items-center gap-4 p-4 rounded-3xl cursor-pointer transition-all border-2 ${
+                           selectedId === m.userId 
+                             ? 'bg-emerald-50/50 border-emerald-500 shadow-lg shadow-emerald-500/10 translate-x-1' 
+                             : 'bg-white border-transparent hover:bg-gray-50 hover:translate-x-1'
+                         }`}
+                      >
+                         <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden relative border border-gray-200">
+                            {m.businessPhotoUrl ? (
+                              <Image src={getImageUrl(m.businessPhotoUrl)} alt={m.businessName} fill className="object-cover" />
+                            ) : (
+                              <Store className="w-6 h-6 text-gray-400" />
+                            )}
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <h4 className="font-extrabold text-xs text-gray-900 truncate uppercase tracking-tight">{m.businessName}</h4>
+                            <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold truncate mt-0.5 uppercase tracking-wide">
+                               <MapPin className="w-2.5 h-2.5 shrink-0" />
+                               {m.businessAddress}
+                            </div>
+                            
+                            <div className="flex items-center gap-4 mt-2.5">
+                               <div className="flex flex-col">
+                                  <span className="text-[8px] font-black text-gray-300 uppercase leading-none mb-1">Jarak</span>
+                                  <span className="text-[10px] font-black text-emerald-600 tracking-tight">{m.distance} Km</span>
+                               </div>
+                               <div className="w-px h-5 bg-gray-100"></div>
+                               <div className="flex flex-col">
+                                  <span className="text-[8px] font-black text-gray-300 uppercase leading-none mb-1">Produk</span>
+                                  <span className="text-[10px] font-black text-gray-800 tracking-tight">{m.productCount} Item</span>
+                               </div>
+                               {selectedId === m.userId && (
+                                 <ChevronRight className="ml-auto w-4 h-4 text-emerald-500" />
+                               )}
+                            </div>
+                         </div>
+                      </motion.div>
+                    ))}
+                    {filteredMarkers.length === 0 && (
+                      <div className="py-20 text-center opacity-50">
+                         <Search className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Toko tidak ditemukan</p>
+                      </div>
+                    )}
+                 </>
+               ) : (
+                 <div className="py-20 text-center opacity-40 px-10">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-500 border border-emerald-50/50 shadow-inner">
+                       <MapPin className="w-7 h-7" />
+                    </div>
+                    <p className="text-[11px] font-black text-gray-500 uppercase tracking-widest leading-relaxed">
+                       Silahkan cari nama toko atau produk untuk memunculkan daftar lokasi
+                    </p>
+                 </div>
+               )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar Toggle for Widgets */}
+      {sidebarVisible && !showSidebar && (
+        <button 
+          onClick={() => setShowSidebar(true)}
+          className="absolute left-6 top-6 z-10 p-3 bg-white shadow-2xl rounded-2xl text-emerald-600 hover:text-emerald-700 border border-gray-100 transition-all hover:scale-110 active:scale-95 flex items-center gap-2 group"
+        >
+          <div className="w-6 h-6 bg-emerald-50 rounded-lg flex items-center justify-center">
+             <Store className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-[11px] font-black uppercase tracking-widest pr-2">Cari Daftar Toko</span>
+        </button>
+      )}
+
+      {/* Map Implementation */}
+      <div className="flex-1 relative bg-gray-50 overflow-hidden">
+        {/* Map Layers & Overlay Controls */}
+        <div className="absolute top-6 right-6 z-10 flex flex-col gap-3">
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="p-3 bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl text-gray-900 hover:text-emerald-600 transition-all border border-white hover:scale-105 active:scale-95 flex items-center gap-2"
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            <span className="text-[10px] font-black uppercase tracking-widest pr-1">
+              {isFullscreen ? "Kecilkan" : "Layar Penuh"}
+            </span>
+          </button>
+        </div>
+
+        <MapContainer
+          center={mapCenter}
+          zoom={13}
+          scrollWheelZoom={true}
+          className="w-full h-full z-0 font-sans"
+          zoomControl={false}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          />
+          
+          <MapController center={mapCenter} />
+
+          {/* User Location */}
+          {!isNaN(userLocation[0]) && !isNaN(userLocation[1]) && (
+             <Marker position={userLocation} icon={createUserIcon()} interactive={false} />
+          )}
+
+          {/* Seller Markers */}
+          {filteredMarkers.map((m) => (
+            <Marker 
+              key={m.userId} 
+              position={[m.latitude, m.longitude]} 
+              icon={createModernMarker(m.businessName, m.distance, selectedId === m.userId)}
+              eventHandlers={{
+                click: () => setSelectedId(m.userId)
+              }}
+            >
+              <Popup closeButton={false} minWidth={320} className="modern-popup">
+                <div className="overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col sm:flex-row aspect-video sm:aspect-auto">
+                  {/* Photo Header (Left side for 4:3 look) */}
+                  <div className="relative w-full sm:w-32 h-32 sm:h-auto bg-emerald-50 shrink-0 border-r border-emerald-50/10">
+                    {m.businessPhotoUrl ? (
+                      <Image src={getImageUrl(m.businessPhotoUrl)} alt={m.businessName} fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-emerald-50">
+                         <Store className="w-8 h-8 text-emerald-200" />
+                      </div>
+                    )}
                   </div>
-                  <h4 className="font-black text-base leading-tight mb-1">{m.businessName}</h4>
-                  <p className="text-white/80 text-xs font-medium flex items-center gap-1">
-                    <Store className="w-3 h-3" /> {m.mainCommodity}
-                  </p>
-                </div>
 
-                <div className="p-4 bg-white">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase mb-2">{m.businessAddress}</p>
-                  <Link
-                    href={`/dashboard/toko/${m.userId}`}
-                    className="block w-full py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-600 transition-colors text-center"
-                  >
-                    Kunjungi Toko
-                  </Link>
+                  <div className="p-4 flex-1 flex flex-col justify-between min-w-0">
+                    <div>
+                       <div className="flex items-center gap-2 mb-1">
+                          <span className="px-1.5 py-0.5 bg-emerald-100 rounded text-[6px] font-black text-emerald-700 uppercase tracking-widest">
+                             {m.businessType}
+                          </span>
+                       </div>
+                       <h4 className="font-black text-emerald-900 text-[13px] leading-tight uppercase tracking-tighter truncate">
+                          {m.businessName}
+                       </h4>
+                       <p className="text-[8px] font-bold text-gray-400 flex items-center gap-1 leading-none uppercase tracking-tighter truncate mt-0.5">
+                          <MapPin className="w-2 h-2" /> {m.businessAddress}
+                       </p>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                       <div className="flex flex-col">
+                          <span className="text-[6px] font-black text-emerald-600/50 uppercase leading-none">Total Produk</span>
+                          <span className="text-[8px] font-black text-emerald-600">{m.productCount} Item</span>
+                       </div>
+                       <Link
+                        href={`/dashboard/toko/${m.userId}`}
+                        className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-emerald-700 transition-all text-center flex items-center justify-center active:scale-95 shadow-md shadow-emerald-200"
+                      >
+                        BUKA TOKO
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
     </div>
   );
 
@@ -170,7 +458,7 @@ export default function MapWidget({ markers = [] }: { markers?: SellerLocation[]
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-99999 bg-white flex flex-col"
+            className="fixed inset-0 z-[99999] bg-white flex flex-col overflow-hidden"
           >
             <div className="flex-1">{mapContent}</div>
           </motion.div>
