@@ -14,7 +14,7 @@ export default async function PetaPage() {
           </p>
         </div>
         <div className="flex-1 relative">
-          <DynamicMap markers={storeLocations} isMapPage={true} />
+          <DynamicMap markers={storeLocations} />
         </div>
       </div>
     </div>

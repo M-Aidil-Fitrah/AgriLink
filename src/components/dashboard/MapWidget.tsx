@@ -54,29 +54,46 @@ const createModernMarker = (name: string, distance?: number, isSelected: boolean
   const textColor = isUser ? "text-blue-900" : "text-emerald-900";
   
   return L.divIcon({
-    className: "modern-marker",
+    className: "modern-marker !overflow-visible",
     html: `
-      <div class="relative flex flex-col items-center group">
+      <style>
+        .marker-group:hover .reveal-text {
+          max-width: 150px !important;
+          padding-left: 8px !important;
+          padding-right: 8px !important;
+          opacity: 1 !important;
+        }
+        .reveal-text {
+          max-width: 0;
+          opacity: 0;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          white-space: nowrap;
+        }
+      </style>
+      <div class="relative flex flex-col items-center marker-group">
         <!-- Main Bubble -->
-        <div class="flex items-center gap-2.5 bg-white border-2 ${borderColor} pl-1.5 pr-4 py-1.5 rounded-full shadow-xl transition-all duration-300 hover:-translate-y-1 active:scale-95 group-hover:shadow-2xl">
+        <div class="flex items-center bg-white border-2 ${borderColor} p-0.5 rounded-full shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+          <!-- Icon Container -->
           <div class="w-8 h-8 ${themeColor} rounded-full flex items-center justify-center text-white shadow-sm shrink-0">
             ${isUser 
               ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
               : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>'
             }
           </div>
-          <div class="flex flex-col min-w-0">
-            <span class="text-[12px] font-black ${textColor} leading-none truncate tracking-tight uppercase mb-1.5">${name}</span>
-            ${distance !== undefined ? `<span class="text-[9px] font-bold ${isUser ? 'text-blue-600/60' : 'text-emerald-600/70'} leading-none">${distance.toLocaleString('id-ID')} km dari lokasi</span>` : ''}
+          <!-- Text Area -->
+          <div class="${isUser ? 'reveal-text' : 'px-3 max-w-[250px] opacity-100'} flex flex-col min-w-0">
+            <span class="text-[12px] font-black ${textColor} leading-none truncate tracking-tight uppercase ${!isUser && 'mb-1'}">${name}</span>
+            ${!isUser && distance !== undefined ? `<span class="text-[9px] font-bold text-emerald-600/70 leading-none truncate">${distance.toLocaleString('id-ID')} km dari lokasi</span>` : ''}
           </div>
         </div>
         <!-- Pointed Tip (Tail) -->
         <div class="w-3 h-3 bg-white border-b-2 border-r-2 ${borderColor} rotate-45 -mt-1.5 shadow-sm z-[-1]"></div>
       </div>
     `,
-    iconSize: [200, 60],
-    iconAnchor: [100, 60], // Point precisely to the tip (Center-Bottom)
-    popupAnchor: [0, -45]
+    iconSize: [40, 40], // Base size for the icon portion
+    iconAnchor: [20, 40], // Anchored to bottom center of icon
+    popupAnchor: [0, -35]
   });
 };
 
@@ -101,10 +118,8 @@ function MapController({ center, zoom }: { center: [number, number], zoom?: numb
 
 export default function MapWidget({ 
   markers = [], 
-  isMapPage = false 
 }: { 
   markers?: SellerLocation[],
-  isMapPage?: boolean
 }) {
   const iconFixed = useRef(false);
   const [mounted, setMounted] = useState(false);
@@ -187,6 +202,13 @@ export default function MapWidget({
 
   const hasInteraction = searchQuery.length > 0 || selectedId !== null;
 
+  const displayList = useMemo(() => {
+    if (selectedId) {
+      return filteredMarkers.filter(m => m.userId === selectedId);
+    }
+    return filteredMarkers.slice(0, 5);
+  }, [filteredMarkers, selectedId]);
+
   const handleStoreSelect = useCallback((store: SellerLocation) => {
     if (isNaN(store.latitude) || isNaN(store.longitude)) return;
     setSelectedId(store.userId);
@@ -199,7 +221,7 @@ export default function MapWidget({
     </div>
   );
 
-  const sidebarVisible = isMapPage || isFullscreen;
+  const sidebarVisible = isFullscreen;
 
   const mapContent = (
     <div className="relative w-full h-full flex overflow-hidden font-sans">
@@ -216,9 +238,9 @@ export default function MapWidget({
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-gray-900 tracking-tight">Sebaran Pasar</h2>
+                  <h2 className="text-xl font-black text-gray-900 tracking-tight">Sebaran Toko</h2>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                    {hasInteraction ? `${filteredMarkers.length} Toko Terdeteksi` : "Cari Untuk Melihat Toko"}
+                    {hasInteraction ? `${displayList.length} dari ${filteredMarkers.length} Toko` : "Cari Untuk Melihat Toko"}
                   </p>
                 </div>
                 {!isFullscreen && (
@@ -304,48 +326,52 @@ export default function MapWidget({
             <div className="flex-1 overflow-y-auto px-2 space-y-1 pb-10 custom-scrollbar">
                {hasInteraction ? (
                  <>
-                    {filteredMarkers.map((m) => (
-                      <motion.div
+                    {displayList.map((m) => (
+                      <motion.div 
                          key={m.userId}
-                         onClick={() => handleStoreSelect(m)}
-                         className={`flex items-center gap-4 p-4 rounded-3xl cursor-pointer transition-all border-2 ${
-                           selectedId === m.userId 
-                             ? 'bg-emerald-50/50 border-emerald-500 shadow-lg shadow-emerald-500/10 translate-x-1' 
-                             : 'bg-white border-transparent hover:bg-gray-50 hover:translate-x-1'
+                         layout
+                         initial={{ opacity: 0, y: 10 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         className={`p-4 rounded-3xl border transition-all cursor-pointer group relative ${
+                            selectedId === m.userId ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-gray-50 hover:border-emerald-100 hover:bg-gray-50/50'
                          }`}
+                         onClick={() => handleStoreSelect(m)}
                       >
-                         <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden relative border border-gray-200">
-                            {m.businessPhotoUrl ? (
-                              <Image src={getImageUrl(m.businessPhotoUrl)} alt={m.businessName} fill className="object-cover" />
-                            ) : (
-                              <Store className="w-6 h-6 text-gray-400" />
-                            )}
-                         </div>
-                         <div className="flex-1 min-w-0">
-                            <h4 className="font-extrabold text-xs text-gray-900 truncate uppercase tracking-tight">{m.businessName}</h4>
-                            <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold truncate mt-0.5 uppercase tracking-wide">
-                               <MapPin className="w-2.5 h-2.5 shrink-0" />
-                               {m.businessAddress}
-                            </div>
-                            
-                            <div className="flex items-center gap-4 mt-2.5">
-                               <div className="flex flex-col">
-                                  <span className="text-[8px] font-black text-gray-300 uppercase leading-none mb-1">Jarak</span>
-                                  <span className="text-[10px] font-black text-emerald-600 tracking-tight">{m.distance} Km</span>
-                               </div>
-                               <div className="w-px h-5 bg-gray-100"></div>
-                               <div className="flex flex-col">
-                                  <span className="text-[8px] font-black text-gray-300 uppercase leading-none mb-1">Produk</span>
-                                  <span className="text-[10px] font-black text-gray-800 tracking-tight">{m.productCount} Item</span>
-                               </div>
-                               {selectedId === m.userId && (
-                                 <ChevronRight className="ml-auto w-4 h-4 text-emerald-500" />
+                         <div className="flex gap-4">
+                            <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100/50 shadow-sm">
+                               {m.businessPhotoUrl ? (
+                                  <Image src={getImageUrl(m.businessPhotoUrl)} alt={m.businessName} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                               ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-emerald-200">
+                                     <Store className="w-6 h-6" />
+                                  </div>
                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                               <h4 className="font-black text-gray-900 text-[13px] leading-tight truncate uppercase tracking-tight">{m.businessName}</h4>
+                               <p className="text-[9px] font-bold text-gray-400 mt-1 flex items-center gap-1 uppercase truncate">
+                                  <MapPin className="w-2 h-2" /> {m.businessAddress}
+                                </p>
+                                
+                               <div className="mt-3 flex items-center gap-4">
+                                  <div className="flex flex-col">
+                                     <span className="text-[8px] font-black text-gray-300 uppercase leading-none mb-1">Jarak</span>
+                                     <span className="text-[10px] font-black text-emerald-600 tracking-tight">{m.distance} Km</span>
+                                  </div>
+                                  <div className="w-px h-5 bg-gray-100"></div>
+                                  <div className="flex flex-col">
+                                     <span className="text-[8px] font-black text-gray-300 uppercase leading-none mb-1">Produk</span>
+                                     <span className="text-[10px] font-black text-gray-800 tracking-tight">{m.productCount} Item</span>
+                                  </div>
+                                  {selectedId === m.userId && (
+                                    <ChevronRight className="ml-auto w-4 h-4 text-emerald-500" />
+                                  )}
+                               </div>
                             </div>
                          </div>
                       </motion.div>
                     ))}
-                    {filteredMarkers.length === 0 && (
+                    {displayList.length === 0 && (
                       <div className="py-20 text-center opacity-50">
                          <Search className="w-10 h-10 text-gray-200 mx-auto mb-3" />
                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Toko tidak ditemukan</p>
@@ -411,7 +437,7 @@ export default function MapWidget({
 
           {/* User Location */}
           {!isNaN(userLocation[0]) && !isNaN(userLocation[1]) && (
-             <Marker position={userLocation} icon={createUserIcon()} interactive={false} />
+             <Marker position={userLocation} icon={createUserIcon()} interactive={true} />
           )}
 
           {/* Seller Markers with Clustering */}
@@ -466,7 +492,7 @@ export default function MapWidget({
                          </div>
                          <Link
                           href={`/dashboard/toko/${m.userId}`}
-                          className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-emerald-700 transition-all text-center flex items-center justify-center active:scale-95 shadow-md shadow-emerald-200"
+                          className="px-6 py-2.5 bg-emerald-600 !text-white rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-emerald-700 transition-all text-center flex items-center justify-center active:scale-95 shadow-md shadow-emerald-200"
                         >
                           BUKA TOKO
                         </Link>
