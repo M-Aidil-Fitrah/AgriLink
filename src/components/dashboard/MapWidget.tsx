@@ -494,7 +494,7 @@ export default function MapWidget({
                           href={`/dashboard/toko/${m.userId}`}
                           className="px-6 py-2.5 bg-emerald-600 !text-white rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-emerald-700 transition-all text-center flex items-center justify-center active:scale-95 shadow-md shadow-emerald-200"
                         >
-                          BUKA TOKO
+                          LIHAT TOKO
                         </Link>
                       </div>
                     </div>

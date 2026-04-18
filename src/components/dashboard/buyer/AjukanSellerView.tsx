@@ -62,6 +62,52 @@ export function AjukanSellerView({
   const [selfiePhotoUrl, setSelfiePhotoUrl] = useState("");
   const [businessPhotoUrl, setBusinessPhotoUrl] = useState("");
 
+  // Real-time validation state
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [formData, setFormData] = useState({
+    fullName: "",
+    nik: "",
+    phone: "",
+    address: "",
+    businessName: "",
+    businessType: "",
+    mainCommodity: "",
+    businessAddress: "",
+    description: ""
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleBlur = (name: string) => {
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+
+  const getFieldError = (name: string): string | null => {
+    if (!touched[name]) return null;
+    
+    const value = formData[name as keyof typeof formData];
+    if (!value) return "Wajib diisi";
+    
+    if (name === "nik" && !/^[0-9]{16}$/.test(value)) {
+      return "NIK harus 16 digit angka";
+    }
+    if (name === "phone" && value.length < 10) {
+      return "Nomor HP tidak valid";
+    }
+    return null;
+  };
+
+  const isFormValid = () => {
+    const hasTextErrors = Object.keys(formData).some(key => getFieldError(key) !== null);
+    const hasEmptyFields = Object.values(formData).some(val => !val);
+    const hasPhotos = ktpPhotoUrl && selfiePhotoUrl && businessPhotoUrl;
+    const hasCoords = coords !== null;
+    return !hasTextErrors && !hasEmptyFields && hasPhotos && hasCoords;
+  };
+
   // If already submitted, show status
   if (existingApplication && existingApplication.status !== "REJECTED") {
     const cfg = STATUS_CONFIG[existingApplication.status];
@@ -102,9 +148,23 @@ export function AjukanSellerView({
     e.preventDefault();
     setError(null);
 
-    if (!ktpPhotoUrl) { setError("Foto KTP wajib diunggah"); return; }
-    if (!selfiePhotoUrl) { setError("Foto selfie dengan KTP wajib diunggah"); return; }
-    if (!businessPhotoUrl) { setError("Foto usaha/kebun wajib diunggah"); return; }
+    if (!ktpPhotoUrl || !selfiePhotoUrl || !businessPhotoUrl || !coords) {
+      setError("Semua data wajib diisi, termasuk foto dan lokasi peta");
+      // Touch all fields to show errors
+      const allTouched: Record<string, boolean> = {};
+      Object.keys(formData).forEach(k => allTouched[k] = true);
+      allTouched.ktp = true;
+      allTouched.selfie = true;
+      allTouched.business = true;
+      allTouched.coords = true;
+      setTouched(allTouched);
+      return;
+    }
+
+    if (!isFormValid()) {
+      setError("Silakan perbaiki data yang tidak sesuai");
+      return;
+    }
 
     const form = e.currentTarget;
     const fd = new FormData(form);
@@ -167,49 +227,94 @@ export function AjukanSellerView({
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap sesuai KTP</label>
-              <input name="fullName" required placeholder="Budi Santoso"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              <input 
+                name="fullName" 
+                required 
+                placeholder="Budi Santoso"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("fullName")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("fullName") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20`}
               />
+              {getFieldError("fullName") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("fullName")}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">NIK / Nomor KTP</label>
-              <input name="nik" required placeholder="3271xxxxxxxxxxxx" maxLength={16} pattern="[0-9]{16}"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              <input 
+                name="nik" 
+                required 
+                placeholder="3271xxxxxxxxxxxx" 
+                maxLength={16}
+                value={formData.nik}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("nik")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("nik") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20`}
               />
+              {getFieldError("nik") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("nik")}</p>}
             </div>
             <div>
               <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-1.5"><Phone className="w-3.5 h-3.5 mt-0.5" /> Nomor HP Aktif</label>
-              <input name="phone" required placeholder="+62 812 xxxx xxxx" type="tel"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              <input 
+                name="phone" 
+                required 
+                placeholder="0812 3456 7890" 
+                type="tel"
+                value={formData.phone}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("phone")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("phone") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20`}
               />
+              {getFieldError("phone") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("phone")}</p>}
             </div>
             <div className="col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Alamat Domisili</label>
-              <textarea name="address" required rows={2} placeholder="Jl. Contoh No. 1, Kel. X, Kec. Y, Kota Z"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 resize-none"
+              <textarea 
+                name="address" 
+                required 
+                rows={2} 
+                placeholder="Jl. Contoh No. 1, Kel. X, Kec. Y, Kota Z"
+                value={formData.address}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("address")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("address") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 resize-none`}
               />
+              {getFieldError("address") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("address")}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ImageUpload
-              label="Foto KTP"
-              hint="Pastikan tulisan KTP terbaca jelas (JPG/PNG)"
-              value={ktpPhotoUrl}
-              onChange={(val) => setKtpPhotoUrl(typeof val === 'string' ? val : val[0])}
-              bucket="verifikasi-seller"
-              folder="ktp"
-              isPrivate={true}
-            />
-            <ImageUpload
-              label="Foto Selfie dengan KTP"
-              hint="Foto Anda sambil memegang KTP secara jelas"
-              value={selfiePhotoUrl}
-              onChange={(val) => setSelfiePhotoUrl(typeof val === 'string' ? val : val[0])}
-              bucket="verifikasi-seller"
-              folder="selfie"
-              isPrivate={true}
-            />
+            <div className="space-y-4">
+              <ImageUpload
+                label="Foto KTP"
+                hint="Pastikan tulisan KTP terbaca jelas (JPG/PNG)"
+                value={ktpPhotoUrl}
+                onChange={(val) => {
+                  const url = typeof val === 'string' ? val : val[0];
+                  setKtpPhotoUrl(url);
+                  setTouched(prev => ({ ...prev, ktp: true }));
+                }}
+                bucket="verifikasi-seller"
+                folder="ktp"
+                isPrivate={true}
+              />
+              {touched.ktp && !ktpPhotoUrl && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Foto KTP wajib diunggah</p>}
+            </div>
+            <div className="space-y-4">
+              <ImageUpload
+                label="Foto Selfie dengan KTP"
+                hint="Foto Anda sambil memegang KTP secara jelas"
+                value={selfiePhotoUrl}
+                onChange={(val) => {
+                  const url = typeof val === 'string' ? val : val[0];
+                  setSelfiePhotoUrl(url);
+                  setTouched(prev => ({ ...prev, selfie: true }));
+                }}
+                bucket="verifikasi-seller"
+                folder="selfie"
+                isPrivate={true}
+              />
+              {touched.selfie && !selfiePhotoUrl && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Foto selfie wajib diunggah</p>}
+            </div>
           </div>
         </div>
 
@@ -228,14 +333,26 @@ export function AjukanSellerView({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nama Usaha / Kebun</label>
-              <input name="businessName" required placeholder="Kebun Organik Makmur"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              <input 
+                name="businessName" 
+                required 
+                placeholder="Kebun Organik Makmur"
+                value={formData.businessName}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("businessName")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("businessName") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20`}
               />
+              {getFieldError("businessName") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("businessName")}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Jenis Usaha</label>
-              <select name="businessType" required
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              <select 
+                name="businessType" 
+                required
+                value={formData.businessType}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("businessType")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("businessType") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-700 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20`}
               >
                 <option value="">-- Pilih Jenis --</option>
                 <option value="Petani">Petani</option>
@@ -244,25 +361,47 @@ export function AjukanSellerView({
                 <option value="UMKM Pertanian">UMKM Pertanian</option>
                 <option value="Lainnya">Lainnya</option>
               </select>
+              {getFieldError("businessType") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("businessType")}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Komoditas Utama</label>
-              <input name="mainCommodity" required placeholder="Cabai, Tomat, Sayuran"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              <input 
+                name="mainCommodity" 
+                required 
+                placeholder="Cabai, Tomat, Sayuran"
+                value={formData.mainCommodity}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("mainCommodity")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("mainCommodity") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20`}
               />
+              {getFieldError("mainCommodity") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("mainCommodity")}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Alamat Usaha</label>
-              <input name="businessAddress" required placeholder="Desa/Kelurahan, Kecamatan, Kota"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              <input 
+                name="businessAddress" 
+                required 
+                placeholder="Desa/Kelurahan, Kecamatan, Kota"
+                value={formData.businessAddress}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("businessAddress")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("businessAddress") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20`}
               />
+              {getFieldError("businessAddress") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("businessAddress")}</p>}
             </div>
             <div className="col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi Usaha</label>
-              <textarea name="description" required rows={3}
+              <textarea 
+                name="description" 
+                required 
+                rows={3}
                 placeholder="Ceritakan singkat tentang usaha Anda, produk unggulan, pengalaman bertani, dll."
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 resize-none"
+                value={formData.description}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur("description")}
+                className={`w-full px-4 py-3 bg-gray-50 rounded-xl border ${getFieldError("description") ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'} text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 resize-none`}
               />
+              {getFieldError("description") && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">{getFieldError("description")}</p>}
             </div>
           </div>
 
@@ -271,13 +410,17 @@ export function AjukanSellerView({
               <MapPin className="w-3.5 h-3.5" /> Lokasi Kebun / Usaha
             </label>
             <p className="text-xs text-gray-400 mb-3">Klik pada peta untuk menentukan titik lokasi usaha Anda</p>
-            <div className="h-56 rounded-2xl overflow-hidden border border-gray-200">
+            <div className={`h-56 rounded-2xl overflow-hidden border ${touched.coords && !coords ? 'border-red-500 ring-1 ring-red-500/20' : 'border-gray-200'}`}>
               <MapPicker
                 initialLat={coords?.lat ?? 5.5483}
                 initialLon={coords?.lon ?? 95.3238}
-                onChange={(c) => setCoords(c)}
+                onChange={(c) => {
+                  setCoords(c);
+                  setTouched(prev => ({ ...prev, coords: true }));
+                }}
               />
             </div>
+            {touched.coords && !coords && <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wider">Silakan pilih lokasi di peta</p>}
             {coords && (
               <p className="text-xs text-emerald-600 font-semibold mt-2">
                 Titik dipilih: {coords.lat.toFixed(6)}, {coords.lon.toFixed(6)}
@@ -285,14 +428,21 @@ export function AjukanSellerView({
             )}
           </div>
 
-          <ImageUpload
-            label="Foto Usaha / Kebun"
-            hint="Foto nyata dari kebun atau tempat usaha Anda"
-            value={businessPhotoUrl}
-            onChange={(val) => setBusinessPhotoUrl(typeof val === 'string' ? val : val[0])}
-            bucket="agrilink-uploads"
-            folder="verification/business"
-          />
+          <div className="space-y-4">
+            <ImageUpload
+              label="Foto Usaha / Kebun"
+              hint="Foto nyata dari kebun atau tempat usaha Anda"
+              value={businessPhotoUrl}
+              onChange={(val) => {
+                const url = typeof val === 'string' ? val : val[0];
+                setBusinessPhotoUrl(url);
+                setTouched(prev => ({ ...prev, business: true }));
+              }}
+              bucket="agrilink-uploads"
+              folder="verification/business"
+            />
+            {touched.business && !businessPhotoUrl && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Foto usaha wajib diunggah</p>}
+          </div>
         </div>
 
         {/* Section 3: Persetujuan */}
