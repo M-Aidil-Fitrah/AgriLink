@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { Toaster } from "react-hot-toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,6 +38,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartDrawer />
+          <Toaster position="bottom-right" />
         </CartProvider>
       </body>
     </html>
