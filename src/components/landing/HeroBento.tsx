@@ -112,20 +112,6 @@ export const HeroBento = ({ images }: { images: { hero: string } }) => {
                     </div>
                 </div>
 
-                {/* Stats Strip */}
-                <div className="border-t border-stone-100 bg-stone-50/50 grid grid-cols-2 md:grid-cols-4 divide-x divide-stone-100">
-                    {[
-                        { label: 'Petani Aktif', value: '2.400+' },
-                        { label: 'Produk Terjual', value: '18.000+' },
-                        { label: 'Jarak Terpendek', value: '0.8km' },
-                        { label: 'Kepuasan Rata-rata', value: '98%' },
-                    ].map((stat, i) => (
-                        <div key={i} className="p-8 text-center">
-                            <p className="text-3xl font-extrabold text-stone-950 mb-1">{stat.value}</p>
-                            <p className="text-[11px] uppercase font-bold tracking-widest text-stone-400">{stat.label}</p>
-                        </div>
-                    ))}
-                </div>
             </motion.div>
         </section>
     );

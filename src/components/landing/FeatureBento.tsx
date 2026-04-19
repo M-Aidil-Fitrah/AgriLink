@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Check, Info, MapPin, Sparkles, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
+import { Check, Info, MapPin, Sparkles } from 'lucide-react';
 
 export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
     const fadeUp = (delay = 0) => ({
