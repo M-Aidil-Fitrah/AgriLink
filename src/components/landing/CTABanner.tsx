@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
@@ -17,9 +17,9 @@ export const CTABanner = () => {
 
     return (
         <section className="container mx-auto px-4 py-16 max-w-7xl">
-            <motion.div 
+            <m.div 
                 {...fadeUp}
-                className="bg-green-950 rounded-[3rem] p-10 md:p-20 relative overflow-hidden group shadow-2xl shadow-green-950/20"
+                className="bg-green-950 rounded-4xl p-10 md:p-20 relative overflow-hidden group shadow-2xl shadow-green-950/20"
             >
                 {/* Background Pattern & Glow */}
                 <div className="absolute inset-0 opacity-10 pointer-events-none" 
@@ -62,7 +62,7 @@ export const CTABanner = () => {
                         </div>
                     </div>
                 </div>
-            </motion.div>
+            </m.div>
         </section>
     );
 };

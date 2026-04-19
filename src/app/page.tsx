@@ -3,13 +3,13 @@ import { Navbar } from "@/components/landing/Navbar";
 import { HeroBento } from "@/components/landing/HeroBento";
 
 // Lazy load components below the fold to improve performance (TBT & LCP)
-const FeatureBento = dynamic(() => import("@/components/landing/FeatureBento").then(mod => mod.FeatureBento), { ssr: true });
-const ProductBento = dynamic(() => import("@/components/landing/ProductBento").then(mod => mod.ProductBento), { ssr: true });
-const HowItWorksBento = dynamic(() => import("@/components/landing/HowItWorksBento").then(mod => mod.HowItWorksBento), { ssr: true });
-const RoleBento = dynamic(() => import("@/components/landing/RoleBento").then(mod => mod.RoleBento), { ssr: true });
-const TestimonialBento = dynamic(() => import("@/components/landing/TestimonialBento").then(mod => mod.TestimonialBento), { ssr: true });
-const CTABanner = dynamic(() => import("@/components/landing/CTABanner").then(mod => mod.CTABanner), { ssr: true });
-const FooterBento = dynamic(() => import("@/components/landing/FooterBento").then(mod => mod.FooterBento), { ssr: true });
+const FeatureBento = dynamic(() => import("@/components/landing/FeatureBento").then(mod => mod.FeatureBento));
+const ProductBento = dynamic(() => import("@/components/landing/ProductBento").then(mod => mod.ProductBento));
+const HowItWorksBento = dynamic(() => import("@/components/landing/HowItWorksBento").then(mod => mod.HowItWorksBento));
+const RoleBento = dynamic(() => import("@/components/landing/RoleBento").then(mod => mod.RoleBento));
+const TestimonialBento = dynamic(() => import("@/components/landing/TestimonialBento").then(mod => mod.TestimonialBento));
+const CTABanner = dynamic(() => import("@/components/landing/CTABanner").then(mod => mod.CTABanner));
+const FooterBento = dynamic(() => import("@/components/landing/FooterBento").then(mod => mod.FooterBento));
 
 export default function Home() {
     // Image paths from public/landing

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Image from 'next/image';
 import { Check, Info, MapPin, Sparkles } from 'lucide-react';
 
@@ -20,7 +20,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
             <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                     {/* Dark Feature Card */}
-                    <motion.div 
+                    <m.div 
                         {...fadeUp(0)}
                         className="md:col-span-5 bg-green-950 rounded-4xl overflow-hidden relative group min-h-[400px] flex flex-col justify-end p-10"
                     >
@@ -49,12 +49,12 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                         
                         {/* Abstract background element */}
                         <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-green-600/20 blur-[100px] rounded-full group-hover:bg-green-600/30 transition-all duration-700" />
-                    </motion.div>
+                    </m.div>
 
                     {/* Right Grid Area */}
                     <div className="md:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Food Miles Card */}
-                        <motion.div 
+                        <m.div 
                             {...fadeUp(0.1)}
                             className="bg-white rounded-4xl p-8 border border-stone-200/60 flex flex-col justify-between"
                         >
@@ -78,7 +78,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                                     <span className="text-lg font-black text-stone-950">94%</span>
                                 </div>
                                 <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                                    <motion.div 
+                                    <m.div 
                                         initial={{ width: 0 }}
                                         whileInView={{ width: '94%' }}
                                         transition={{ duration: 1, delay: 0.5 }}
@@ -86,10 +86,10 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                                     />
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
 
                         {/* Freshness Score Card */}
-                        <motion.div 
+                        <m.div 
                             {...fadeUp(0.2)}
                             className="bg-white rounded-4xl p-8 border border-stone-200/60 flex flex-col justify-between"
                         >
@@ -107,7 +107,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                             
                             <div className="grid grid-cols-6 gap-1 items-end h-12">
                                 {[40, 60, 45, 90, 75, 100].map((h, i) => (
-                                    <motion.div 
+                                    <m.div 
                                         key={i}
                                         initial={{ height: 0 }}
                                         whileInView={{ height: `${h}%` }}
@@ -117,10 +117,10 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                                     />
                                 ))}
                             </div>
-                        </motion.div>
+                        </m.div>
 
                         {/* Large Image/Traceability Card */}
-                        <motion.div 
+                        <m.div 
                             {...fadeUp(0.3)}
                             className="md:col-span-2 bg-white rounded-4xl overflow-hidden border border-stone-200/60 relative h-[280px] group"
                         >
@@ -147,7 +147,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                                     Setiap produk dapat anda pantau.
                                 </p>
                             </div>
-                        </motion.div>
+                        </m.div>
                     </div>
                 </div>
                 

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Image from 'next/image';
 import { Search, Package, Navigation, Heart } from 'lucide-react';
 
@@ -24,9 +24,9 @@ export const HowItWorksBento = ({ images }: { images: { howItWorks: string } }) 
 
     return (
         <section className="container mx-auto px-4 py-16 max-w-7xl">
-            <motion.div 
+            <m.div 
                 {...fadeUp(0)}
-                className="rounded-[2.5rem] overflow-hidden relative min-h-[600px] flex flex-col justify-between p-8 md:p-16 border border-stone-200/60 shadow-xl"
+                className="rounded-4xl overflow-hidden relative min-h-[600px] flex flex-col justify-between p-8 md:p-16 border border-stone-200/60 shadow-xl"
             >
                 {/* Background Image & Overlay */}
                 <Image 
@@ -59,7 +59,7 @@ export const HowItWorksBento = ({ images }: { images: { howItWorks: string } }) 
                 {/* Steps Cards Grid */}
                 <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-auto pt-16">
                     {steps.map((step, i) => (
-                        <motion.div 
+                        <m.div 
                             key={i}
                             {...fadeUp(0.2 + (i * 0.1))}
                             className={`bg-white rounded-4xl p-8 border border-stone-200/60 flex flex-col justify-between hover:border-green-200 transition-all group ${step.span}`}
@@ -73,10 +73,10 @@ export const HowItWorksBento = ({ images }: { images: { howItWorks: string } }) 
                             <p className="text-[13px] text-stone-500 leading-relaxed font-medium">
                                 {step.desc}
                             </p>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
-            </motion.div>
+            </m.div>
         </section>
     );
 };

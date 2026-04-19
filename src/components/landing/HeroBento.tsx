@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -16,21 +16,22 @@ export const HeroBento = ({ images }: { images: { hero: string } }) => {
     };
 
     return (
-        <section className="container mx-auto px-4 pt-32 pb-8 max-w-7xl">
-            <motion.div 
-                {...fadeUp}
-                className="bg-white rounded-4xl border border-stone-200/60 overflow-hidden shadow-sm"
-            >
-                <div className="p-8 md:p-12">
-                    {/* Top Label */}
-                    <motion.span 
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="inline-block text-[11px] font-bold tracking-[0.18em] text-stone-400 uppercase mb-8"
-                    >
-                        Marketplace Pertanian Berkelanjutan
-                    </motion.span>
+        <LazyMotion features={domAnimation}>
+            <section className="container mx-auto px-4 pt-32 pb-8 max-w-7xl">
+                <m.div 
+                    {...fadeUp}
+                    className="bg-white rounded-4xl border border-stone-200/60 overflow-hidden shadow-sm"
+                >
+                    <div className="p-8 md:p-12">
+                        {/* Top Label */}
+                        <m.span 
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="inline-block text-[11px] font-bold tracking-[0.18em] text-stone-400 uppercase mb-8"
+                        >
+                            Marketplace Pertanian Berkelanjutan
+                        </m.span>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                         {/* Heading Area */}
@@ -81,7 +82,8 @@ export const HeroBento = ({ images }: { images: { hero: string } }) => {
                     </div>
                 </div>
 
-            </motion.div>
-        </section>
+                </m.div>
+            </section>
+        </LazyMotion>
     );
 };
