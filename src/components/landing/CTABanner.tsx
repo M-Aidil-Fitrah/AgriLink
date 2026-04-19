@@ -33,10 +33,10 @@ export const CTABanner = () => {
                             <Sparkles className="text-green-400" size={20} />
                             <span className="text-[11px] font-bold tracking-[0.2em] text-green-400 uppercase">Ayo Bergabung Sekarang</span>
                         </div>
-                        <h2 className="text-5xl md:text-[80px] leading-[0.9] font-extrabold text-white uppercase italic tracking-tighter mb-0">
+                        <h2 className="text-5xl md:text-[80px] leading-[0.9] font-extrabold text-white uppercase not-italic tracking-tighter mb-0">
                             Mulai Perjalanan <br />
-                            <span className="text-green-500 not-italic">Pangan Sehat</span> <br />
-                            Anda <span className="text-green-500 not-italic">Hari Ini.</span>
+                            <span className="text-green-500 italic">Pangan Sehat</span> <br />
+                            Anda <span className="text-green-500 italic">Hari Ini.</span>
                         </h2>
                     </div>
 

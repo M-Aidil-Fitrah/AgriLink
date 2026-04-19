@@ -36,9 +36,9 @@ export const RoleBento = ({ images }: { images: { farmer: string, buyer: string 
                         <span className="text-[11px] font-bold tracking-[0.18em] text-green-400 uppercase mb-6 block">
                             Untuk Produsen
                         </span>
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-white uppercase italic tracking-tighter mb-8 leading-[0.9]">
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-white uppercase not-italic tracking-tighter mb-8 leading-[0.9]">
                             Jual Lebih <br />
-                            <span className="text-green-500 not-italic">Menguntungkan,</span> <br />
+                            <span className="text-green-500 italic">Menguntungkan,</span> <br />
                             Tanpa Perantara.
                         </h2>
                         
@@ -80,10 +80,10 @@ export const RoleBento = ({ images }: { images: { farmer: string, buyer: string 
                         <span className="text-[11px] font-bold tracking-[0.18em] text-stone-300 uppercase mb-6 block">
                             Untuk Konsumen
                         </span>
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-white uppercase italic tracking-tighter mb-8 leading-[0.9]">
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-white uppercase not-italic tracking-tighter mb-8 leading-[0.9]">
                             Belanja Produk <br />
-                            <span className="text-green-500 not-italic">Segar</span> Dengan <br />
-                            <span className="text-green-500 not-italic">Transparansi.</span>
+                            <span className="text-green-500 italic">Segar</span> Dengan <br />
+                            <span className="text-green-500 italic">Transparansi.</span>
                         </h2>
                         
                         <ul className="mb-10 space-y-3">

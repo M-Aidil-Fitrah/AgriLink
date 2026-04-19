@@ -43,10 +43,10 @@ export const HowItWorksBento = ({ images }: { images: { howItWorks: string } }) 
                         <span className="text-[11px] font-bold tracking-[0.18em] text-green-400 uppercase mb-6 block">
                             Alur Kerja Platform
                         </span>
-                        <h2 className="text-4xl md:text-6xl font-extrabold text-white uppercase italic tracking-tighter leading-[0.9]">
+                        <h2 className="text-4xl md:text-6xl font-extrabold text-white uppercase not-italic tracking-tighter leading-[0.9]">
                             Mudah, <br />
                             Transparan, <br />
-                            <span className="text-green-500 not-italic text-5xl md:text-7xl">Terpercaya.</span>
+                            <span className="text-green-500 italic text-5xl md:text-7xl">Terpercaya.</span>
                         </h2>
                     </div>
                     <div className="md:w-1/3 pt-4 md:pt-[100px]">

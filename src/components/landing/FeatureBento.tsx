@@ -149,29 +149,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                         </motion.div>
                     </div>
                 </div>
-
-                {/* Bottom Small Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                        { icon: <TrendingUp size={18} />, title: "Economic Growth", desc: "Meningkatkan pendapatan petani lokal hingga 40%." },
-                        { icon: <ShieldCheck size={18} />, title: "Quality Control", desc: "Standarisasi ketat untuk setiap mitra yang bergabung." },
-                        { icon: <Zap size={18} />, title: "Near Instant Delivery", desc: "Optimasi logistik lokal untuk pengiriman di hari yang sama." },
-                    ].map((item, i) => (
-                        <motion.div 
-                            key={i}
-                            {...fadeUp(0.4 + (i * 0.1))}
-                            className="bg-white rounded-4xl p-5 border border-stone-200/60 flex flex-col group hover:border-green-200 transition-all"
-                        >
-                            <div className="min-w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400 group-hover:text-green-600 group-hover:bg-green-50 transition-colors mb-4">
-                                {item.icon}
-                            </div>
-                            <div>
-                                <h4 className="text-[13px] font-bold text-stone-950 uppercase tracking-widest mb-1">{item.title}</h4>
-                                <p className="text-xs text-stone-500 leading-relaxed">{item.desc}</p>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
+                
             </div>
         </section>
     );

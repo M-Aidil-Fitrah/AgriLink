@@ -19,7 +19,7 @@ export const ProductBento = ({ images }: { images: { tomatoes: string } }) => {
     const products = [
         { name: 'Bayam Organik', location: 'Kab. Malang', price: 'Rp 4.500', unit: '/ ikat', miles: '0.8km', freshness: '9.8', color: '#e8f5e9' },
         { name: 'Tomat Cherry', location: 'Batu', price: 'Rp 12.000', unit: '/ 500g', miles: '4.2km', freshness: '9.5', color: '#fce4ec' },
-        { name: 'Selada Hidroponik', location: 'Kota Malang', price: 'Rp 8.500', unit: '/ 250g', miles: '1.5km', freshness: '9.9', color: '#f3e5f5' },
+        { name: 'Selada', location: 'Kota Malang', price: 'Rp 8.500', unit: '/ 250g', miles: '1.5km', freshness: '9.9', color: '#f3e5f5' },
         { name: 'Jagung Manis', location: 'Kediri', price: 'Rp 7.000', unit: '/ kg', miles: '12km', freshness: '9.2', color: '#fff9c4' },
     ];
 
@@ -57,10 +57,10 @@ export const ProductBento = ({ images }: { images: { tomatoes: string } }) => {
                     <div className="absolute inset-0 bg-linear-to-t from-green-950 via-green-950/40 to-transparent" />
                     
                     <div className="relative z-10">
-                        <h3 className="text-[40px] leading-none font-extrabold text-white uppercase italic mb-6">
+                        <h3 className="text-[40px] leading-none font-extrabold text-white uppercase not-italic mb-6">
                             18.000+ Produk <br />
-                            <span className="text-green-500 not-italic">Segar</span> Langsung <br />
-                            <span className="text-green-500 not-italic">Dari Kebun.</span>
+                            <span className="text-green-500 italic">Segar</span> Langsung <br />
+                            <span className="text-green-500 italic">Dari Kebun.</span>
                         </h3>
                         <p className="text-green-100/70 text-sm max-w-xs mb-8 font-medium">
                             Setiap pembelian mendukung kesejahteraan petani lokal dan lingkungan yang sehat.
@@ -92,7 +92,7 @@ export const ProductBento = ({ images }: { images: { tomatoes: string } }) => {
                                     <span className="text-[10px] font-bold text-stone-950">4.9</span>
                                 </div>
                                 <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                                    <span className="text-[10px] font-bold text-green-600 uppercase tracking-tighter">Unggulan</span>
+                                    <span className="text-[10px] font-bold text-green-600 uppercase tracking-tighter">Organik</span>
                                 </div>
                                 
                                 {/* Placeholder for actual product icons */}

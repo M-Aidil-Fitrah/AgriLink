@@ -30,7 +30,7 @@ export const FooterBento = () => {
                         
                         <div className="space-y-4 mb-10">
                             {[
-                                { icon: <MapPin size={18} />, text: 'Jl. Dieng No. 123, Kota Batu, Indonesia' },
+                                { icon: <MapPin size={18} />, text: 'Jl. Sultan Malikul Saleh No. 123, Kota Banda Aceh, Indonesia' },
                                 { icon: <Phone size={18} />, text: '+62 812 3456 7890' },
                                 { icon: <Mail size={18} />, text: 'hello@agrilink.id' },
                             ].map((item, i) => (

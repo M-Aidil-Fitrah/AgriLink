@@ -36,11 +36,11 @@ export const HeroBento = ({ images }: { images: { hero: string } }) => {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                         {/* Heading Area */}
                         <div className="lg:col-span-7">
-                            <h1 className="text-6xl md:text-[80px] leading-[0.9] font-extrabold text-stone-950 uppercase tracking-tighter mb-8 italic">
+                            <h1 className="text-6xl md:text-[80px] leading-[0.9] font-extrabold text-stone-950 uppercase tracking-tighter mb-8 not-italic">
                                 Panen <br />
-                                <span className="text-green-600 not-italic">Langsung,</span> <br />
+                                <span className="text-green-600 italic">Langsung,</span> <br />
                                 Segar <br />
-                                <span className="text-green-600 not-italic">Terjamin.</span>
+                                <span className="text-green-600 italic">Terjamin.</span>
                             </h1>
                             
                             <p className="text-lg text-stone-500 max-w-md mb-10 leading-relaxed">
