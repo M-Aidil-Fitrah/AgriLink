@@ -21,10 +21,11 @@ const MapPicker = dynamic<MapPickerProps>(
 
 import { User } from "@prisma/client";
 
+import { toast } from "react-hot-toast";
+
 export function ProfileView({ user, initialLocations }: { user: User; initialLocations: Location[] }) {
   const [activeTab, setActiveTab] = useState<"biodata" | "password" | "alamat">("biodata");
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Address Form States
   const [showAddLoc, setShowAddLoc] = useState(false);
@@ -39,8 +40,8 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
 
     startTransition(async () => {
       const res = await updateProfile(data);
-      if (res.error) setMessage({ type: "error", text: res.error });
-      else setMessage({ type: "success", text: "Profil berhasil diperbarui!" });
+      if (res.error) toast.error(res.error);
+      else toast.success("Profil berhasil diperbarui!");
     });
   };
 
@@ -55,16 +56,19 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
 
     startTransition(async () => {
       const res = await updatePassword(data);
-      if (res.error) setMessage({ type: "error", text: res.error });
+      if (res.error) toast.error(res.error);
       else {
-          setMessage({ type: "success", text: "Password berhasil diperbarui!" });
+          toast.success("Password berhasil diperbarui!");
           (e.target as HTMLFormElement).reset();
       }
     });
   };
 
   const handleAddLocation = async () => {
-    if (!newLoc.label || !newLoc.address || !newLoc.lat) return;
+    if (!newLoc.label || !newLoc.address || !newLoc.lat) {
+      toast.error("Silakan lengkapi data alamat dan lokasi");
+      return;
+    }
     
     startTransition(async () => {
       const res = await addLocation({
@@ -74,9 +78,9 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
         longitude: newLoc.lon,
         isPrimary: newLoc.isPrimary
       });
-      if (res.error) setMessage({ type: "error", text: res.error });
+      if (res.error) toast.error(res.error);
       else {
-        setMessage({ type: "success", text: "Alamat berhasil ditambah!" });
+        toast.success("Alamat berhasil ditambah!");
         setShowAddLoc(false);
         setNewLoc({ label: "", address: "", lat: 0, lon: 0, isPrimary: false });
       }
@@ -92,33 +96,27 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
 
       <div className="flex flex-wrap gap-1 bg-gray-100 p-1.5 rounded-2xl w-fit mb-8">
         <button
-          onClick={() => { setActiveTab("biodata"); setMessage(null); }}
+          onClick={() => { setActiveTab("biodata"); }}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "biodata" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
         >
           <UserIcon className="w-4 h-4" />
           Biodata
         </button>
         <button
-          onClick={() => { setActiveTab("password"); setMessage(null); }}
+          onClick={() => { setActiveTab("password"); }}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "password" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
         >
           <Lock className="w-4 h-4" />
           Ganti Password
         </button>
         <button
-          onClick={() => { setActiveTab("alamat"); setMessage(null); }}
+          onClick={() => { setActiveTab("alamat"); }}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "alamat" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
         >
           <MapPin className="w-4 h-4" />
           Buku Alamat
         </button>
       </div>
-
-      {message && (
-        <div className={`mb-6 p-4 rounded-2xl text-sm font-bold border ${message.type === "success" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-red-50 border-red-100 text-red-700"}`}>
-          {message.text}
-        </div>
-      )}
 
       {activeTab === "biodata" && (
         <form onSubmit={handleUpdateProfile} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">

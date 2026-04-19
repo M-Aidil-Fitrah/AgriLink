@@ -6,6 +6,7 @@ import { CultivationMethod, Product as PrismaProduct } from "@prisma/client";
 import { createProduct, updateProduct, ProductInput } from "@/app/actions/productActions";
 import { Loader2 } from "lucide-react";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
+import { toast } from "react-hot-toast";
 
 type Product = PrismaProduct & { images: string[] };
 
@@ -48,7 +49,9 @@ export function ProductForm({ product }: { product?: Product | null }) {
 
       if (!result.success) {
         setError(result.error);
+        toast.error(result.error || "Gagal menyimpan produk");
       } else {
+        toast.success(product ? "Produk diperbarui!" : "Produk berhasil diupload!");
         router.push("/dashboard/farmer-produk");
       }
     });

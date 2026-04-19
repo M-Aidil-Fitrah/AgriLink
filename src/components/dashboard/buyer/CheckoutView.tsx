@@ -9,6 +9,8 @@ import { createOrderAction, getUserPrimaryLocation } from "@/app/actions/orderAc
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
+import { toast } from "react-hot-toast";
+
 export function CheckoutView() {
   const { items, totalPrice, clearCart } = useCart();
   const router = useRouter();
@@ -34,7 +36,9 @@ export function CheckoutView() {
 
   const handleCheckout = () => {
     if (!location) {
-      setError("Silakan atur alamat pengiriman terlebih dahulu di menu Profil.");
+      const msg = "Silakan atur alamat pengiriman terlebih dahulu di menu Profil.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -54,12 +58,14 @@ export function CheckoutView() {
 
       if (result.success) {
         setIsSuccess(true);
+        toast.success("Pembayaran Berhasil! Pesanan Anda sedang diproses.");
         setTimeout(() => {
           clearCart();
           router.push("/dashboard/pesanan");
         }, 3000);
       } else {
         setError(result.error);
+        toast.error(result.error || "Gagal membuat pesanan");
       }
     });
   };

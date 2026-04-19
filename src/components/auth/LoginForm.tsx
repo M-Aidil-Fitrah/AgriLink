@@ -1,14 +1,21 @@
 'use client';
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { authenticate } from "@/app/actions/authActions";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { AnimatedInput } from "./AuthComponents";
+import { toast } from "react-hot-toast";
 
 export default function LoginForm() {
     const [errorMessage, dispatch, isPending] = useActionState(authenticate, undefined);
+
+    useEffect(() => {
+        if (errorMessage) {
+            toast.error(errorMessage);
+        }
+    }, [errorMessage]);
 
     return (
         <motion.div

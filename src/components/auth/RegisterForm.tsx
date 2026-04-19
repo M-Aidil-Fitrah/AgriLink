@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatedInput, PasswordStrength } from "./AuthComponents";
 
+import { toast } from "react-hot-toast";
+
 export default function RegisterForm() {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
@@ -23,14 +25,14 @@ export default function RegisterForm() {
         if (pwMismatch) return;
 
         const formData = new FormData(e.currentTarget);
-        // All registrations default to USER role in backend, 
-        // but we follow current logic of not changing actions.
 
         startTransition(async () => {
             const res = await registerUser(null, formData);
             if (res?.error) {
                 setError(res.error);
+                toast.error(res.error);
             } else {
+                toast.success("Registrasi berhasil! Silakan masuk.");
                 router.push("/login");
             }
         });

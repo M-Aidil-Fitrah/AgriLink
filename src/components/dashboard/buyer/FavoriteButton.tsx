@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useState, useOptimistic } from "react";
+import { useTransition, useOptimistic } from "react";
 import { toggleFavorite } from "@/app/actions/favoriteActions";
 import { Heart } from "lucide-react";
 import { toast } from "react-hot-toast";

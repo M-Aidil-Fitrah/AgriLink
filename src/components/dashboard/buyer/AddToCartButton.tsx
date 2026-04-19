@@ -3,6 +3,7 @@
 import { useCart, CartItem } from "@/context/CartContext";
 import { Check, Plus } from "lucide-react";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 
 export function AddToCartButton({ item }: { item: CartItem }) {
   const { addItem } = useCart();
@@ -13,6 +14,7 @@ export function AddToCartButton({ item }: { item: CartItem }) {
     e.stopPropagation();
     addItem(item);
     setAdded(true);
+    toast.success(`${item.name} ditambahkan ke keranjang`);
     setTimeout(() => setAdded(false), 2000);
   };
 

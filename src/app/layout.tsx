@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { Toaster } from "react-hot-toast";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export default function RootLayout({
   children,
@@ -38,7 +38,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartDrawer />
-          <Toaster position="bottom-right" />
+          <ToastProvider />
         </CartProvider>
       </body>
     </html>
