@@ -6,7 +6,7 @@ export function RegisterView() {
     <div className="relative h-screen w-full overflow-hidden bg-gray-950 flex flex-col items-center justify-center">
       <div className="absolute inset-0 w-full h-full z-0">
         <Image
-          src="/images/auth/register.jfif"
+          src="/images/auth/register.jpg"
           alt="Farmer in field"
           fill
           className="object-cover opacity-60"
