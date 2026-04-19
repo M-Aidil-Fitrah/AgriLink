@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroBento } from "@/components/landing/HeroBento";
+import { LandingMotionProvider } from "@/components/landing/LandingMotionProvider";
 
 // Lazy load components below the fold to improve performance (TBT & LCP)
 const FeatureBento = dynamic(() => import("@/components/landing/FeatureBento").then(mod => mod.FeatureBento));
@@ -22,22 +23,24 @@ export default function Home() {
     };
 
     return (
-        <main className="min-h-screen bg-[#f2f4f0] font-sans text-stone-950 overflow-x-hidden">
-            <Navbar />
-            
-            <div className="flex flex-col">
-                {/* HeroBento is immediately visible, so we load it directly */}
-                <HeroBento images={landingImages} />
+        <LandingMotionProvider>
+            <main className="min-h-screen bg-[#f2f4f0] font-sans text-stone-950 overflow-x-hidden">
+                <Navbar />
                 
-                {/* Sections below the fold are loaded dynamically */}
-                <FeatureBento images={landingImages} />
-                <ProductBento images={landingImages} />
-                <HowItWorksBento images={landingImages} />
-                <RoleBento images={landingImages} />
-                <TestimonialBento />
-                <CTABanner />
-                <FooterBento />
-            </div>
-        </main>
+                <div className="flex flex-col">
+                    {/* HeroBento is immediately visible, so we load it directly */}
+                    <HeroBento images={landingImages} />
+                    
+                    {/* Sections below the fold are loaded dynamically */}
+                    <FeatureBento images={landingImages} />
+                    <ProductBento images={landingImages} />
+                    <HowItWorksBento images={landingImages} />
+                    <RoleBento images={landingImages} />
+                    <TestimonialBento />
+                    <CTABanner />
+                    <FooterBento />
+                </div>
+            </main>
+        </LandingMotionProvider>
     );
 }

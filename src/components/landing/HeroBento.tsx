@@ -1,6 +1,6 @@
 'use client';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -16,8 +16,7 @@ export const HeroBento = ({ images }: { images: { hero: string } }) => {
     };
 
     return (
-        <LazyMotion features={domAnimation}>
-            <section className="container mx-auto px-4 pt-32 pb-8 max-w-7xl">
+        <section className="container mx-auto px-4 pt-32 pb-8 max-w-7xl">
                 <m.div 
                     {...fadeUp}
                     className="bg-white rounded-4xl border border-stone-200/60 overflow-hidden shadow-sm"
@@ -84,6 +83,5 @@ export const HeroBento = ({ images }: { images: { hero: string } }) => {
 
                 </m.div>
             </section>
-        </LazyMotion>
     );
 };

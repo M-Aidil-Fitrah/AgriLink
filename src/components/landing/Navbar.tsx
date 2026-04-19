@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Menu, X } from 'lucide-react';
 
 export const Navbar = () => {
@@ -19,8 +19,7 @@ export const Navbar = () => {
     }, []);
 
     return (
-        <LazyMotion features={domAnimation}>
-            <m.nav
+        <m.nav
                 initial={{ y: -12, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -54,7 +53,7 @@ export const Navbar = () => {
                     {/* Desktop Nav - Focused on Dashboard */}
                     <div className="hidden md:flex items-center gap-8">
                         <Link 
-                            href="/dashboard/produk"
+                            href="/dashboard"
                             className="text-[13px] font-medium tracking-wide text-stone-600 hover:text-green-600 transition-colors"
                         >
                             Lihat Dashboard
@@ -99,7 +98,7 @@ export const Navbar = () => {
                     >
                         <div className="flex flex-col gap-4 p-6">
                             <Link 
-                                href="/dashboard/produk"
+                                href="/dashboard"
                                 className="text-lg font-semibold text-stone-950 px-2 py-1"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
@@ -117,6 +116,5 @@ export const Navbar = () => {
                 )}
             </AnimatePresence>
         </m.nav>
-    </LazyMotion>
     );
 };
