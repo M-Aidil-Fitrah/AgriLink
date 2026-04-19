@@ -42,6 +42,7 @@ export const Navbar = () => {
                                 alt="Logo Agrilink" 
                                 fill 
                                 className="object-contain"
+                                priority
                             />
                         </div>
                         <span className="font-bold text-xl tracking-tight text-stone-950">

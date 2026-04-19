@@ -54,7 +54,7 @@ export const RoleBento = ({ images }: { images: { farmer: string, buyer: string 
                         </ul>
 
                         <Link 
-                            href="/register?role=farmer" 
+                            href="/register" 
                             className="inline-flex bg-green-500 text-green-950 px-8 py-4 rounded-full font-bold text-[14px] items-center gap-3 hover:bg-green-400 transition-all uppercase tracking-wide"
                         >
                             Daftar Jadi Petani

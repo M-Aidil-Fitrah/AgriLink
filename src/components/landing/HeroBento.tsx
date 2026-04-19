@@ -3,17 +3,16 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Leaf, Zap } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export const HeroBento = ({ images }: { images: { hero: string } }) => {
     const fadeUp = {
-        initial: { opacity: 0, y: 20 },
-        whileInView: { 
+        initial: { opacity: 0, y: 15 },
+        animate: { 
             opacity: 1, 
             y: 0,
-            transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
-        },
-        viewport: { once: true }
+            transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
+        }
     };
 
     return (
@@ -56,7 +55,7 @@ export const HeroBento = ({ images }: { images: { hero: string } }) => {
                                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                 </Link>
                                 <Link 
-                                    href="/register?role=farmer" 
+                                    href="/register" 
                                     className="bg-white border border-stone-200 text-stone-950 px-8 py-4 rounded-full font-bold text-[15px] hover:bg-stone-50 transition-all"
                                 >
                                     Jadi Mitra Petani
@@ -73,40 +72,10 @@ export const HeroBento = ({ images }: { images: { hero: string } }) => {
                                     fill
                                     className="object-cover"
                                     priority
+                                    sizes="(max-width: 768px) 100vw, 50vw"
                                 />
                                 
-                                {/* Floating Metrics */}
-                                <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-3">
-                                    <motion.div 
-                                        initial={{ x: -20, opacity: 0 }}
-                                        whileInView={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.4 }}
-                                        className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/20 flex items-center gap-3 shadow-lg self-start"
-                                    >
-                                        <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white">
-                                            <Zap size={14} />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold tracking-wider text-stone-400">Food Miles</p>
-                                            <p className="text-sm font-bold text-stone-950">Rata-rata 4.2km</p>
-                                        </div>
-                                    </motion.div>
-
-                                    <motion.div 
-                                        initial={{ x: 20, opacity: 0 }}
-                                        whileInView={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.5 }}
-                                        className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/20 flex items-center gap-3 shadow-lg self-end"
-                                    >
-                                        <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white">
-                                            <Leaf size={14} />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold tracking-wider text-stone-400">Freshness Score</p>
-                                            <p className="text-sm font-bold text-stone-950">9.8 / 10 Optimal</p>
-                                        </div>
-                                    </motion.div>
-                                </div>
+                            
                             </div>
                         </div>
                     </div>

@@ -56,7 +56,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                         {/* Food Miles Card */}
                         <motion.div 
                             {...fadeUp(0.1)}
-                            className="bg-white rounded-[2rem] p-8 border border-stone-200/60 flex flex-col justify-between"
+                            className="bg-white rounded-4xl p-8 border border-stone-200/60 flex flex-col justify-between"
                         >
                             <div className="aspect-4/3 rounded-2xl mb-5 flex items-center justify-center relative overflow-hidden group-hover:shadow-md transition-shadow">
                                 <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 font-bold">
@@ -91,7 +91,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                         {/* Freshness Score Card */}
                         <motion.div 
                             {...fadeUp(0.2)}
-                            className="bg-white rounded-[2rem] p-8 border border-stone-200/60 flex flex-col justify-between"
+                            className="bg-white rounded-4xl p-8 border border-stone-200/60 flex flex-col justify-between"
                         >
                             <div>
                                 <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 mb-6">
@@ -122,13 +122,14 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                         {/* Large Image/Traceability Card */}
                         <motion.div 
                             {...fadeUp(0.3)}
-                            className="md:col-span-2 bg-white rounded-[2rem] overflow-hidden border border-stone-200/60 relative h-[280px] group"
+                            className="md:col-span-2 bg-white rounded-4xl overflow-hidden border border-stone-200/60 relative h-[280px] group"
                         >
                             <Image 
                                 src={images.tomatoes} 
                                 alt="Fresh Harvest" 
                                 fill 
                                 className="object-cover group-hover:scale-105 transition-transform duration-700"
+                                sizes="(max-width: 768px) 100vw, 80vw"
                             />
                             <div className="absolute inset-0 bg-linear-to-t from-green-950 via-green-950/40 to-transparent" />
                             <div className="absolute inset-0 p-10 flex flex-col justify-end">
@@ -138,12 +139,12 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                                     </div>
                                     <span className="text-[11px] font-bold tracking-[0.2em] text-green-400 uppercase">Traceability</span>
                                 </div>
-                                <h3 className="text-3xl font-extrabold text-white uppercase italic tracking-tighter mb-2">
-                                    Lacak Dari <span className="text-green-500 not-italic">Benih</span> <br /> 
-                                    Hingga <span className="text-green-500 not-italic">Meja Makan</span>
+                                <h3 className="text-3xl font-extrabold text-white uppercase not-italic tracking-tighter mb-2">
+                                    Lacak Dari <span className="text-green-500 italic">Benih</span> <br /> 
+                                    Hingga <span className="text-green-500 italic">Meja Makan</span>
                                 </h3>
                                 <p className="text-stone-300 text-sm max-w-lg mb-0 font-medium opacity-80">
-                                    Setiap produk memiliki riwayat digital yang dapat diakses melalui QR code.
+                                    Setiap produk dapat anda pantau.
                                 </p>
                             </div>
                         </motion.div>

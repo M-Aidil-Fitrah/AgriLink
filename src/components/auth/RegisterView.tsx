@@ -64,7 +64,7 @@ export function RegisterView() {
                                 className="object-contain"
                             />
                         </div>
-                        <span className="font-bold text-xl tracking-tight text-white uppercase tracking-[0.2em] text-[15px]">
+                        <span className="font-bold uppercase tracking-[0.2em] text-[15px] text-white">
                             AgriLink
                         </span>
                     </motion.div>
@@ -129,7 +129,7 @@ export function RegisterView() {
                 {/* Mobile Header */}
                 <div className="lg:hidden absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
                     <Image src="/logo_agrilink.png" width={24} height={24} alt="Logo" className="object-contain" />
-                    <span className="font-bold text-lg tracking-tight text-stone-900 uppercase tracking-widest text-sm">
+                    <span className="font-bold text-stone-900 uppercase tracking-widest text-sm">
                         AgriLink
                     </span>
                 </div>

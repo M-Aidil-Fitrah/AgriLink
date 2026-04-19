@@ -21,7 +21,6 @@ interface TokoDetailViewProps {
 
 export async function TokoDetailView({ sellerId }: TokoDetailViewProps) {
   const session = await auth();
-  if (!session) return null;
 
   // Fetch seller application
   const seller = await prisma.sellerApplication.findUnique({
@@ -70,12 +69,15 @@ export async function TokoDetailView({ sellerId }: TokoDetailViewProps) {
     return { ...product, images };
   });
 
-  // Fetch user favorites
-  const userFavorites = await prisma.favorite.findMany({
-    where: { userId: session.user.id },
-    select: { productId: true },
-  });
-  const favoritedIds = new Set(userFavorites.map((f) => f.productId));
+  // Fetch user favorites if logged in
+  const favoritedIds = new Set<string>();
+  if (session?.user?.id) {
+    const userFavorites = await prisma.favorite.findMany({
+      where: { userId: session.user.id },
+      select: { productId: true },
+    });
+    userFavorites.forEach((f) => favoritedIds.add(f.productId));
+  }
 
   return (
     <div className="p-6 pb-20 max-w-[1200px] mx-auto">

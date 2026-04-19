@@ -1,12 +1,15 @@
+import dynamic from 'next/dynamic';
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroBento } from "@/components/landing/HeroBento";
-import { FeatureBento } from "@/components/landing/FeatureBento";
-import { ProductBento } from "@/components/landing/ProductBento";
-import { HowItWorksBento } from "@/components/landing/HowItWorksBento";
-import { RoleBento } from "@/components/landing/RoleBento";
-import { TestimonialBento } from "@/components/landing/TestimonialBento";
-import { CTABanner } from "@/components/landing/CTABanner";
-import { FooterBento } from "@/components/landing/FooterBento";
+
+// Lazy load components below the fold to improve performance (TBT & LCP)
+const FeatureBento = dynamic(() => import("@/components/landing/FeatureBento").then(mod => mod.FeatureBento), { ssr: true });
+const ProductBento = dynamic(() => import("@/components/landing/ProductBento").then(mod => mod.ProductBento), { ssr: true });
+const HowItWorksBento = dynamic(() => import("@/components/landing/HowItWorksBento").then(mod => mod.HowItWorksBento), { ssr: true });
+const RoleBento = dynamic(() => import("@/components/landing/RoleBento").then(mod => mod.RoleBento), { ssr: true });
+const TestimonialBento = dynamic(() => import("@/components/landing/TestimonialBento").then(mod => mod.TestimonialBento), { ssr: true });
+const CTABanner = dynamic(() => import("@/components/landing/CTABanner").then(mod => mod.CTABanner), { ssr: true });
+const FooterBento = dynamic(() => import("@/components/landing/FooterBento").then(mod => mod.FooterBento), { ssr: true });
 
 export default function Home() {
     // Image paths from public/landing
@@ -23,7 +26,10 @@ export default function Home() {
             <Navbar />
             
             <div className="flex flex-col">
+                {/* HeroBento is immediately visible, so we load it directly */}
                 <HeroBento images={landingImages} />
+                
+                {/* Sections below the fold are loaded dynamically */}
                 <FeatureBento images={landingImages} />
                 <ProductBento images={landingImages} />
                 <HowItWorksBento images={landingImages} />

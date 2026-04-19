@@ -492,7 +492,7 @@ export default function MapWidget({
                          </div>
                          <Link
                           href={`/dashboard/toko/${m.userId}`}
-                          className="px-6 py-2.5 bg-emerald-600 !text-white rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-emerald-700 transition-all text-center flex items-center justify-center active:scale-95 shadow-md shadow-emerald-200"
+                          className="px-6 py-2.5 bg-emerald-600 text-white! rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-emerald-700 transition-all text-center flex items-center justify-center active:scale-95 shadow-md shadow-emerald-200"
                         >
                           LIHAT TOKO
                         </Link>
@@ -517,7 +517,7 @@ export default function MapWidget({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99999] bg-white flex flex-col overflow-hidden"
+            className="fixed inset-0 z-99999 bg-white flex flex-col overflow-hidden"
           >
             <div className="flex-1">{mapContent}</div>
           </motion.div>
