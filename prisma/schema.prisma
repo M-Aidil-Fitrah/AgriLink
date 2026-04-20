@@ -89,6 +89,7 @@ model User {
   orders            Order[]            // Orders placed by USER
   favorites         Favorite[]
   sellerApplication SellerApplication?
+  cart              Cart?              // Shopping cart (USER role only)
 
   notifications     Notification[]
   createdAt DateTime @default(now())
@@ -144,6 +145,7 @@ model Product {
 
   orderItems OrderItem[]
   favorites  Favorite[]
+  cartItems  CartItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -258,4 +260,36 @@ model Notification {
   @@index([userId])
 }
 
+// ── Cart ──────────────────────────────────────────────────────────────
 
+// One cart per USER (created on demand)
+model Cart {
+  id     String     @id @default(cuid())
+  userId String     @unique
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items  CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Each row is one distinct product in the cart
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quantity  Int     @default(1)
+  /// Price snapshot at the time the item was added
+  price     Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}

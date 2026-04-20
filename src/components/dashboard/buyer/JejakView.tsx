@@ -161,7 +161,7 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       </div>
 
       {avgMiles !== null && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-[9px] font-black uppercase tracking-widest opacity-80 mb-2">
@@ -192,15 +192,6 @@ export function JejakView({ products }: { products: ProductRow[] }) {
               Menampilkan
             </p>
             <p className="text-xl font-black text-gray-900">{filteredProducts.length} <span className="text-sm text-gray-400">/ {products.length}</span></p>
-          </div>
-
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
-              Terverifikasi GPS
-            </p>
-            <p className="text-xl font-black text-gray-900">
-              {validDistances.length}
-            </p>
           </div>
         </div>
       )}

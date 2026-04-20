@@ -1,103 +1,149 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useTransition,
+} from "react";
+import {
+  getCartAction,
+  addToCartAction,
+  removeFromCartAction,
+  updateCartQuantityAction,
+  clearCartAction,
+} from "@/app/actions/cartActions";
+import type { CartItemData } from "@/app/actions/cartActions";
 
-export type CartItem = {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  images: string[];
-  unit: string;
-  farmerId: string;
-  farmerName: string;
-};
+// Re-export CartItem shape for consumers that import it from this module
+export type CartItem = CartItemData;
 
 type CartContextType = {
   items: CartItem[];
+  /** True while any cart action is in-flight */
+  isLoading: boolean;
   addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  removeItem: (cartItemId: string) => void;
+  updateQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
   totalPrice: number;
   totalItems: number;
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+  isAuthenticated: boolean;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  // Use state initializer for SSR-safe localStorage access
+export function CartProvider({ userId, children }: { userId: string | null, children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [isFetching, setIsFetching] = useState(true);
 
-  // Load from localStorage on mount (client-side only)
+  // ── Initial load from DB ─────────────────────────────────────────────────
   useEffect(() => {
-    const saved = localStorage.getItem("cart_items");
-    if (saved) {
-      try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setItems(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse cart", e);
+    let cancelled = false;
+    getCartAction().then((result) => {
+      if (!cancelled) {
+        if (result.success) setItems(result.data.items);
+        else setItems([]); // Clear cart items if no session or error
+        setIsFetching(false);
       }
-    }
-    setIsInitialized(true);
-  }, []);
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
 
-  // Save to localStorage when items change, but only after initialization
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem("cart_items", JSON.stringify(items));
-    }
-  }, [items, isInitialized]);
+  // ── Mutations ────────────────────────────────────────────────────────────
 
-  const addItem = (newItem: CartItem) => {
+  const addItem = useCallback((item: CartItem) => {
+    // Optimistic update
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === newItem.id);
+      const existing = prev.find((i) => i.productId === item.productId);
       if (existing) {
         return prev.map((i) =>
-          i.id === newItem.id ? { ...i, quantity: i.quantity + newItem.quantity } : i
+          i.productId === item.productId
+            ? { ...i, quantity: i.quantity + item.quantity }
+            : i
         );
       }
-      return [...prev, newItem];
+      return [...prev, item];
     });
     setIsCartOpen(true);
-  };
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-  };
+    startTransition(async () => {
+      const result = await addToCartAction(item.productId, item.quantity, item.price);
+      if (result.success) {
+        // Replace optimistic item with real DB row (gets a proper CartItem.id)
+        setItems((prev) =>
+          prev.map((i) =>
+            i.productId === result.data.productId ? result.data : i
+          )
+        );
+      } else {
+        // Rollback on failure
+        setItems((prev) =>
+          prev.filter((i) => i.productId !== item.productId)
+        );
+      }
+    });
+  }, []);
 
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) return;
+  const removeItem = useCallback((cartItemId: string) => {
+    // Optimistic remove
+    setItems((prev) => prev.filter((i) => i.id !== cartItemId));
+
+    startTransition(async () => {
+      await removeFromCartAction(cartItemId);
+      // Re-sync from DB on error (simple: just refetch)
+    });
+  }, []);
+
+  const updateQuantity = useCallback((cartItemId: string, quantity: number) => {
+    if (quantity < 1) {
+      removeItem(cartItemId);
+      return;
+    }
+    // Optimistic update
     setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity } : i))
+      prev.map((i) => (i.id === cartItemId ? { ...i, quantity } : i))
     );
-  };
 
-  const clearCart = () => {
+    startTransition(async () => {
+      await updateCartQuantityAction(cartItemId, quantity);
+    });
+  }, [removeItem]);
+
+  const clearCart = useCallback(() => {
+    // Optimistic clear
     setItems([]);
-  };
 
-  const openCart = () => setIsCartOpen(true);
-  const closeCart = () => setIsCartOpen(false);
+    startTransition(async () => {
+      await clearCartAction();
+    });
+  }, []);
 
-  const totalPrice = useMemo(() => 
-    items.reduce((total, item) => total + item.price * item.quantity, 0),
-  [items]);
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
-  const totalItems = useMemo(() => 
-    items.reduce((total, item) => total + item.quantity, 0),
-  [items]);
+  const totalPrice = useMemo(
+    () => items.reduce((acc, i) => acc + i.price * i.quantity, 0),
+    [items]
+  );
+  const totalItems = useMemo(
+    () => items.reduce((acc, i) => acc + i.quantity, 0),
+    [items]
+  );
 
   return (
     <CartContext.Provider
       value={{
         items,
+        isLoading: isFetching || isPending,
         addItem,
         removeItem,
         updateQuantity,
@@ -107,6 +153,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isCartOpen,
         openCart,
         closeCart,
+        isAuthenticated: !!userId,
       }}
     >
       {children}

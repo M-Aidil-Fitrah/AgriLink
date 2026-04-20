@@ -203,7 +203,7 @@ export function ProdukViewClient({ products, favoritedIds: initialFavorites }: P
                   </div>
                   <AddToCartButton
                     item={{
-                      id: product.id,
+                      productId: product.id,
                       name: product.name,
                       price: product.price,
                       quantity: 1,

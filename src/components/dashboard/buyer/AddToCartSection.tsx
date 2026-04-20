@@ -14,15 +14,23 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const { addItem } = useCart();
+  const { addItem, isAuthenticated } = useCart();
   const router = useRouter();
 
   const handleAddToCart = (redirect = false) => {
     if (product.stock === 0) return;
+    
+    if (!isAuthenticated) {
+      toast.error("Silakan masuk/login untuk melakukan pembelian.");
+      router.push("/login");
+      return;
+    }
+
     setIsAdding(true);
     setTimeout(() => {
       addItem({
-        id: product.id,
+        id: `optimistic-${product.id}`,
+        productId: product.id,
         name: product.name,
         price: product.price,
         images: product.images,

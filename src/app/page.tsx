@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic';
+import { auth } from '@/auth';
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroBento } from "@/components/landing/HeroBento";
 import { LandingMotionProvider } from "@/components/landing/LandingMotionProvider";
@@ -12,7 +13,11 @@ const TestimonialBento = dynamic(() => import("@/components/landing/TestimonialB
 const CTABanner = dynamic(() => import("@/components/landing/CTABanner").then(mod => mod.CTABanner));
 const FooterBento = dynamic(() => import("@/components/landing/FooterBento").then(mod => mod.FooterBento));
 
-export default function Home() {
+export default async function Home() {
+    // Fetch session server-side so Navbar can conditionally render auth buttons
+    const session = await auth();
+    const isLoggedIn = !!session?.user;
+
     // Image paths from public/landing
     const landingImages = {
         hero: "/landing/hero.png",
@@ -25,7 +30,7 @@ export default function Home() {
     return (
         <LandingMotionProvider>
             <main className="min-h-screen bg-[#f2f4f0] font-sans text-stone-950 overflow-x-hidden">
-                <Navbar />
+                <Navbar isLoggedIn={isLoggedIn} />
                 
                 <div className="flex flex-col">
                     {/* HeroBento is immediately visible, so we load it directly */}

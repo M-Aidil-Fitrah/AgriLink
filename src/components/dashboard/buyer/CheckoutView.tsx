@@ -46,7 +46,7 @@ export function CheckoutView() {
     startTransition(async () => {
       const result = await createOrderAction({
         items: items.map(i => ({
-          productId: i.id,
+          productId: i.productId,
           quantity: i.quantity,
           price: i.price
         })),

@@ -6,7 +6,11 @@ import Image from 'next/image';
 import { m, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Menu, X } from 'lucide-react';
 
-export const Navbar = () => {
+interface NavbarProps {
+    isLoggedIn: boolean;
+}
+
+export const Navbar = ({ isLoggedIn }: NavbarProps) => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -62,19 +66,33 @@ export const Navbar = () => {
 
                     {/* CTA */}
                     <div className="flex items-center gap-3">
-                        <Link 
-                            href="/login" 
-                            className="text-[13px] font-semibold text-stone-600 hover:text-stone-950 px-4 py-2 transition-colors hidden sm:block"
-                        >
-                            Masuk
-                        </Link>
-                        <Link 
-                            href="/register" 
-                            className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-6 py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
-                        >
-                            Mulai Sekarang
-                            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                        </Link>
+                        {isLoggedIn ? (
+                            /* User is logged in — show only "Mulai Sekarang" as dashboard link */
+                            <Link 
+                                href="/dashboard" 
+                                className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-6 py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
+                            >
+                                Mulai Sekarang
+                                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        ) : (
+                            /* Guest — show Login + Register */
+                            <>
+                                <Link 
+                                    href="/login" 
+                                    className="text-[13px] font-semibold text-stone-600 hover:text-stone-950 px-4 py-2 transition-colors hidden sm:block"
+                                >
+                                    Masuk
+                                </Link>
+                                <Link 
+                                    href="/register" 
+                                    className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-6 py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
+                                >
+                                    Mulai Sekarang
+                                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                            </>
+                        )}
                         
                         {/* Mobile Toggle */}
                         <button 
@@ -105,12 +123,23 @@ export const Navbar = () => {
                                 Lihat Dashboard
                             </Link>
                             <hr className="border-stone-100" />
-                            <Link 
-                                href="/login" 
-                                className="text-lg font-semibold text-stone-950 px-2 py-1"
-                            >
-                                Masuk
-                            </Link>
+                            {isLoggedIn ? (
+                                <Link 
+                                    href="/dashboard" 
+                                    className="text-lg font-semibold text-green-600 px-2 py-1"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    Mulai Sekarang
+                                </Link>
+                            ) : (
+                                <Link 
+                                    href="/login" 
+                                    className="text-lg font-semibold text-stone-950 px-2 py-1"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    Masuk
+                                </Link>
+                            )}
                         </div>
                     </m.div>
                 )}
