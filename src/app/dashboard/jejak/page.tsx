@@ -48,6 +48,8 @@ export default async function JejakPage() {
         unit: p.unit,
         farmerId: p.farmer.id,
         harvestDate: p.harvestDate ? p.harvestDate.toISOString() : null,
+        cultivationMethod: p.cultivationMethod,
+        productCategory: p.productCategory,
         farmerName:
           p.farmer.sellerApplication?.businessName ||
           p.farmer.name ||

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CultivationMethod, Product as PrismaProduct } from "@prisma/client";
+import { CultivationMethod, ProductCategory, Product as PrismaProduct } from "@prisma/client";
 import { createProduct, updateProduct, ProductInput } from "@/app/actions/productActions";
 import { Loader2 } from "lucide-react";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
@@ -10,11 +10,21 @@ import { toast } from "react-hot-toast";
 
 type Product = PrismaProduct & { images: string[] };
 
-const CULTIVATION_OPTIONS: { value: CultivationMethod; label: string }[] = [
-  { value: "ORGANIC", label: "Organik" },
-  { value: "HYDROPONIC", label: "Hidroponik" },
-  { value: "CONVENTIONAL", label: "Konvensional" },
-  { value: "OTHER", label: "Lainnya" },
+const CULTIVATION_OPTIONS: { value: CultivationMethod; label: string; hint: string }[] = [
+  { value: "ORGANIC", label: "Organik", hint: "Tanpa pestisida/pupuk kimia sintetis. Lebih sehat dan ramah lingkungan." },
+  { value: "HYDROPONIC", label: "Hidroponik", hint: "Ditanam tanpa tanah, menggunakan larutan nutrisi. Bersih dan terstandarisasi." },
+  { value: "CONVENTIONAL", label: "Konvensional", hint: "Menggunakan pupuk dan pestisida standar. Metode pertanian umum." },
+  { value: "OTHER", label: "Lainnya", hint: "Metode lain seperti tumpang sari, agroforestri, dll." },
+];
+
+const CATEGORY_OPTIONS: { value: ProductCategory; label: string; example: string }[] = [
+  { value: "LEAFY_GREEN",     label: "Sayuran Daun",        example: "Bayam, Kangkung, Selada, Sawi" },
+  { value: "FRUIT_SOFT",      label: "Buah Lunak",          example: "Tomat, Mangga, Anggur, Pepaya" },
+  { value: "FRUIT_HARD",      label: "Buah Keras",          example: "Jeruk, Semangka, Apel, Melon" },
+  { value: "ROOT_VEGETABLE",  label: "Umbi & Akar",         example: "Wortel, Kentang, Ubi, Singkong" },
+  { value: "GRAIN_DRY",       label: "Biji-bijian & Kering", example: "Beras, Jagung, Kacang, Kedelai" },
+  { value: "HERB_SPICE",      label: "Rempah & Bumbu",      example: "Jahe, Kunyit, Cabai, Daun Bawang" },
+  { value: "VEGETABLE_OTHER", label: "Sayuran Lainnya",     example: "Produk yang tidak masuk kategori di atas" },
 ];
 
 const UNIT_OPTIONS = ["kg", "ikat", "buah", "liter", "pack", "gram"];
@@ -39,6 +49,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
       unit: formData.get("unit") as string,
       harvestDate: formData.get("harvestDate") as string,
       cultivationMethod: formData.get("cultivationMethod") as CultivationMethod,
+      productCategory: formData.get("productCategory") as ProductCategory,
       origin: formData.get("origin") as string,
     };
 
@@ -147,6 +158,22 @@ export function ProductForm({ product }: { product?: Product | null }) {
         </div>
 
         <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-gray-700">Kategori Produk</label>
+          <p className="text-xs text-gray-400 mb-2">Pilih kategori yang paling sesuai. Ini digunakan untuk menghitung skor kesegaran yang akurat.</p>
+          <select
+            name="productCategory"
+            defaultValue={product?.productCategory ?? "VEGETABLE_OTHER"}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-emerald-400"
+          >
+            {CATEGORY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label} — {o.example}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
           <label className="block text-sm font-semibold text-gray-700">Metode Budidaya</label>
           <select
             name="cultivationMethod"
@@ -154,7 +181,9 @@ export function ProductForm({ product }: { product?: Product | null }) {
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-emerald-400"
           >
             {CULTIVATION_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label} — {o.hint}
+              </option>
             ))}
           </select>
         </div>

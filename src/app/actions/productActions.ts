@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { CultivationMethod, Product } from "@prisma/client";
+import { CultivationMethod, Product, ProductCategory } from "@prisma/client";
 import { ActionResult, SellerLocation } from "@/lib/types";
 
 export type ProductInput = {
@@ -15,6 +15,7 @@ export type ProductInput = {
   unit: string;
   harvestDate: string;
   cultivationMethod: CultivationMethod;
+  productCategory: ProductCategory;
   origin: string;
 };
 
@@ -45,6 +46,7 @@ export async function createProduct(
           ? new Date(input.harvestDate)
           : null,
         cultivationMethod: input.cultivationMethod,
+        productCategory: input.productCategory,
         origin: input.origin || null,
         farmerId: session.user.id,
       },
@@ -94,6 +96,7 @@ export async function updateProduct(
           ? new Date(input.harvestDate)
           : null,
         cultivationMethod: input.cultivationMethod,
+        productCategory: input.productCategory,
         origin: input.origin || null,
       },
     });

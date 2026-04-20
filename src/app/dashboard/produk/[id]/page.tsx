@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { ProductDetails } from "@/components/dashboard/buyer/ProductDetails";
 import { notFound } from "next/navigation";
-import { ProductWithFarmer } from "@/lib/types";
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProductDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
-  
+
   const rawProduct = await prisma.product.findUnique({
     where: { id },
     include: {
@@ -18,12 +21,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           sellerApplication: {
             select: {
               businessName: true,
-              businessAddress: true
-            }
-          }
-        }
-      }
-    }
+              businessAddress: true,
+              latitude: true,
+              longitude: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!rawProduct) {
@@ -32,17 +37,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   // Resolve image paths to URLs
   const { supabaseServer } = await import("@/lib/supabaseServer");
-  const images = (rawProduct.images as string[] || []).map((path) => {
+  const images = ((rawProduct.images as string[]) || []).map((path) => {
     if (path.startsWith("http")) return path;
-    const { data: { publicUrl } } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
+    const {
+      data: { publicUrl },
+    } = supabaseServer.storage.from("agrilink-uploads").getPublicUrl(path);
     return publicUrl;
   });
 
-  const product = { ...rawProduct, images } as ProductWithFarmer;
-
-  if (!product) {
-    notFound();
-  }
+  const product = {
+    ...rawProduct,
+    images,
+    farmer: {
+      ...rawProduct.farmer,
+      // Keep role as-is since ProductWithFarmer expects it
+    },
+  };
 
   return <ProductDetails product={product} />;
 }

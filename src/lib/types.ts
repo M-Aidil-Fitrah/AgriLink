@@ -1,4 +1,4 @@
-import { Product, Order, OrderItem, Role, Favorite } from "@prisma/client";
+import { Product, Order, OrderItem, Role, Favorite, ProductCategory, CultivationMethod } from "@prisma/client";
 
 export type ActionResult<T> =
   | { success: true; data: T }
@@ -12,9 +12,12 @@ export type ProductWithFarmer = Product & {
     sellerApplication: {
       businessName: string;
       businessAddress: string;
+      latitude: number | null;
+      longitude: number | null;
     } | null;
   };
 };
+
 
 export type FavoriteWithProduct = Favorite & {
   product: ProductWithFarmer;
@@ -49,6 +52,8 @@ export interface ProductRow {
   farmerName: string | null;
   farmerId: string;
   origin: string | null;
+  cultivationMethod: CultivationMethod;
+  productCategory: ProductCategory;
   // Seller location (from SellerApplication)
   sellerLat: number | null;
   sellerLon: number | null;
@@ -59,10 +64,16 @@ export type FoodMilesCategory = {
   color: string;
 };
 
+export type FreshnessImpactReason = {
+  type: "positive" | "neutral" | "warning" | "negative";
+  text: string;
+};
+
 export type FreshnessResult = {
   score: number;
   label: string;
   color: string;
+  reasons: FreshnessImpactReason[];
 };
 
 export interface NearbyProductRow extends ProductRow {
