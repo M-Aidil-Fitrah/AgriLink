@@ -9,18 +9,14 @@ export async function authenticate(
   prevState: string | undefined,
   formData: FormData,
 ) {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
   try {
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    // Determine redirect target based on role
-    const user = await prisma.user.findUnique({ where: { email }, select: { role: true } });
-    const redirectTo = user?.role === 'ADMIN' ? '/admin' : '/dashboard';
-
     await signIn('credentials', {
       email,
       password,
-      redirectTo,
+      redirect: false,
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -33,6 +29,15 @@ export async function authenticate(
     }
     throw error;
   }
+
+  const user = await prisma.user.findUnique({ where: { email }, select: { role: true } });
+  const redirectTo = (user?.role === 'ADMIN' ? '/admin' : '/dashboard') + '?login=success';
+
+  await signIn('credentials', {
+    email,
+    password,
+    redirectTo,
+  });
 }
 
 export type AuthState = { error?: string; success?: boolean } | null | undefined;
@@ -76,5 +81,5 @@ export async function registerUser(prevState: AuthState, formData: FormData) {
 }
 
 export async function logout() {
-  await signOut({ redirectTo: '/' });
+  await signOut({ redirectTo: '/?logout=success' });
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useTransition, useState } from "react";
+import { useTransition } from "react";
 import { deleteProduct } from "@/app/actions/productActions";
 import { Trash2 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export function DeleteProductButton({
   productId,
@@ -12,14 +13,16 @@ export function DeleteProductButton({
   productName: string;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
 
   function handleDelete() {
     if (!confirm(`Hapus produk "${productName}"? Tindakan ini tidak dapat dibatalkan.`)) return;
-    setError(null);
     startTransition(async () => {
       const result = await deleteProduct(productId);
-      if (!result.success) setError(result.error);
+      if (!result.success) {
+        toast.error(result.error || "Gagal menghapus produk");
+      } else {
+        toast.success(`Produk "${productName}" berhasil dihapus`);
+      }
     });
   }
 
@@ -32,7 +35,6 @@ export function DeleteProductButton({
       >
         <Trash2 className="w-4 h-4" />
       </button>
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </>
   );
 }

@@ -1,14 +1,21 @@
 'use client';
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { authenticate } from "@/app/actions/authActions";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { AnimatedInput } from "./AuthComponents";
+import { toast } from "react-hot-toast";
 
 export default function LoginForm() {
     const [errorMessage, dispatch, isPending] = useActionState(authenticate, undefined);
+
+    useEffect(() => {
+        if (errorMessage) {
+            toast.error(errorMessage);
+        }
+    }, [errorMessage]);
 
     return (
         <motion.div
@@ -17,7 +24,7 @@ export default function LoginForm() {
             transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 1, 0.5, 1] }}
             className="w-full max-w-[440px]"
         >
-            <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-stone-200/60 shadow-sm">
+            <div className="bg-white rounded-4xl p-6 md:p-8 border border-stone-200/60 shadow-sm">
                 {/* Header Card */}
                 <div className="mb-6">
                     <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-green-600 mb-3 block">

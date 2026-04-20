@@ -7,6 +7,7 @@ import { User, Phone, MapPin, Building, FileText, CheckCircle, Clock, XCircle, t
 import dynamic from "next/dynamic";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import type { ComponentType } from "react";
+import { toast } from "react-hot-toast";
 
 type MapPickerProps = {
   initialLat?: number | null;
@@ -149,7 +150,9 @@ export function AjukanSellerView({
     setError(null);
 
     if (!ktpPhotoUrl || !selfiePhotoUrl || !businessPhotoUrl || !coords) {
-      setError("Semua data wajib diisi, termasuk foto dan lokasi peta");
+      const msg = "Semua data wajib diisi, termasuk foto dan lokasi peta";
+      setError(msg);
+      toast.error(msg);
       // Touch all fields to show errors
       const allTouched: Record<string, boolean> = {};
       Object.keys(formData).forEach(k => allTouched[k] = true);
@@ -162,7 +165,9 @@ export function AjukanSellerView({
     }
 
     if (!isFormValid()) {
-      setError("Silakan perbaiki data yang tidak sesuai");
+      const msg = "Silakan perbaiki data yang tidak sesuai";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -188,8 +193,13 @@ export function AjukanSellerView({
 
     startTransition(async () => {
       const res = await submitSellerApplication(payload);
-      if (res.error) setError(res.error);
-      else setSuccess(true);
+      if (res.error) {
+        setError(res.error);
+        toast.error(res.error);
+      } else {
+        setSuccess(true);
+        toast.success("Pengajuan seller berhasil dikirim!");
+      }
     });
   };
 

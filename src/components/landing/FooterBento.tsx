@@ -7,7 +7,7 @@ import { Mail as Instagram, Mail as Twitter, Mail as Facebook, Mail, MapPin, Pho
 export const FooterBento = () => {
     return (
         <section className="container mx-auto px-4 pt-8 pb-12 max-w-7xl">
-            <div className="bg-stone-950 rounded-[3rem] p-10 md:p-16 text-white">
+            <div className="bg-stone-950 rounded-4xl p-10 md:p-16 text-white">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-16">
                     {/* Brand Column */}
                     <div className="lg:col-span-5">

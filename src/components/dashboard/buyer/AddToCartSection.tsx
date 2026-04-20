@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { CreditCard } from "lucide-react";
 
+import { toast } from "react-hot-toast";
+
 export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -31,6 +33,7 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
       });
       setIsAdding(false);
       setShowSuccess(true);
+      toast.success(`${quantity} ${product.unit} ${product.name} ditambahkan`);
       if (redirect) {
         router.push("/dashboard/checkout");
       } else {

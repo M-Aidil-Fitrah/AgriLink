@@ -16,13 +16,20 @@ const STATUS_BADGE: Record<SellerApplicationStatus, { label: string; color: stri
   REJECTED: { label: "Ditolak", color: "text-red-600 bg-red-50 border-red-200" },
 };
 
+import { toast } from "react-hot-toast";
+
 function ReviewButtons({ applicationId }: { applicationId: string }) {
   const [isPending, startTransition] = useTransition();
   const [note, setNote] = useState("");
 
   const handleReview = (status: SellerApplicationStatus) => {
     startTransition(async () => {
-      await reviewSellerApplication(applicationId, status, note);
+      const res = await reviewSellerApplication(applicationId, status, note);
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success(status === "APPROVED" ? "Pengajuan disetujui!" : "Pengajuan ditolak.");
+      }
     });
   };
 

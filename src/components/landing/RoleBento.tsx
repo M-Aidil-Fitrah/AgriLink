@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
@@ -20,9 +20,9 @@ export const RoleBento = ({ images }: { images: { farmer: string, buyer: string 
         <section className="container mx-auto px-4 py-16 max-w-7xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Farmer Role Card */}
-                <motion.div 
+                <m.div 
                     {...fadeUp(0)}
-                    className="relative rounded-[2.5rem] overflow-hidden min-h-[500px] group flex flex-col justify-end p-10 border border-stone-200/60"
+                    className="relative rounded-4xl overflow-hidden min-h-[500px] group flex flex-col justify-end p-10 border border-stone-200/60"
                 >
                     <Image 
                         src={images.farmer} 
@@ -54,19 +54,19 @@ export const RoleBento = ({ images }: { images: { farmer: string, buyer: string 
                         </ul>
 
                         <Link 
-                            href="/register?role=farmer" 
+                            href="/register" 
                             className="inline-flex bg-green-500 text-green-950 px-8 py-4 rounded-full font-bold text-[14px] items-center gap-3 hover:bg-green-400 transition-all uppercase tracking-wide"
                         >
                             Daftar Jadi Petani
                             <ArrowRight size={16} />
                         </Link>
                     </div>
-                </motion.div>
+                </m.div>
 
                 {/* Buyer Role Card */}
-                <motion.div 
+                <m.div 
                     {...fadeUp(0.1)}
-                    className="relative rounded-[2.5rem] overflow-hidden min-h-[500px] group flex flex-col justify-end p-10 border border-stone-200/60"
+                    className="relative rounded-4xl overflow-hidden min-h-[500px] group flex flex-col justify-end p-10 border border-stone-200/60"
                 >
                     <Image 
                         src={images.buyer} 
@@ -105,7 +105,7 @@ export const RoleBento = ({ images }: { images: { farmer: string, buyer: string 
                             <ArrowRight size={16} />
                         </Link>
                     </div>
-                </motion.div>
+                </m.div>
             </div>
         </section>
     );

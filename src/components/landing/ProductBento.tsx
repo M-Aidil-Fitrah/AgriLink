@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, ShoppingCart, Star, MapPin } from 'lucide-react';
@@ -44,7 +44,7 @@ export const ProductBento = ({ images }: { images: { tomatoes: string } }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 {/* Left Billboard Card */}
-                <motion.div 
+                <m.div 
                     {...fadeUp(0)}
                     className="md:col-span-5 bg-green-950 rounded-4xl overflow-hidden relative group min-h-[400px] flex flex-col justify-end p-10"
                 >
@@ -72,12 +72,12 @@ export const ProductBento = ({ images }: { images: { tomatoes: string } }) => {
                             Jelajah Sekarang
                         </Link>
                     </div>
-                </motion.div>
+                </m.div>
 
                 {/* Right Product Grid */}
                 <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {products.map((product, i) => (
-                        <motion.div 
+                        <m.div 
                             key={i}
                             {...fadeUp(0.1 + (i * 0.1))}
                             className="bg-white rounded-4xl p-5 border border-stone-200/60 flex flex-col group hover:border-green-200 transition-all"
@@ -133,7 +133,7 @@ export const ProductBento = ({ images }: { images: { tomatoes: string } }) => {
                                     <ShoppingCart size={16} />
                                 </button>
                             </div>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
             </div>

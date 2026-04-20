@@ -20,6 +20,8 @@ const ROLE_COLORS: Record<Role, string> = {
   ADMIN: "text-purple-600 bg-purple-50 border-purple-200",
 };
 
+import { toast } from "react-hot-toast";
+
 function DeleteUserButton({ userId, name }: { userId: string; name: string | null }) {
   const [isPending, startTransition] = useTransition();
   return (
@@ -27,7 +29,9 @@ function DeleteUserButton({ userId, name }: { userId: string; name: string | nul
       onClick={() => {
         if (!confirm(`Hapus pengguna "${name ?? userId}"?`)) return;
         startTransition(async () => {
-          await deleteUser(userId);
+          const res = await deleteUser(userId);
+          if (res?.error) toast.error(res.error);
+          else toast.success(`Pengguna "${name || 'User'}" telah dihapus`);
         });
       }}
       disabled={isPending}
@@ -48,7 +52,9 @@ function ChangeRoleSelect({ userId, currentRole }: { userId: string; currentRole
       onChange={(e) => {
         const newRole = e.target.value as Role;
         startTransition(async () => {
-          await updateUserRole(userId, newRole);
+          const res = await updateUserRole(userId, newRole);
+          if (res?.error) toast.error(res.error);
+          else toast.success(`Role diperbarui ke ${newRole}`);
         });
       }}
       className="text-xs font-bold px-2 py-1 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60 cursor-pointer"
@@ -71,8 +77,13 @@ function AddUserModal({ onClose }: { onClose: () => void }) {
     setError(null);
     startTransition(async () => {
       const res = await createUser(fd);
-      if (res.error) setError(res.error);
-      else onClose();
+      if (res.error) {
+        setError(res.error);
+        toast.error(res.error);
+      } else {
+        toast.success("Pengguna berhasil ditambahkan!");
+        onClose();
+      }
     });
   };
 

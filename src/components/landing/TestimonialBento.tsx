@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Star } from 'lucide-react';
 
 export const TestimonialBento = () => {
@@ -71,7 +71,7 @@ export const TestimonialBento = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {testimonials.map((t, i) => (
-                    <motion.div 
+                    <m.div 
                         key={i}
                         {...fadeUp(0.1 + (i * 0.1))}
                         className={`bg-white rounded-4xl p-8 border border-stone-200/60 flex flex-col justify-between hover:border-green-200 transition-all group ${t.span}`}
@@ -99,7 +99,7 @@ export const TestimonialBento = () => {
                             </div>
                             <span className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">Terverifikasi</span>
                         </div>
-                    </motion.div>
+                    </m.div>
                 ))}
             </div>
         </section>
