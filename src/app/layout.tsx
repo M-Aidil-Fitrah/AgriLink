@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   },
 };
 
+import { Suspense } from "react";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export default function RootLayout({
@@ -38,7 +39,9 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartDrawer />
-          <ToastProvider />
+          <Suspense fallback={null}>
+            <ToastProvider />
+          </Suspense>
         </CartProvider>
       </body>
     </html>
