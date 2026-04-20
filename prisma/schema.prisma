@@ -21,6 +21,16 @@ enum CultivationMethod {
   OTHER
 }
 
+enum ProductCategory {
+  LEAFY_GREEN       // Sayuran Daun: bayam, kangkung, selada
+  FRUIT_SOFT        // Buah Lunak: tomat, mangga, anggur, pepaya
+  FRUIT_HARD        // Buah Keras: jeruk, semangka, apel
+  ROOT_VEGETABLE    // Umbi & Akar: wortel, kentang, ubi, singkong
+  GRAIN_DRY         // Biji-bijian & Kering: beras, jagung, kacang
+  HERB_SPICE        // Rempah & Bumbu: jahe, kunyit, cabai, daun bawang
+  VEGETABLE_OTHER   // Sayuran Lainnya (default fallback)
+}
+
 enum OrderStatus {
   PENDING
   PROCESSING
@@ -121,7 +131,13 @@ model Product {
 
   harvestDate       DateTime?
   cultivationMethod CultivationMethod @default(CONVENTIONAL)
+  productCategory   ProductCategory   @default(VEGETABLE_OTHER)
   origin            String?
+
+  // Legacy location columns kept for Supabase trigger compatibility
+  latitude  Float?
+  longitude Float?
+  geog      Unsupported("geography(Point, 4326)")?
 
   farmerId String
   farmer   User   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
@@ -134,6 +150,7 @@ model Product {
 
   @@index([farmerId])
   @@index([cultivationMethod])
+  @@index([productCategory])
 }
 
 
