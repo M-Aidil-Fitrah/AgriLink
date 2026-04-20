@@ -4,6 +4,7 @@ import { Toaster, resolveValue, toast } from "react-hot-toast";
 import { CheckCircle, AlertCircle, Info, X, Smile } from "lucide-react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function ToastProvider() {
   const searchParams = useSearchParams();
@@ -61,34 +62,43 @@ export function ToastProvider() {
         const borderColor = isError ? "border-red-500" : isSuccess ? "border-emerald-500" : "border-blue-500";
         const bgColor = isError ? "bg-red-50" : isSuccess ? "bg-emerald-50" : "bg-blue-50";
         const textColor = isError ? "text-red-700" : isSuccess ? "text-emerald-700" : "text-blue-700";
-        const title = isError ? "Error" : isSuccess ? "Congratulations" : "Information";
+        const title = isError ? "Error" : isSuccess ? "Berhasil" : "Informasi";
 
         return (
-          <div
-            className={`${
-              t.visible ? 'animate-in fade-in slide-in-from-top-4' : 'animate-out fade-out slide-out-to-top-4'
-            } max-w-sm w-full bg-white shadow-xl rounded-xl pointer-events-auto flex flex-col border-t-4 ${borderColor} ${bgColor} overflow-hidden`}
-          >
-            <div className="flex p-4 items-start gap-4">
-              <div className={`mt-0.5 ${textColor}`}>
-                {icon}
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm font-extrabold uppercase tracking-tight ${textColor}`}>
-                  {title}
-                </p>
-                <div className="mt-1 text-xs font-semibold text-gray-600 leading-relaxed">
-                  {resolveValue(t.message, t)}
-                </div>
-              </div>
-              <button
-                onClick={() => toast.dismiss(t.id)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+          <AnimatePresence>
+            {t.visible && (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, x: 60, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 60, scale: 0.95 }}
+                transition={{ type: "spring", damping: 22, stiffness: 260 }}
+                className={`max-w-sm w-full bg-white shadow-xl rounded-xl pointer-events-auto flex flex-col border-t-4 ${borderColor} ${bgColor} overflow-hidden`}
               >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
+                <div className="flex p-4 items-start gap-4">
+                  <div className={`mt-0.5 shrink-0 ${textColor}`}>
+                    {icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-extrabold uppercase tracking-tight ${textColor}`}>
+                      {title}
+                    </p>
+                    <div className="mt-1 text-xs font-semibold text-gray-600 leading-relaxed">
+                      {resolveValue(t.message, t)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toast.dismiss(t.id)}
+                    className={`shrink-0 p-1 rounded-md transition-colors text-gray-400 hover:text-gray-700 hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400`}
+                    aria-label="Tutup notifikasi"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         );
       }}
     </Toaster>

@@ -11,6 +11,7 @@ import { FoodMilesCategory, ProductRow } from "@/lib/types";
 import { Leaf, MapPin, ArrowRight, Loader2, Star, Search, Filter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Pagination } from "@/components/ui/Pagination";
 
 type ProductWithMetrics = ProductRow & {
   distance: number | null;
@@ -30,6 +31,10 @@ export function JejakView({ products }: { products: ProductRow[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [selectedCultivation, setSelectedCultivation] = useState<string>("ALL");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     if (!("geolocation" in navigator)) {
@@ -156,7 +161,7 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       </div>
 
       {avgMiles !== null && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-[9px] font-black uppercase tracking-widest opacity-80 mb-2">
@@ -186,16 +191,7 @@ export function JejakView({ products }: { products: ProductRow[] }) {
             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
               Menampilkan
             </p>
-            <p className="text-xl font-black text-gray-900">{filteredProducts.length} <span className="text-sm text-gray-400">/ {computed.length}</span></p>
-          </div>
-
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
-              Terverifikasi GPS
-            </p>
-            <p className="text-xl font-black text-gray-900">
-              {validDistances.length}
-            </p>
+            <p className="text-xl font-black text-gray-900">{filteredProducts.length} <span className="text-sm text-gray-400">/ {products.length}</span></p>
           </div>
         </div>
       )}
@@ -208,7 +204,10 @@ export function JejakView({ products }: { products: ProductRow[] }) {
             type="text"
             placeholder="Cari nama produk atau nama penanam..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-xl text-sm font-bold text-gray-900 outline-none transition-all"
           />
         </div>
@@ -218,7 +217,10 @@ export function JejakView({ products }: { products: ProductRow[] }) {
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-xl text-[11px] font-bold text-gray-900 outline-none transition-all appearance-none cursor-pointer"
             >
               <option value="ALL">Kategori</option>
@@ -232,7 +234,10 @@ export function JejakView({ products }: { products: ProductRow[] }) {
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <select
               value={selectedCultivation}
-              onChange={(e) => setSelectedCultivation(e.target.value)}
+              onChange={(e) => {
+                setSelectedCultivation(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-xl text-[11px] font-bold text-gray-900 outline-none transition-all appearance-none cursor-pointer"
             >
               <option value="ALL">Teknik Budidaya</option>
@@ -246,7 +251,7 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {filteredProducts.map((p) => (
+        {filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((p) => (
           <div
             key={p.id}
             className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col"
@@ -327,6 +332,12 @@ export function JejakView({ products }: { products: ProductRow[] }) {
           </div>
         )}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

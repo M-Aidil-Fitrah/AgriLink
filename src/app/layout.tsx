@@ -3,6 +3,8 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import dynamic from 'next/dynamic';
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 // Lazy load the CartDrawer as it's not needed for initial page paint
 const CartDrawer = dynamic(() => import("@/components/dashboard/buyer/CartDrawer").then(mod => mod.CartDrawer));
@@ -25,20 +27,37 @@ export const metadata: Metadata = {
 import { Suspense } from "react";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch fresh role from DB so cart & CartDrawer are only shown for USER role
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
+  let userRole: "USER" | "FARMER" | "ADMIN" | null = null;
+  if (userId) {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    userRole = dbUser?.role ?? null;
+  }
+
+  // Cart is only for buyers (USER role)
+  const showCart = userRole === "USER";
+
   return (
     <html lang="id">
       <body
         suppressHydrationWarning
         className={`${jakartaSans.variable} ${jakartaSans.className} antialiased selection:bg-emerald-200 selection:text-emerald-900 bg-white`}
       >
-        <CartProvider>
+        {/* CartProvider listens to userId changes to refresh the cart when switching accounts */}
+        <CartProvider key={userId ?? 'guest'} userId={userId}>
           {children}
-          <CartDrawer />
+          {showCart && <CartDrawer />}
           <Suspense fallback={null}>
             <ToastProvider />
           </Suspense>

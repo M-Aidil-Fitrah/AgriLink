@@ -5,6 +5,8 @@ import { toggleFavorite } from "@/app/actions/favoriteActions";
 import { Heart } from "lucide-react";
 import { toast } from "react-hot-toast";
 
+import { useRouter } from "next/navigation";
+
 export function FavoriteButton({
   productId,
   initialFavorited,
@@ -13,6 +15,7 @@ export function FavoriteButton({
   initialFavorited: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   
   // Optimistic UI for instant feedback
   const [optimisticFavorited, addOptimisticFavorite] = useOptimistic(
@@ -32,6 +35,11 @@ export function FavoriteButton({
       const result = await toggleFavorite(productId);
       
       if (!result.success) {
+        if (result.error === "Tidak terautentikasi") {
+          toast.error("Silakan login untuk menambahkan favorit.");
+          router.push("/login");
+          return;
+        }
         toast.error(result.error || "Gagal memperbarui favorit");
       }
     });

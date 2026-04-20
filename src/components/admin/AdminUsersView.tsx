@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { deleteUser, updateUserRole, createUser } from "@/app/actions/adminActions";
 import { Role } from "@prisma/client";
-import { Trash2, Plus, X, UserCog } from "lucide-react";
+import { Trash2, Plus, X, UserCog, Search } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 
 type UserRow = {
   id: string;
@@ -130,21 +131,53 @@ function AddUserModal({ onClose }: { onClose: () => void }) {
 
 export function AdminUsersView({ users }: { users: UserRow[] }) {
   const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  const filteredUsers = users.filter((u) => {
+    return (
+      (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (u.email && u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  });
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="p-8 pb-20">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900">Manajemen Pengguna</h2>
-          <p className="text-gray-500 font-medium mt-1">{users.length} pengguna terdaftar</p>
+          <p className="text-gray-500 font-medium mt-1">{filteredUsers.length} pengguna terdaftar</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Tambah Pengguna
-        </button>
+        
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cari nama atau email..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 rounded-xl text-sm font-bold text-gray-900 outline-none transition-all shadow-sm"
+            />
+          </div>
+
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition-colors whitespace-nowrap shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Tambah Pengguna
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
@@ -157,11 +190,11 @@ export function AdminUsersView({ users }: { users: UserRow[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {users.length === 0 ? (
+            {paginatedUsers.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-16 text-gray-400 font-medium">Tidak ada pengguna</td>
+                <td colSpan={6} className="text-center py-16 text-gray-400 font-medium">Tidak ada pengguna yang cocok</td>
               </tr>
-            ) : users.map((user) => (
+            ) : paginatedUsers.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
@@ -201,6 +234,12 @@ export function AdminUsersView({ users }: { users: UserRow[] }) {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)}
+        onPageChange={setCurrentPage}
+      />
 
       {showModal && <AddUserModal onClose={() => setShowModal(false)} />}
     </div>

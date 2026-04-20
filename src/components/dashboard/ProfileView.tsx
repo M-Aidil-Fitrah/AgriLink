@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { MapPin, Save, Loader2, Trash2, Plus, Star, Lock, User as UserIcon } from "lucide-react";
-import { updateProfile, addLocation, deleteLocation } from "@/app/actions/profileActions";
+import { updateProfile, addLocation, deleteLocation, setPrimaryLocation } from "@/app/actions/profileActions";
 import { updatePassword } from "@/app/actions/passwordActions";
 import { Location } from "@prisma/client";
 import dynamic from "next/dynamic";
@@ -71,12 +71,13 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
     }
     
     startTransition(async () => {
+      const isFirstAddress = initialLocations.length === 0;
       const res = await addLocation({
         label: newLoc.label,
         address: newLoc.address,
         latitude: newLoc.lat,
         longitude: newLoc.lon,
-        isPrimary: newLoc.isPrimary
+        isPrimary: isFirstAddress ? true : newLoc.isPrimary
       });
       if (res.error) toast.error(res.error);
       else {
@@ -114,7 +115,7 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "alamat" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
         >
           <MapPin className="w-4 h-4" />
-          Buku Alamat
+          Alamat
         </button>
       </div>
 
@@ -180,18 +181,18 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div className="space-y-1.5">
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Label Alamat</label>
-                        <input value={newLoc.label} onChange={(e) => setNewLoc({...newLoc, label: e.target.value})} placeholder="Contoh: Rumah, Kantor, Kost" className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-200" />
+                        <input value={newLoc.label} onChange={(e) => setNewLoc({...newLoc, label: e.target.value})} placeholder="Contoh: Rumah, Kantor, Kost" className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-200 text-sm font-bold text-gray-900 placeholder:text-gray-400" />
                      </div>
                      <div className="flex items-end pb-1">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                           <input type="checkbox" checked={newLoc.isPrimary} onChange={(e) => setNewLoc({...newLoc, isPrimary: e.target.checked})} className="w-4 h-4 rounded text-emerald-600" />
+                        <label className={`flex items-center gap-2 ${initialLocations.length === 0 ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
+                           <input type="checkbox" checked={initialLocations.length === 0 ? true : newLoc.isPrimary} onChange={(e) => { if(initialLocations.length > 0) setNewLoc({...newLoc, isPrimary: e.target.checked}) }} className="w-4 h-4 rounded text-emerald-600" />
                            <span className="text-sm font-bold text-gray-700">Jadikan Alamat Utama</span>
                         </label>
                      </div>
                   </div>
                   <div className="space-y-1.5">
                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Alamat Lengkap</label>
-                     <textarea value={newLoc.address} onChange={(e) => setNewLoc({...newLoc, address: e.target.value})} rows={2} placeholder="Sebutkan jalan, nomor rumah, RT/RW, dan patokan..." className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-200 resize-none" />
+                     <textarea value={newLoc.address} onChange={(e) => setNewLoc({...newLoc, address: e.target.value})} rows={2} placeholder="Sebutkan jalan, nomor rumah, RT/RW, dan patokan..." className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-200 resize-none text-sm font-medium text-gray-900 placeholder:text-gray-400" />
                   </div>
                   <div className="space-y-1.5">
                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Pin Lokasi Peta</label>
@@ -220,20 +221,41 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
                   <h4 className="font-extrabold text-gray-900">{loc.label}</h4>
                 </div>
                 <p className="text-sm text-gray-500 font-medium line-clamp-2 mb-6">{loc.address}</p>
-                <div className="flex items-center justify-between mt-auto">
-                    <p className="text-[10px] font-bold text-gray-400">KOORD: {loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}</p>
-                    <button 
-                      onClick={() => {
-                        if (confirm("Hapus alamat ini?")) {
-                          startTransition(async () => {
-                            await deleteLocation(loc.id);
-                          });
-                        }
-                      }}
-                      className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                <div className="flex items-center justify-between mt-auto pt-2 border-t border-dashed border-gray-100">
+                    <div>
+                      {!loc.isPrimary && (
+                        <button
+                          onClick={() => {
+                            startTransition(async () => {
+                              const res = await setPrimaryLocation(loc.id);
+                              if (res.error) toast.error(res.error);
+                              else toast.success("Alamat utama diubah!");
+                            });
+                          }}
+                          disabled={isPending}
+                          className="text-[10px] font-bold text-emerald-600 hover:text-emerald-800 transition-colors uppercase disabled:opacity-50 tracking-wider bg-emerald-50 px-2 py-1 rounded-md"
+                        >
+                          Jadikan Utama
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-bold text-gray-400">KOORD: {loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}</p>
+                      <button 
+                        onClick={() => {
+                          if (confirm("Hapus alamat ini?")) {
+                            startTransition(async () => {
+                              await deleteLocation(loc.id);
+                            });
+                          }
+                        }}
+                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                        title="Hapus Alamat"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                 </div>
               </div>
             ))}

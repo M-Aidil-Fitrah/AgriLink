@@ -37,22 +37,22 @@ export default function LoginForm() {
                 </div>
 
                 <form action={dispatch} className="space-y-4">
-                    <AnimatedInput 
-                        label="Alamat Email" 
-                        name="email" 
-                        type="email" 
-                        placeholder="anda@email.com" 
-                        required 
+                    <AnimatedInput
+                        label="Alamat Email"
+                        name="email"
+                        type="email"
+                        placeholder="anda@email.com"
+                        required
                         delay={0.4}
                     />
 
                     <div className="space-y-2">
-                        <AnimatedInput 
-                            label="Kata Sandi" 
-                            name="password" 
-                            type="password" 
-                            placeholder="••••••••" 
-                            required 
+                        <AnimatedInput
+                            label="Kata Sandi"
+                            name="password"
+                            type="password"
+                            placeholder="••••••••"
+                            required
                             showPasswordToggle
                             delay={0.48}
                         />
@@ -62,8 +62,8 @@ export default function LoginForm() {
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.54 }}
                             >
-                                <Link 
-                                    href="#" 
+                                <Link
+                                    href="#"
                                     className="text-[12px] font-semibold text-green-600 hover:text-green-700 transition-colors"
                                 >
                                     Lupa kata sandi?

@@ -69,3 +69,25 @@ export async function deleteLocation(id: string) {
     return { error: "Gagal menghapus lokasi" };
   }
 }
+
+export async function setPrimaryLocation(id: string) {
+  const session = await auth();
+  if (!session) return { error: "Tidak terautentikasi" };
+
+  try {
+    await prisma.location.updateMany({
+      where: { userId: session.user.id },
+      data: { isPrimary: false },
+    });
+
+    await prisma.location.update({
+      where: { id, userId: session.user.id },
+      data: { isPrimary: true },
+    });
+
+    revalidatePath("/dashboard/profil");
+    return { success: true };
+  } catch {
+    return { error: "Gagal mengubah lokasi utama" };
+  }
+}

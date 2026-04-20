@@ -1,18 +1,33 @@
 "use client";
 
-import { useCart, CartItem } from "@/context/CartContext";
+import { useCart } from "@/context/CartContext";
+import type { CartItem } from "@/context/CartContext";
 import { Check, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
-export function AddToCartButton({ item }: { item: CartItem }) {
-  const { addItem } = useCart();
+import { useRouter } from "next/navigation";
+
+/** Props for AddToCartButton — pass product-level data; CartItem.id will be assigned by the DB */
+type AddToCartProps = Omit<CartItem, "id">;
+
+export function AddToCartButton({ item }: { item: AddToCartProps }) {
+  const { addItem, isAuthenticated } = useCart();
   const [added, setAdded] = useState(false);
+  const router = useRouter();
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(item);
+
+    if (!isAuthenticated) {
+      toast.error("Silakan masuk/login untuk menambah ke keranjang.");
+      router.push("/login");
+      return;
+    }
+
+    // Optimistic id — server action will replace it with the real DB id
+    addItem({ ...item, id: `optimistic-${item.productId}` });
     setAdded(true);
     toast.success(`${item.name} ditambahkan ke keranjang`);
     setTimeout(() => setAdded(false), 2000);

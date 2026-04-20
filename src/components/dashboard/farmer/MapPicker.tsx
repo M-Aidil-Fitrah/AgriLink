@@ -55,7 +55,6 @@ export function MapPicker({
       ).addTo(map);
 
       const marker = L.marker([coords.lat, coords.lon], { draggable: true }).addTo(map);
-      marker.bindPopup("Lokasi kebun Anda").openPopup();
 
       marker.on("dragend", () => {
         const pos = marker.getLatLng();
@@ -88,7 +87,7 @@ export function MapPicker({
       <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
         <MapPin className="w-3.5 h-3.5 text-emerald-600" />
         <span>
-          Klik peta atau seret penanda untuk menentukan lokasi lahan.{" "}
+          Klik peta atau seret penanda untuk menentukan lokasi.{" "}
           <span className="font-bold text-gray-700">
             {coords.lat.toFixed(5)}, {coords.lon.toFixed(5)}
           </span>
