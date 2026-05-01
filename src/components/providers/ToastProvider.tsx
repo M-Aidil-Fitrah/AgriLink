@@ -15,6 +15,7 @@ export function ToastProvider() {
   useEffect(() => {
     const loginStatus = searchParams.get('login');
     const logoutStatus = searchParams.get('logout');
+    const orderStatus = searchParams.get('order');
 
     if (loginStatus === 'success' && !hasShown.current) {
       hasShown.current = true;
@@ -39,9 +40,21 @@ export function ToastProvider() {
       params.delete('logout');
       router.replace(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`);
     }
+    
+    if (orderStatus === 'success' && !hasShown.current) {
+      hasShown.current = true;
+      toast.success("Pesanan Berhasil Dibuat!", { 
+        icon: <Smile className="w-5 h-5 text-emerald-500" />,
+        duration: 5000 
+      });
+      // Clean up URL
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('order');
+      router.replace(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`);
+    }
 
     // Reset ref if params are gone
-    if (!loginStatus && !logoutStatus) {
+    if (!loginStatus && !logoutStatus && !orderStatus) {
       hasShown.current = false;
     }
   }, [searchParams, pathname, router]);

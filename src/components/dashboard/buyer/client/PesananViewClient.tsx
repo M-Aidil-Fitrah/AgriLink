@@ -174,9 +174,16 @@ export function PesananViewClient({
 
                 {/* Footer Pesanan */}
                 <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
-                  <p className="text-xs text-gray-400">
-                    Alamat: <span className="font-medium text-gray-600">{order.deliveryAddress || "-"}</span>
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">
+                      Alamat: <span className="font-medium text-gray-600">{order.deliveryAddress || "-"}</span>
+                    </p>
+                    {order.note && (
+                      <p className="text-xs text-gray-400 italic">
+                        Catatan: <span className="text-gray-500">{order.note}</span>
+                      </p>
+                    )}
+                  </div>
                   <div className="text-right">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Total Bayar</p>
                     <p className="text-lg font-black text-gray-900 leading-tight">

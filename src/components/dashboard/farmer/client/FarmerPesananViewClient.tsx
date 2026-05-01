@@ -182,18 +182,22 @@ export function FarmerPesananViewClient({
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between px-6 py-4 bg-gray-50">
-                  {order.note && (
-                    <p className="text-xs text-gray-500 italic">Catatan: {order.note}</p>
-                  )}
-                  {order.deliveryAddress && (
-                    <p className="text-xs text-gray-500 font-medium">
-                      Kirim ke: {order.deliveryAddress}
-                    </p>
-                  )}
-                  <div className="ml-auto text-right">
-                    <p className="text-xs text-gray-500 font-semibold">Total</p>
-                    <p className="text-lg font-extrabold text-emerald-700">
+                <div className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-gray-50 gap-4">
+                  <div className="flex-1 space-y-1">
+                    {order.note && (
+                      <p className="text-xs text-gray-500 italic">
+                        <span className="font-bold not-italic">Catatan:</span> {order.note}
+                      </p>
+                    )}
+                    {order.deliveryAddress && (
+                      <p className="text-xs text-gray-500 font-medium">
+                        <span className="font-bold text-gray-700">Kirim ke:</span> {order.deliveryAddress}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Pesanan</p>
+                    <p className="text-lg font-black text-emerald-700">
                       Rp {order.total?.toLocaleString("id-ID")}
                     </p>
                   </div>

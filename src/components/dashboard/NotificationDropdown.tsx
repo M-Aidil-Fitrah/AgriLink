@@ -1,10 +1,11 @@
 "use client";
 
 import { Bell, Check, Clock, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getMyNotifications, markAsRead } from "@/app/actions/notificationActions";
 import { Notification } from "@prisma/client";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -12,18 +13,44 @@ export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const lastNotifIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchNotifs = async () => {
-      const data = await getMyNotifications();
-      setNotifications(data);
-      setUnreadCount(data.filter((n: Notification) => !n.read).length);
+      try {
+        const data = await getMyNotifications();
+        
+        // If we have new notifications that weren't there before, show a toast
+        if (lastNotifIds.current.size > 0) {
+          const newNotifs = data.filter((n: Notification) => 
+            !n.read && !lastNotifIds.current.has(n.id)
+          );
+          
+          newNotifs.forEach((n: Notification) => {
+            toast.success(
+              <div className="space-y-0.5">
+                <p className="font-bold text-emerald-900">{n.title}</p>
+                <p className="font-medium text-emerald-700/80 leading-tight">{n.message}</p>
+              </div>,
+              { duration: 6000 }
+            );
+          });
+        }
+
+        // Update ref with current IDs
+        lastNotifIds.current = new Set(data.map(n => n.id));
+        
+        setNotifications(data);
+        setUnreadCount(data.filter((n: Notification) => !n.read).length);
+      } catch (err) {
+        console.error("Failed to fetch notifications:", err);
+      }
     };
+
     fetchNotifs();
-    // In a real app, you'd use Pusher or Supabase Realtime here.
-    const interval = setInterval(fetchNotifs, 30000);
+    const interval = setInterval(fetchNotifs, 20000); // 20s is safer for DB connection limits
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Empty dependency array prevents loops
 
   const handleRead = async (id: string) => {
     await markAsRead(id);

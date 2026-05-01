@@ -38,11 +38,17 @@ export default async function RootLayout({
 
   let userRole: "USER" | "FARMER" | "ADMIN" | null = null;
   if (userId) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-    userRole = dbUser?.role ?? null;
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      userRole = dbUser?.role ?? null;
+    } catch (err) {
+      console.error("Layout Role Fetch Error:", err);
+      // Fallback to session role if DB fetch fails
+      userRole = (session?.user as { role?: "USER" | "FARMER" | "ADMIN" | null })?.role || null;
+    }
   }
 
   // Cart is only for buyers (USER role)

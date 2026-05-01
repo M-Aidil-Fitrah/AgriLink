@@ -256,3 +256,22 @@ export async function searchProducts(query: string): Promise<{
     return { ...product, images };
   });
 }
+
+export async function getProductById(id: string) {
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        farmer: {
+          include: {
+            sellerApplication: true
+          }
+        }
+      }
+    });
+    return product;
+  } catch (error) {
+    console.error("GET_PRODUCT_BY_ID_ERROR:", error);
+    return null;
+  }
+}
