@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart, type CartItem } from "@/context/CartContext";
+import { calculateFoodMiles, getFreshnessScore } from "@/lib/metrics";
 import { 
   ShieldCheck, 
   MapPin, 
@@ -22,6 +23,8 @@ export type CheckoutViewProps = {
   userName: string;
   userAddress: string;
   userPhone: string;
+  userLat: number;
+  userLon: number;
   directBuyItem?: CartItem | null;
 };
 
@@ -39,12 +42,22 @@ const SHIPPING_OPTIONS: ShippingOption[] = [
   { id: "eco", label: "Eco delivery", sub: "REGULAR", price: 0, desc: "Gratis" }
 ];
 
-export default function CheckoutView({ userName, userAddress, userPhone, directBuyItem }: CheckoutViewProps) {
+export default function CheckoutView({ 
+  userName, 
+  userAddress, 
+  userPhone, 
+  userLat,
+  userLon,
+  directBuyItem 
+}: CheckoutViewProps) {
   const router = useRouter();
   const { items: cartItems, totalItems: cartTotalItems, totalPrice: cartTotalPrice, updateQuantity: updateCartQuantity } = useCart();
   
-  // Logic to switch between direct buy and cart
-  const items = directBuyItem ? [directBuyItem] : cartItems;
+  // Wrap items in useMemo to fix lint warning and prevent unnecessary re-renders
+  const items = useMemo(() => {
+    return directBuyItem ? [directBuyItem] : cartItems;
+  }, [directBuyItem, cartItems]);
+
   const totalPrice = directBuyItem ? (directBuyItem.price * directBuyItem.quantity) : cartTotalPrice;
   const totalItemsCount = directBuyItem ? directBuyItem.quantity : cartTotalItems;
 
@@ -60,6 +73,42 @@ export default function CheckoutView({ userName, userAddress, userPhone, directB
   const discount: number = couponActive ? 5000 : 0;
   const serviceFee: number = 2500;
   const finalTotal: number = currentTotalPrice + shippingMethod.price + serviceFee - discount;
+
+  // Calculate Distances and Freshness for each item
+  const itemsWithMetrics = useMemo(() => {
+    return items.map(item => {
+      // 1. Distance
+      let distance = 0;
+      if (userLat && userLon && item.farmerLat && item.farmerLon) {
+        distance = calculateFoodMiles(userLat, userLon, item.farmerLat, item.farmerLon);
+      }
+
+      // 2. Freshness
+      const freshness = getFreshnessScore(
+        item.harvestDate ? new Date(item.harvestDate) : null,
+        item.category,
+        item.cultivationMethod
+      );
+
+      return { ...item, distance, freshness };
+    });
+  }, [items, userLat, userLon]);
+
+  // Average Food Miles (Weighted by items count if needed, but simple average is fine for display)
+  const averageFoodMiles = useMemo(() => {
+    if (itemsWithMetrics.length === 0) return 0;
+    const totalDist = itemsWithMetrics.reduce((acc, i) => acc + i.distance, 0);
+    return totalDist / itemsWithMetrics.length;
+  }, [itemsWithMetrics]);
+
+  // Dynamic Arrival Estimation based on distance
+  const getEstimation = () => {
+    if (averageFoodMiles === 0) return "Estimasi tiba 2–3 hari";
+    if (averageFoodMiles < 5) return "Estimasi tiba 1–2 jam (Sangat Dekat)";
+    if (averageFoodMiles < 20) return "Estimasi tiba 3–6 jam (Dekat)";
+    if (averageFoodMiles < 100) return "Estimasi tiba 1 hari (Antar Kota)";
+    return "Estimasi tiba 2–3 hari (Luar Kota)";
+  };
 
   const updateQuantity = (id: string, newQty: number) => {
     if (directBuyItem && id === directBuyItem.id) {
@@ -82,7 +131,9 @@ export default function CheckoutView({ userName, userAddress, userPhone, directB
       shippingId: shippingMethod.id,
       shippingCost: shippingMethod.price.toString(),
       note: note,
-      address: userAddress
+      address: userAddress,
+      lat: userLat.toString(),
+      lon: userLon.toString()
     });
     
     if (directBuyItem) {
@@ -156,7 +207,7 @@ export default function CheckoutView({ userName, userAddress, userPhone, directB
             CHECKOUT<span className="text-emerald-500">.</span>
           </h1>
           <div className="text-sm font-medium text-slate-500 pb-2">
-            {directBuyItem ? directQuantity : totalItemsCount} item · Food miles 14.2 km
+            {directBuyItem ? directQuantity : totalItemsCount} item · Food miles {averageFoodMiles.toFixed(1).replace(".", ",")} km
           </div>
         </motion.div>
 
@@ -190,15 +241,18 @@ export default function CheckoutView({ userName, userAddress, userPhone, directB
                         <p className="text-slate-500 text-sm mt-2">{userPhone}</p>
                       </div>
                     </div>
-                    <button className="text-xs font-bold tracking-widest uppercase text-emerald-600 hover:text-emerald-800 transition-colors">
+                    <Link 
+                      href="/profile?tab=address"
+                      className="text-xs font-bold tracking-widest uppercase text-emerald-600 hover:text-emerald-800 transition-colors"
+                    >
                       Edit
-                    </button>
+                    </Link>
                   </div>
                 </div>
                 <div className="bg-[#f2f4f0] px-6 py-4 flex items-center gap-3 border-t border-black/5">
                   <Truck className="w-4 h-4 text-emerald-700" />
                   <span className="text-sm font-medium text-emerald-900">
-                    Estimasi tiba 2–3 hari · Food miles tertimbang 14.2 km
+                    {getEstimation()} · Food miles tertimbang {averageFoodMiles.toFixed(1).replace(".", ",")} km
                   </span>
                 </div>
               </div>
@@ -212,10 +266,10 @@ export default function CheckoutView({ userName, userAddress, userPhone, directB
                 <div className="flex-1 h-px bg-black/10"></div>
               </div>
               <div className="border border-black/10 rounded-xl bg-white divide-y divide-black/5">
-                {items.length === 0 ? (
+                {itemsWithMetrics.length === 0 ? (
                   <div className="p-8 text-center text-slate-500">Keranjang kosong.</div>
                 ) : (
-                  items.map((item: CartItem, idx: number) => (
+                  itemsWithMetrics.map((item, idx: number) => (
                     <motion.div 
                       key={item.id}
                       initial={{ opacity: 0, y: 14 }}
@@ -238,9 +292,15 @@ export default function CheckoutView({ userName, userAddress, userPhone, directB
                           </p>
                           <h3 className="font-medium text-base mb-2">{item.name}</h3>
                           <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
-                            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Lembang, 14km</span>
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" /> 
+                              Jarak {item.distance.toFixed(1).replace(".", ",")} km
+                            </span>
                             <span className="text-slate-300">•</span>
-                            <span className="flex items-center gap-1"><Sprout className="w-3 h-3" /> Fresh 98%</span>
+                            <span className="flex items-center gap-1">
+                              <Sprout className={`w-3 h-3 ${item.freshness.score >= 85 ? 'text-emerald-600' : item.freshness.score >= 65 ? 'text-emerald-500' : 'text-amber-500'}`} /> 
+                              Fresh {item.freshness.score}%
+                            </span>
                             <span className="text-slate-300">•</span>
                             <span>Rp {item.price.toLocaleString("id-ID")}/{item.unit}</span>
                           </div>

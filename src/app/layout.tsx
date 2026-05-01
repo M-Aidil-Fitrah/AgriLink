@@ -61,7 +61,7 @@ export default async function RootLayout({
         className={`${jakartaSans.variable} ${jakartaSans.className} antialiased selection:bg-emerald-200 selection:text-emerald-900 bg-white`}
       >
         {/* CartProvider listens to userId changes to refresh the cart when switching accounts */}
-        <CartProvider key={userId ?? 'guest'} userId={userId}>
+        <CartProvider userId={userId}>
           {children}
           {showCart && <CartDrawer />}
           <Suspense fallback={null}>

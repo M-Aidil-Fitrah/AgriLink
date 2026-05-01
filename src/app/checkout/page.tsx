@@ -60,12 +60,19 @@ export default async function CheckoutPage({
         images: product.images as string[],
         unit: product.unit,
         farmerId: product.farmerId,
-        farmerName: product.farmer.sellerApplication?.businessName || product.farmer.name || "Petani"
+        farmerName: product.farmer.sellerApplication?.businessName || product.farmer.name || "Petani",
+        farmerLat: product.farmer.sellerApplication?.latitude,
+        farmerLon: product.farmer.sellerApplication?.longitude,
+        harvestDate: product.harvestDate,
+        category: product.productCategory,
+        cultivationMethod: product.cultivationMethod
       };
     }
   }
 
   const address = user.locations?.[0]?.address || "Jalan Jendral Sudirman No. 1, Jakarta";
+  const userLat = user.locations?.[0]?.latitude || 0;
+  const userLon = user.locations?.[0]?.longitude || 0;
   const name = user.name || "Customer";
   const phone = "0812-3456-XXXX"; // Masked for demo
 
@@ -74,6 +81,8 @@ export default async function CheckoutPage({
       userName={name}
       userAddress={address}
       userPhone={phone}
+      userLat={userLat}
+      userLon={userLon}
       directBuyItem={directBuyItem}
     />
   );
