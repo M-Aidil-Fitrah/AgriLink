@@ -170,6 +170,7 @@ model Order {
   shippingMethod  String?
   shippingCost    Float?
   paymentMethod   String?
+  paymentExpiry   DateTime?
 
   items OrderItem[]
 

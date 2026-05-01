@@ -2,6 +2,7 @@
 
 import { midtransCore } from "@/lib/midtrans";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 import { MidtransChargeResponse } from "@/lib/midtrans-types";
 
@@ -42,6 +43,11 @@ export async function createMidtransTransactionAction(data: {
         quantity: item.quantity,
         name: item.name.substring(0, 50),
       })),
+      // Set unified 24h expiry in request for all methods (Core API uses custom_expiry)
+      custom_expiry: {
+        expiry_duration: 60 * 24, // 24 hours
+        unit: "minute"
+      }
     };
 
     // Map payment methods to Midtrans API
@@ -99,10 +105,56 @@ export async function createMidtransTransactionAction(data: {
     }
 
     const response = (await midtransCore.charge(parameter)) as MidtransChargeResponse;
+
+    // Save expiry to DB (Always 24h fallback if expiry_time is missing)
+    if (response.expiry_time || response.transaction_time) {
+      const expiry = response.expiry_time 
+        ? new Date(response.expiry_time) 
+        : new Date(new Date(response.transaction_time).getTime() + (24 * 60 * 60 * 1000));
+      
+      await prisma.order.update({
+        where: { id: data.orderId },
+        data: { paymentExpiry: expiry }
+      });
+    }
+
     return { success: true, data: response };
   } catch (error: unknown) {
     const err = error as Error;
     console.error("MIDTRANS_CHARGE_ERROR:", err);
     return { success: false, error: err.message || "Gagal menghubungi Midtrans" };
+  }
+}
+
+interface MidtransCoreWithTransaction {
+  transaction: {
+    status: (orderId: string) => Promise<MidtransChargeResponse>;
+  };
+}
+
+export async function getMidtransStatusAction(orderId: string) {
+  const session = await auth();
+  if (!session?.user) return { success: false, error: "Unauthorized" };
+
+  try {
+    const response = await (midtransCore as unknown as MidtransCoreWithTransaction).transaction.status(orderId);
+    
+    // Save/Sync expiry to DB (Always 24h fallback)
+    if (response.expiry_time || response.transaction_time) {
+      const expiry = response.expiry_time 
+        ? new Date(response.expiry_time) 
+        : new Date(new Date(response.transaction_time).getTime() + (24 * 60 * 60 * 1000));
+      
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { paymentExpiry: expiry }
+      });
+    }
+
+    return { success: true, data: response };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("MIDTRANS_STATUS_ERROR:", err);
+    return { success: false, error: err.message || "Gagal mendapatkan status transaksi" };
   }
 }

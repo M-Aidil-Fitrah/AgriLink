@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { 
   ShieldCheck, 
   ArrowRight, 
-  Check, 
   QrCode,
   Building2,
   Store,
@@ -18,7 +17,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart, type CartItem } from "@/context/CartContext";
 import { createOrderAction } from "@/app/actions/orderActions";
-import { createMidtransTransactionAction } from "@/app/actions/paymentActions";
+import { createMidtransTransactionAction, getMidtransStatusAction } from "@/app/actions/paymentActions";
 import { toast } from "react-hot-toast";
 import { MidtransChargeResponse } from "@/lib/midtrans-types";
 
@@ -63,7 +62,7 @@ const PAYMENT_METHODS: PaymentGroup[] = [
   }
 ];
 
-type PaymentState = "select" | "instruction" | "success";
+type PaymentState = "select" | "instruction";
 
 export default function PaymentView() {
   const router = useRouter();
@@ -81,125 +80,249 @@ export default function PaymentView() {
   const itemsCount: number = rawItemsCount ? parseInt(rawItemsCount, 10) : 0;
 
   const shipping: number = rawShippingCost ? parseInt(rawShippingCost, 10) : 25000;
-  const serviceFee: number = 2500;
-  const itemTotal: number = total > 0 ? total - shipping - serviceFee : 0;
+  
+  // Dynamic Service Fee Calculation based on Midtrans standards
+  const getServiceFee = (method: PaymentMethod | null, subtotal: number): number => {
+    if (!method) return 2500; // Default placeholder
+    
+    switch (method.group) {
+      case "va":
+        return 4000; // Standard VA fee
+      case "qris_ewallet":
+        if (method.id === "qris") return Math.round(subtotal * 0.007); // QRIS GPN 0.7%
+        return Math.round(subtotal * 0.02); // E-Wallet (GoPay/ShopeePay) ~2%
+      case "cstore":
+        return 5000; // Standard C-Store fee
+      default:
+        return 2500;
+    }
+  };
 
   const [state, setState] = useState<PaymentState>("select");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [loading, setLoading] = useState(false);
   const [midtransResponse, setMidtransResponse] = useState<MidtransChargeResponse | null>(null);
 
-  const [timeLeft, setTimeLeft] = useState<number>(15 * 60);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  // Calculate totals dynamically
+  // Note: 'total' from URL already includes a default 2500 service fee from checkout, 
+  // so we subtract it first to get the base subtotal.
+  const baseSubtotal = total - shipping - 2500;
+  const serviceFee = getServiceFee(selectedMethod, baseSubtotal);
+  const currentTotal = baseSubtotal + shipping + serviceFee;
+  const itemTotal = baseSubtotal;
 
   useEffect(() => {
-    if (state === "instruction") {
+    const existingOrderId = searchParams.get("orderId");
+    if (existingOrderId && state === "select") {
+      const fetchStatus = async () => {
+        setLoading(true);
+        const result = await getMidtransStatusAction(existingOrderId);
+        if (result.success && result.data) {
+          const status = result.data.transaction_status;
+          if (status === "pending" || status === "settlement" || status === "capture") {
+            setMidtransResponse(result.data);
+            setState("instruction");
+            
+            const pType = result.data.payment_type;
+            let methodId = "";
+            if (pType === "bank_transfer") {
+              methodId = `${result.data.va_numbers?.[0]?.bank}_va` || "bca_va";
+            } else if (pType === "echannel") {
+              methodId = "mandiri";
+            } else if (pType === "qris") {
+              methodId = "qris";
+            } else if (pType === "cstore") {
+              methodId = result.data.store || "indomaret";
+            }
+            
+            const foundMethod = PAYMENT_METHODS.flatMap(g => g.items).find(m => m.id === methodId);
+            if (foundMethod) setSelectedMethod(foundMethod);
+            
+          } else if (status === "expire" || status === "cancel" || status === "deny") {
+            toast.error("Transaksi ini sudah kedaluwarsa atau dibatalkan. Silakan beli ulang.");
+          }
+        }
+        setLoading(false);
+      };
+      fetchStatus();
+    }
+  }, [searchParams, state]);
+
+  useEffect(() => {
+    if (midtransResponse) {
+      const txTime = new Date(midtransResponse.transaction_time).getTime();
+      const now = new Date().getTime();
+      
+      let expiryTime;
+      if (midtransResponse.expiry_time) {
+        expiryTime = new Date(midtransResponse.expiry_time).getTime();
+      } else {
+        expiryTime = txTime + (24 * 60 * 60 * 1000);
+      }
+      
+      const diff = Math.max(0, Math.floor((expiryTime - now) / 1000) - 5);
+      setTimeLeft(diff);
+    }
+  }, [midtransResponse]);
+
+  useEffect(() => {
+    if (state === "instruction" && timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft((prev: number) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [state]);
+  }, [state, timeLeft]);
 
   const handlePay = async (): Promise<void> => {
-    if (!selectedMethod) return;
+    if (!selectedMethod) {
+      toast.error("Pilih metode pembayaran terlebih dahulu.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const isDirectBuy = searchParams.get("directBuy") === "true";
       const directProductId = searchParams.get("productId");
       const directQuantity = parseInt(searchParams.get("quantity") || "1");
+      const existingOrderId = searchParams.get("orderId");
 
-      // 1. Create order in DB
-      const orderItems = (isDirectBuy && directProductId) 
-        ? [{ 
-            productId: directProductId, 
-            quantity: directQuantity, 
-            price: Math.round(itemTotal / directQuantity) 
-          }]
-        : items.map((item: CartItem) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            price: Math.round(item.price)
-          }));
+      let orderId = existingOrderId;
+      let midtransItems = [];
 
-      const orderResult = await createOrderAction({
-        total: total,
-        items: orderItems,
-        deliveryAddress: address || "Alamat tidak tersedia",
-        note: note || undefined,
-        shippingMethod: rawShippingId || "",
-        shippingCost: shipping,
-        paymentMethod: selectedMethod.id
-      });
+      if (existingOrderId) {
+        midtransItems = [
+          {
+            id: existingOrderId,
+            price: currentTotal,
+            quantity: 1,
+            name: `Pelunasan Pesanan #${existingOrderId.slice(-8).toUpperCase()}`
+          }
+        ];
+      } else {
+        // 1. Create new order in DB
+        const orderItems = (isDirectBuy && directProductId) 
+          ? [{ 
+              productId: directProductId, 
+              quantity: directQuantity, 
+              price: Math.round(itemTotal / directQuantity) 
+            }]
+          : items.map((item: CartItem) => ({
+              productId: item.id,
+              quantity: item.quantity,
+              price: Math.round(item.price)
+            }));
 
-      if (!orderResult.success) {
-        toast.error(orderResult.error || "Gagal membuat pesanan.");
-        setLoading(false);
-        return;
-      }
+        const orderResult = await createOrderAction({
+          total: currentTotal,
+          items: orderItems,
+          deliveryAddress: address || "Alamat tidak tersedia",
+          note: note || undefined,
+          shippingMethod: rawShippingId || "",
+          shippingCost: shipping,
+          paymentMethod: selectedMethod.id
+        });
 
-      const orderId = orderResult.data.id;
+        if (!orderResult.success) {
+          toast.error(orderResult.error || "Gagal membuat pesanan.");
+          setLoading(false);
+          return;
+        }
 
-      // 2. Charge Midtrans
-      const midtransResult = await createMidtransTransactionAction({
-        orderId: orderId,
-        grossAmount: total,
-        paymentMethod: selectedMethod.id,
-        customerDetails: {
-          firstName: "Pelanggan", 
-          email: "customer@example.com",
-        },
-        items: [
+        orderId = orderResult.data.id;
+        midtransItems = [
           ...orderItems.map((oi, idx) => ({
             id: oi.productId,
             price: oi.price,
             quantity: oi.quantity,
             name: `Item ${idx + 1}`
           })),
-          // Include shipping and fees so the sum matches gross_amount
-          {
-            id: "SHIPPING_FEE",
-            price: shipping,
-            quantity: 1,
-            name: "Ongkos Kirim"
+          { id: "SHIPPING_FEE", price: shipping, quantity: 1, name: "Ongkos Kirim" },
+          { id: "SERVICE_FEE", price: serviceFee, quantity: 1, name: "Biaya Layanan" }
+        ];
+      }
+
+      if (!orderId) {
+        toast.error("ID Pesanan tidak ditemukan.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Charge Midtrans (or Resume if already pending)
+      let midtransResult;
+      if (existingOrderId) {
+        // Double check status first to avoid 406 conflict
+        const statusCheck = await getMidtransStatusAction(existingOrderId);
+        if (statusCheck.success && statusCheck.data && 
+           (statusCheck.data.transaction_status === "pending" || 
+            statusCheck.data.transaction_status === "settlement" || 
+            statusCheck.data.transaction_status === "capture")) {
+          midtransResult = statusCheck;
+        } else {
+          midtransResult = await createMidtransTransactionAction({
+            orderId: orderId,
+            grossAmount: currentTotal,
+            paymentMethod: selectedMethod.id,
+            customerDetails: {
+              firstName: "Customer",
+              email: "customer@example.com",
+              phone: "08123456789"
+            },
+            items: midtransItems
+          });
+        }
+      } else {
+        midtransResult = await createMidtransTransactionAction({
+          orderId: orderId,
+          grossAmount: currentTotal,
+          paymentMethod: selectedMethod.id,
+          customerDetails: {
+            firstName: "Customer",
+            email: "customer@example.com",
+            phone: "08123456789"
           },
-          {
-            id: "SERVICE_FEE",
-            price: serviceFee,
-            quantity: 1,
-            name: "Biaya Layanan"
-          }
-        ]
-      });
+          items: midtransItems
+        });
+      }
 
       if (midtransResult.success && midtransResult.data) {
         setMidtransResponse(midtransResult.data);
         setState("instruction");
       } else {
-        toast.error(midtransResult.error || "Gagal memproses pembayaran Midtrans.");
-        setLoading(false);
-        return;
+        toast.error(midtransResult.error || "Pembayaran gagal diproses.");
       }
-    } catch (err) {
-      console.error("PAYMENT_FLOW_ERROR:", err);
-      toast.error("Terjadi masalah sistem.");
+    } catch (error: unknown) {
+      console.error("PAY_ERROR:", error);
+      toast.error("Terjadi kesalahan sistem.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFinish = async (): Promise<void> => {
-    setState("success");
-    setTimeout(() => {
+  const handleCheckStatus = async (): Promise<void> => {
+    if (midtransResponse?.order_id) {
       clearCart();
-      router.push("/dashboard/pesanan?order=success");
-    }, 2400);
+      router.push(`/payment/status/${midtransResponse.order_id}`);
+    } else {
+      const existingOrderId = searchParams.get("orderId");
+      if (existingOrderId) {
+        clearCart();
+        router.push(`/payment/status/${existingOrderId}`);
+      } else {
+        toast.error("Gagal menemukan ID Pesanan.");
+      }
+    }
   };
 
   const formatTime = (seconds: number): string => {
-    const m: string = Math.floor(seconds / 60).toString().padStart(2, "0");
-    const s: string = (seconds % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -209,20 +332,11 @@ export default function PaymentView() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
-              <Image 
-                src="/logo_agrilink.png" 
-                alt="Logo Agrilink" 
-                fill 
-                className="object-contain"
-                priority
-              />
+              <Image src="/logo_agrilink.png" alt="Logo AgriLink" fill className="object-contain" priority />
             </div>
-            <span className="font-bold text-xl tracking-tight text-stone-950">
-              AgriLink
-            </span>
+            <span className="font-bold text-xl tracking-tight text-stone-950">AgriLink</span>
           </Link>
         </div>
-        
         <div className="flex items-center gap-4 text-sm font-medium">
           <span className="text-slate-400">01 — Checkout</span>
           <span className="text-slate-300">→</span>
@@ -230,7 +344,6 @@ export default function PaymentView() {
           <span className="text-slate-300">→</span>
           <span className="text-slate-400">03 — Confirmation</span>
         </div>
-
         <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
           <span>Secure</span>
@@ -416,23 +529,33 @@ export default function PaymentView() {
 
                       {selectedMethod.group === "qris_ewallet" && (selectedMethod.id === "qris" || selectedMethod.id === "gopay" || selectedMethod.id === "shopeepay") && (
                         <div className="text-center">
-                          {midtransResponse?.actions?.find((a) => a.name === "generate-qr-code")?.url ? (
-                            <div className="w-[224px] h-[224px] bg-white border border-black/5 rounded-2xl mx-auto flex items-center justify-center relative mb-6 overflow-hidden">
-                              <Image 
-                                src={midtransResponse.actions.find((a) => a.name === "generate-qr-code")?.url || ""} 
-                                alt="QRIS" 
-                                width={224}
-                                height={224}
-                                className="w-full h-full object-contain" 
-                                unoptimized
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-[224px] h-[224px] bg-slate-50 border border-black/5 rounded-2xl mx-auto flex items-center justify-center relative mb-6">
-                              <QrCode className="w-48 h-48 text-emerald-900 opacity-20" strokeWidth={1} />
-                              <p className="absolute text-[10px] font-bold text-slate-400">Tunggu sebentar...</p>
-                            </div>
-                          )}
+                          {(() => {
+                            let qrUrl = midtransResponse?.actions?.find((a) => 
+                              a.name.toLowerCase().includes("qr") || 
+                              a.url.toLowerCase().includes("qr-code")
+                            )?.url;
+
+                            if (!qrUrl && midtransResponse?.transaction_id) {
+                              const isProd = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true";
+                              const baseUrl = isProd ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com";
+                              qrUrl = `${baseUrl}/v2/qris/${midtransResponse.transaction_id}/qr-code`;
+                            }
+
+                            if (qrUrl) {
+                              return (
+                                <div className="w-[224px] h-[224px] bg-white border border-black/5 rounded-2xl mx-auto flex items-center justify-center relative mb-6 overflow-hidden">
+                                  <Image src={qrUrl} alt="QRIS" width={224} height={224} className="w-full h-full object-contain" unoptimized />
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="w-[224px] h-[224px] bg-slate-50 border border-black/5 rounded-2xl mx-auto flex items-center justify-center relative mb-6">
+                                <QrCode className="w-48 h-48 text-emerald-900 opacity-20" strokeWidth={1} />
+                                <p className="absolute text-[10px] font-bold text-slate-400">Tunggu sebentar...</p>
+                              </div>
+                            );
+                          })()}
                           <p className="text-xs font-bold tracking-widest uppercase text-slate-500">
                             Scan menggunakan aplikasi apapun
                           </p>
@@ -469,56 +592,26 @@ export default function PaymentView() {
                             <Lock className="w-8 h-8 text-emerald-600" />
                           </div>
                           <h3 className="font-medium text-lg mb-2">Memproses Kartu...</h3>
-                          <p className="text-sm text-slate-500">Mohon jangan tutup halaman ini.</p>
+                          <p className="text-sm text-slate-500">Silakan ikuti instruksi 3D Secure yang muncul.</p>
                         </div>
                       )}
-
-                      <div className="mt-12">
+                      
+                      <div className="mt-10 pt-8 border-t border-black/5 text-center">
                         <button 
-                          onClick={handleFinish}
-                          className="w-full bg-emerald-900 text-white py-4 rounded-xl font-semibold hover:bg-emerald-500 transition-colors"
+                          onClick={handleCheckStatus}
+                          className="w-full bg-emerald-900 text-white py-4 rounded-xl font-semibold hover:bg-emerald-800 transition-colors shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2"
                         >
-                          Saya sudah membayar
+                          Cek Status Pembayaran
+                          <ArrowRight className="w-5 h-5" />
                         </button>
+                        <p className="mt-4 text-xs text-slate-400">
+                          Klik tombol di atas untuk memverifikasi status pembayaran Anda.
+                        </p>
                       </div>
                     </div>
                   </div>
                 </motion.div>
               )}
-
-              {/* STATE 3: SUCCESS */}
-              {state === "success" && (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="h-[500px] flex items-center justify-center border border-black/10 rounded-xl bg-white"
-                >
-                  <div className="text-center">
-                    <motion.div 
-                      initial={{ scale: 0, rotate: -90 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ 
-                        type: "spring", 
-                        stiffness: 220, 
-                        damping: 18,
-                        delay: 0.15 
-                      }}
-                      className="w-20 h-20 bg-emerald-900 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-900/20"
-                    >
-                      <Check className="w-10 h-10 text-white" strokeWidth={3} />
-                    </motion.div>
-                    <h2 className="text-[40px] font-normal tracking-tight mb-3">Pembayaran diterima</h2>
-                    <p className="text-slate-600 mb-6">Pesananmu langsung diteruskan ke petani.</p>
-                    <div className="flex items-center justify-center gap-2 text-sm font-medium text-emerald-600">
-                      <div className="w-4 h-4 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin"></div>
-                      Mengalihkan…
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
             </AnimatePresence>
           </div>
 
@@ -528,7 +621,7 @@ export default function PaymentView() {
               <div className="bg-[#1a3d2e] text-white rounded-2xl p-8 shadow-xl shadow-emerald-900/10">
                 <h3 className="text-xs font-bold tracking-widest uppercase text-white/60 mb-2">Ringkasan pesanan</h3>
                 <div className="text-[40px] font-normal tracking-[-0.04em] leading-none mb-1">
-                  Rp {total.toLocaleString("id-ID")}
+                  Rp {currentTotal.toLocaleString("id-ID")}
                 </div>
                 <div className="text-emerald-400 text-sm font-medium mb-8">Total tagihan</div>
 
@@ -579,7 +672,7 @@ export default function PaymentView() {
                       <div className="w-5 h-5 border-2 border-[#1a3d2e] border-t-transparent rounded-full animate-spin group-hover:border-white"></div>
                     ) : (
                       <>
-                        Bayar Rp {total.toLocaleString("id-ID")}
+                        Bayar Rp {currentTotal.toLocaleString("id-ID")}
                         <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                       </>
                     )}
@@ -607,7 +700,6 @@ export default function PaymentView() {
               </div>
             </div>
           </div>
-
         </div>
       </main>
     </div>

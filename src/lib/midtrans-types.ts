@@ -22,6 +22,8 @@ export interface MidtransChargeResponse {
     url: string;
   }>;
   qr_code?: string;
+  store?: string;
+  expiry_time?: string;
 }
 
 export interface MidtransWebhookPayload {

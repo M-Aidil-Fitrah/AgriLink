@@ -30,6 +30,7 @@ export type OrderWithItems = Order & {
     email: string | null;
     role: Role;
   };
+  paymentExpiry: Date | null;
   items: (OrderItem & {
     product: {
       id: string;

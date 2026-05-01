@@ -85,6 +85,7 @@ export async function createOrderAction(input: OrderInput): Promise<ActionResult
           shippingMethod: input.shippingMethod,
           shippingCost: input.shippingCost,
           paymentMethod: input.paymentMethod,
+          paymentExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
         }
       });
 
