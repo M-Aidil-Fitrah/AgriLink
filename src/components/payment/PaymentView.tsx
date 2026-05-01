@@ -5,10 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   ShieldCheck, 
-  Sprout, 
   ArrowRight, 
   Check, 
-  CreditCard,
   QrCode,
   Building2,
   Store,
@@ -20,7 +18,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart, type CartItem } from "@/context/CartContext";
 import { createOrderAction } from "@/app/actions/orderActions";
+import { createMidtransTransactionAction } from "@/app/actions/paymentActions";
 import { toast } from "react-hot-toast";
+import { MidtransChargeResponse } from "@/lib/midtrans-types";
 
 type PaymentMethodGroup = "va" | "qris_ewallet" | "card" | "cstore";
 
@@ -42,7 +42,7 @@ const PAYMENT_METHODS: PaymentGroup[] = [
     groupLabel: "Bank Transfer (Virtual Account)",
     items: [
       { id: "bca_va", label: "BCA", sub: "VIRTUAL ACCOUNT", group: "va", icon: Building2 },
-      { id: "bca_bni", label: "BNI", sub: "VIRTUAL ACCOUNT", group: "va", icon: Building2 },
+      { id: "bni_va", label: "BNI", sub: "VIRTUAL ACCOUNT", group: "va", icon: Building2 },
       { id: "mandiri", label: "Mandiri Bill Payment", sub: "VIRTUAL ACCOUNT", group: "va", icon: Building2 },
     ]
   },
@@ -52,12 +52,6 @@ const PAYMENT_METHODS: PaymentGroup[] = [
       { id: "qris", label: "QRIS", sub: "ALL SUPPORTED APPS", group: "qris_ewallet", icon: QrCode },
       { id: "gopay", label: "GoPay", sub: "E-WALLET", group: "qris_ewallet", icon: QrCode },
       { id: "shopeepay", label: "ShopeePay", sub: "E-WALLET", group: "qris_ewallet", icon: QrCode },
-    ]
-  },
-  {
-    groupLabel: "Kartu",
-    items: [
-      { id: "card", label: "Kartu Kredit / Debit", sub: "VISA · MASTERCARD · JCB", group: "card", icon: CreditCard },
     ]
   },
   {
@@ -77,11 +71,11 @@ export default function PaymentView() {
   const { items, clearCart } = useCart();
   
   const rawTotal: string | null = searchParams.get("total");
-  const rawItemsCount: string | null = searchParams.get("itemsCount");
   const rawShippingCost: string | null = searchParams.get("shippingCost");
   const rawShippingId: string | null = searchParams.get("shippingId");
   const note: string | null = searchParams.get("note");
   const address: string | null = searchParams.get("address");
+  const rawItemsCount: string | null = searchParams.get("itemsCount");
   
   const total: number = rawTotal ? parseInt(rawTotal, 10) : 0;
   const itemsCount: number = rawItemsCount ? parseInt(rawItemsCount, 10) : 0;
@@ -92,11 +86,8 @@ export default function PaymentView() {
 
   const [state, setState] = useState<PaymentState>("select");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-
-  const [cardNumber, setCardNumber] = useState<string>("");
-  const [cardName, setCardName] = useState<string>("");
-  const [cardExpiry, setCardExpiry] = useState<string>("");
-  const [cardCvv, setCardCvv] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [midtransResponse, setMidtransResponse] = useState<MidtransChargeResponse | null>(null);
 
   const [timeLeft, setTimeLeft] = useState<number>(15 * 60);
 
@@ -109,69 +100,95 @@ export default function PaymentView() {
     }
   }, [state]);
 
-  const handlePay = (): void => {
+  const handlePay = async (): Promise<void> => {
     if (!selectedMethod) return;
-    setState("instruction");
+    setLoading(true);
+
+    try {
+      const isDirectBuy = searchParams.get("directBuy") === "true";
+      const directProductId = searchParams.get("productId");
+      const directQuantity = parseInt(searchParams.get("quantity") || "1");
+
+      // 1. Create order in DB
+      const orderItems = (isDirectBuy && directProductId) 
+        ? [{ 
+            productId: directProductId, 
+            quantity: directQuantity, 
+            price: Math.round(itemTotal / directQuantity) 
+          }]
+        : items.map((item: CartItem) => ({
+            productId: item.id,
+            quantity: item.quantity,
+            price: Math.round(item.price)
+          }));
+
+      const orderResult = await createOrderAction({
+        total: total,
+        items: orderItems,
+        deliveryAddress: address || "Alamat tidak tersedia",
+        note: note || undefined,
+        shippingMethod: rawShippingId || "",
+        shippingCost: shipping,
+        paymentMethod: selectedMethod.id
+      });
+
+      if (!orderResult.success) {
+        toast.error(orderResult.error || "Gagal membuat pesanan.");
+        setLoading(false);
+        return;
+      }
+
+      const orderId = orderResult.data.id;
+
+      // 2. Charge Midtrans
+      const midtransResult = await createMidtransTransactionAction({
+        orderId: orderId,
+        grossAmount: total,
+        paymentMethod: selectedMethod.id,
+        customerDetails: {
+          firstName: "Pelanggan", 
+          email: "customer@example.com",
+        },
+        items: [
+          ...orderItems.map((oi, idx) => ({
+            id: oi.productId,
+            price: oi.price,
+            quantity: oi.quantity,
+            name: `Item ${idx + 1}`
+          })),
+          // Include shipping and fees so the sum matches gross_amount
+          {
+            id: "SHIPPING_FEE",
+            price: shipping,
+            quantity: 1,
+            name: "Ongkos Kirim"
+          },
+          {
+            id: "SERVICE_FEE",
+            price: serviceFee,
+            quantity: 1,
+            name: "Biaya Layanan"
+          }
+        ]
+      });
+
+      if (midtransResult.success && midtransResult.data) {
+        setMidtransResponse(midtransResult.data);
+        setState("instruction");
+      } else {
+        toast.error(midtransResult.error || "Gagal memproses pembayaran Midtrans.");
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      console.error("PAYMENT_FLOW_ERROR:", err);
+      toast.error("Terjadi masalah sistem.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFinish = async (): Promise<void> => {
-    const isDirectBuy = searchParams.get("directBuy") === "true";
-    const directProductId = searchParams.get("productId");
-    const directQuantity = parseInt(searchParams.get("quantity") || "1");
-
-    // Call backend to create the order
-    if (isDirectBuy && directProductId) {
-      try {
-        const result = await createOrderAction({
-          total: total,
-          items: [{
-            productId: directProductId,
-            quantity: directQuantity,
-            price: itemTotal / directQuantity
-          }],
-          deliveryAddress: address || "Alamat tidak tersedia",
-          note: note || undefined,
-          shippingMethod: rawShippingId || "",
-          shippingCost: shipping,
-          paymentMethod: selectedMethod?.id || ""
-        });
-
-        if (!result.success) {
-          toast.error(result.error || "Gagal membuat pesanan.");
-          return;
-        }
-      } catch (err) {
-        console.error("PAYMENT_DIRECT_BUY_ERROR:", err);
-        toast.error("Terjadi masalah koneksi. Silakan coba lagi.");
-        return;
-      }
-    } else if (items.length > 0) {
-      try {
-        const result = await createOrderAction({
-          total: total,
-          items: items.map((item: CartItem) => ({
-            productId: item.id, // In cart context, item.id is the product unique ID from DB
-            quantity: item.quantity,
-            price: item.price
-          })),
-          deliveryAddress: address || "Alamat tidak tersedia",
-          note: note || undefined,
-          shippingMethod: rawShippingId || "",
-          shippingCost: shipping,
-          paymentMethod: selectedMethod?.id || ""
-        });
-
-        if (!result.success) {
-          toast.error(result.error || "Gagal membuat pesanan.");
-          return;
-        }
-      } catch (err) {
-        console.error("PAYMENT_FINISH_ERROR:", err);
-        toast.error("Terjadi masalah koneksi. Silakan coba lagi.");
-        return;
-      }
-    }
-
     setState("success");
     setTimeout(() => {
       clearCart();
@@ -315,39 +332,9 @@ export default function PaymentView() {
                                     className="overflow-hidden bg-white text-slate-900"
                                   >
                                     <div className="p-6 border-t border-black/5 space-y-4">
-                                      <input 
-                                        type="text" 
-                                        placeholder="Nomor kartu" 
-                                        value={cardNumber}
-                                        onChange={(e) => setCardNumber(e.target.value)}
-                                        className="w-full border-b border-black/10 pb-2 bg-transparent focus:outline-none focus:border-emerald-500 transition-colors"
-                                      />
-                                      <input 
-                                        type="text" 
-                                        placeholder="Nama di kartu" 
-                                        value={cardName}
-                                        onChange={(e) => setCardName(e.target.value)}
-                                        className="w-full border-b border-black/10 pb-2 bg-transparent focus:outline-none focus:border-emerald-500 transition-colors"
-                                      />
-                                      <div className="grid grid-cols-2 gap-4">
-                                        <input 
-                                          type="text" 
-                                          placeholder="MM/YY" 
-                                          value={cardExpiry}
-                                          onChange={(e) => setCardExpiry(e.target.value)}
-                                          className="w-full border-b border-black/10 pb-2 bg-transparent focus:outline-none focus:border-emerald-500 transition-colors"
-                                        />
-                                        <input 
-                                          type="text" 
-                                          placeholder="CVV" 
-                                          value={cardCvv}
-                                          onChange={(e) => setCardCvv(e.target.value)}
-                                          className="w-full border-b border-black/10 pb-2 bg-transparent focus:outline-none focus:border-emerald-500 transition-colors"
-                                        />
-                                      </div>
                                       <div className="pt-2 flex items-center justify-end text-[10px] font-bold tracking-widest uppercase text-emerald-900 gap-1.5">
                                         <Lock className="w-3 h-3" />
-                                        Diamankan oleh Midtrans 3-D Secure
+                                        Diamankan oleh Midtrans
                                       </div>
                                     </div>
                                   </motion.div>
@@ -387,9 +374,22 @@ export default function PaymentView() {
                         <div className="text-center">
                           <p className="text-sm text-slate-500 mb-2">Nomor Virtual Account</p>
                           <div className="text-[36px] font-light tracking-tight text-emerald-900 mb-6 font-mono">
-                            8077 1234 5678 9012
+                            {selectedMethod.id === "mandiri" 
+                              ? `${midtransResponse?.biller_code} ${midtransResponse?.bill_key}`
+                              : midtransResponse?.va_numbers?.[0]?.va_number || midtransResponse?.permata_va_number || "Gagal memuat VA"}
                           </div>
-                          <button className="bg-emerald-900 text-white px-6 py-2.5 rounded-full font-medium flex items-center gap-2 mx-auto hover:bg-emerald-800 transition-colors">
+                          <button 
+                            onClick={() => {
+                              const val = selectedMethod.id === "mandiri" 
+                                ? `${midtransResponse?.biller_code}${midtransResponse?.bill_key}`
+                                : midtransResponse?.va_numbers?.[0]?.va_number || midtransResponse?.permata_va_number;
+                              if (val) {
+                                navigator.clipboard.writeText(val);
+                                toast.success("Nomor disalin!");
+                              }
+                            }}
+                            className="bg-emerald-900 text-white px-6 py-2.5 rounded-full font-medium flex items-center gap-2 mx-auto hover:bg-emerald-800 transition-colors"
+                          >
                             <Copy className="w-4 h-4" />
                             Salin Nomor
                           </button>
@@ -400,7 +400,7 @@ export default function PaymentView() {
                               {[
                                 "Buka aplikasi mobile banking Anda.",
                                 "Pilih menu Transfer > Virtual Account.",
-                                "Masukkan nomor VA di atas.",
+                                `Masukkan nomor VA: ${selectedMethod.id === "mandiri" ? midtransResponse?.bill_key : midtransResponse?.va_numbers?.[0]?.va_number || midtransResponse?.permata_va_number}`,
                                 "Pastikan nama penerima adalah AgriLink.",
                                 "Masukkan PIN untuk menyelesaikan."
                               ].map((step: string, i: number) => (
@@ -414,30 +414,28 @@ export default function PaymentView() {
                         </div>
                       )}
 
-                      {selectedMethod.group === "qris_ewallet" && selectedMethod.id === "qris" && (
+                      {selectedMethod.group === "qris_ewallet" && (selectedMethod.id === "qris" || selectedMethod.id === "gopay" || selectedMethod.id === "shopeepay") && (
                         <div className="text-center">
-                          <div className="w-[224px] h-[224px] bg-slate-50 border border-black/5 rounded-2xl mx-auto flex items-center justify-center relative mb-6">
-                            <QrCode className="w-48 h-48 text-emerald-900" strokeWidth={1} />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-12 h-12 bg-emerald-900 rounded-lg flex items-center justify-center shadow-lg">
-                                <Sprout className="w-6 h-6 text-white" />
-                              </div>
+                          {midtransResponse?.actions?.find((a) => a.name === "generate-qr-code")?.url ? (
+                            <div className="w-[224px] h-[224px] bg-white border border-black/5 rounded-2xl mx-auto flex items-center justify-center relative mb-6 overflow-hidden">
+                              <Image 
+                                src={midtransResponse.actions.find((a) => a.name === "generate-qr-code")?.url || ""} 
+                                alt="QRIS" 
+                                width={224}
+                                height={224}
+                                className="w-full h-full object-contain" 
+                                unoptimized
+                              />
                             </div>
-                          </div>
+                          ) : (
+                            <div className="w-[224px] h-[224px] bg-slate-50 border border-black/5 rounded-2xl mx-auto flex items-center justify-center relative mb-6">
+                              <QrCode className="w-48 h-48 text-emerald-900 opacity-20" strokeWidth={1} />
+                              <p className="absolute text-[10px] font-bold text-slate-400">Tunggu sebentar...</p>
+                            </div>
+                          )}
                           <p className="text-xs font-bold tracking-widest uppercase text-slate-500">
                             Scan menggunakan aplikasi apapun
                           </p>
-                        </div>
-                      )}
-
-                      {selectedMethod.group === "qris_ewallet" && selectedMethod.id !== "qris" && (
-                        <div className="text-center py-12">
-                          <p className="text-lg mb-8">Anda akan diarahkan ke <span className="font-bold">{selectedMethod.label}</span>...</p>
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-8 h-1 bg-emerald-500 rounded-full animate-pulse"></div>
-                            <div className="w-8 h-1 bg-slate-200 rounded-full"></div>
-                            <div className="w-8 h-1 bg-slate-200 rounded-full"></div>
-                          </div>
                         </div>
                       )}
 
@@ -445,11 +443,23 @@ export default function PaymentView() {
                         <div className="text-center">
                           <p className="text-sm text-slate-500 mb-2">Kode Pembayaran</p>
                           <div className="text-[36px] font-light tracking-tight text-emerald-900 mb-6 font-mono">
-                            AGRI29384756
+                            {midtransResponse?.payment_code || "MENUNGGU..."}
                           </div>
                           <p className="text-sm text-slate-600 max-w-sm mx-auto">
                             Tunjukkan kode ini ke kasir {selectedMethod.label} terdekat. Kasir akan mengkonfirmasi detail pesanan Anda.
                           </p>
+                          <button 
+                            onClick={() => {
+                              if (midtransResponse?.payment_code) {
+                                navigator.clipboard.writeText(midtransResponse.payment_code);
+                                toast.success("Kode disalin!");
+                              }
+                            }}
+                            className="mt-4 bg-emerald-900 text-white px-6 py-2.5 rounded-full font-medium flex items-center gap-2 mx-auto hover:bg-emerald-800 transition-colors"
+                          >
+                            <Copy className="w-4 h-4" />
+                            Salin Kode
+                          </button>
                         </div>
                       )}
 
@@ -562,11 +572,17 @@ export default function PaymentView() {
                 {state === "select" && (
                   <button 
                     onClick={handlePay}
-                    disabled={!selectedMethod}
+                    disabled={!selectedMethod || loading}
                     className="w-full bg-white text-[#1a3d2e] py-4 rounded-xl font-semibold flex items-center justify-center gap-2 group hover:bg-emerald-500 hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Bayar Rp {total.toLocaleString("id-ID")}
-                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-[#1a3d2e] border-t-transparent rounded-full animate-spin group-hover:border-white"></div>
+                    ) : (
+                      <>
+                        Bayar Rp {total.toLocaleString("id-ID")}
+                        <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                      </>
+                    )}
                   </button>
                 )}
 
