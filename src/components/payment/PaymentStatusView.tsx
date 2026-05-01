@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { getMidtransStatusAction } from "@/app/actions/paymentActions";
+import { updateOrderStatus } from "@/app/actions/orderActions";
 import { toast } from "react-hot-toast";
 import { MidtransChargeResponse } from "@/lib/midtrans-types";
 
@@ -44,6 +45,8 @@ export default function PaymentStatusView() {
           
           if (midtransStatus === "settlement" || midtransStatus === "capture") {
             setStatus("settlement");
+            // Sync status to database
+            await updateOrderStatus(orderId, "PROCESSING");
             toast.success("Pembayaran Berhasil! Pesanan Anda sedang diproses.");
           } else if (midtransStatus === "pending") {
             setStatus("pending");
