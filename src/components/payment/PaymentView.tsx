@@ -121,7 +121,16 @@ export default function PaymentView() {
         const result = await getMidtransStatusAction(existingOrderId);
         if (result.success && result.data) {
           const status = result.data.transaction_status;
-          if (status === "pending" || status === "settlement" || status === "capture") {
+          if (status === "settlement" || status === "capture") {
+            // Only clear cart if it's a fresh cart checkout (not direct buy, not re-paying existing order)
+            const isDirectBuy = searchParams.get("directBuy") === "true";
+            const isExistingOrder = !!searchParams.get("orderId");
+            if (!isDirectBuy && !isExistingOrder) {
+              clearCart();
+            }
+            router.push(`/payment/status/${existingOrderId}`);
+            return;
+          } else if (status === "pending") {
             setMidtransResponse(result.data);
             setState("instruction");
             
@@ -148,7 +157,7 @@ export default function PaymentView() {
       };
       fetchStatus();
     }
-  }, [searchParams, state]);
+  }, [searchParams, state, clearCart, router]);
 
   useEffect(() => {
     if (midtransResponse) {
@@ -175,6 +184,54 @@ export default function PaymentView() {
       return () => clearInterval(timer);
     }
   }, [state, timeLeft]);
+
+  // Automatic Polling for Payment Status
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+
+    const checkStatus = async () => {
+      const orderId = midtransResponse?.order_id || searchParams.get("orderId");
+      if (!orderId || state !== "instruction") return;
+
+      try {
+        const result = await getMidtransStatusAction(orderId);
+        if (result.success && result.data) {
+          const status = result.data.transaction_status;
+          
+          if (status === "settlement" || status === "capture") {
+            toast.success("Pembayaran berhasil dikonfirmasi!", {
+              id: "payment-success", // Prevent duplicate toasts
+            });
+            
+            // Only clear cart if it's a fresh cart checkout
+            const isDirectBuy = searchParams.get("directBuy") === "true";
+            const isExistingOrder = !!searchParams.get("orderId");
+            if (!isDirectBuy && !isExistingOrder) {
+              clearCart();
+            }
+
+            router.push(`/payment/status/${orderId}`);
+          } else if (status === "expire" || status === "cancel" || status === "deny") {
+            toast.error("Transaksi telah berakhir atau dibatalkan.");
+            setState("select");
+          }
+        }
+      } catch (error: unknown) {
+        console.error("Polling error:", error);
+      }
+    };
+
+    if (state === "instruction") {
+      // Check every 5 seconds
+      intervalId = setInterval(checkStatus, 5000);
+      // Immediate check
+      checkStatus();
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [state, midtransResponse?.order_id, searchParams, router, clearCart]);
 
   const handlePay = async (): Promise<void> => {
     if (!selectedMethod) {
@@ -303,13 +360,18 @@ export default function PaymentView() {
   };
 
   const handleCheckStatus = async (): Promise<void> => {
+    const isDirectBuy = searchParams.get("directBuy") === "true";
+    const isExistingOrder = !!searchParams.get("orderId");
+
     if (midtransResponse?.order_id) {
-      clearCart();
+      if (!isDirectBuy && !isExistingOrder) {
+        clearCart();
+      }
       router.push(`/payment/status/${midtransResponse.order_id}`);
     } else {
       const existingOrderId = searchParams.get("orderId");
       if (existingOrderId) {
-        clearCart();
+        // Re-paying existing order should never clear cart
         router.push(`/payment/status/${existingOrderId}`);
       } else {
         toast.error("Gagal menemukan ID Pesanan.");
