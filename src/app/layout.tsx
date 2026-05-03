@@ -38,11 +38,17 @@ export default async function RootLayout({
 
   let userRole: "USER" | "FARMER" | "ADMIN" | null = null;
   if (userId) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-    userRole = dbUser?.role ?? null;
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      userRole = dbUser?.role ?? null;
+    } catch (err) {
+      console.error("Layout Role Fetch Error:", err);
+      // Fallback to session role if DB fetch fails
+      userRole = (session?.user as { role?: "USER" | "FARMER" | "ADMIN" | null })?.role || null;
+    }
   }
 
   // Cart is only for buyers (USER role)
@@ -55,7 +61,7 @@ export default async function RootLayout({
         className={`${jakartaSans.variable} ${jakartaSans.className} antialiased selection:bg-emerald-200 selection:text-emerald-900 bg-white`}
       >
         {/* CartProvider listens to userId changes to refresh the cart when switching accounts */}
-        <CartProvider key={userId ?? 'guest'} userId={userId}>
+        <CartProvider userId={userId}>
           {children}
           {showCart && <CartDrawer />}
           <Suspense fallback={null}>

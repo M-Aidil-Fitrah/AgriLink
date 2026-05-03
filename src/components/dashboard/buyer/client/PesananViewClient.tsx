@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { OrderStatus } from "@prisma/client";
 import { Package, Clock, Truck, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
 import { Pagination } from "@/components/ui/Pagination";
+import { toast } from "react-hot-toast";
 
 const STATUS_MAP: Record<
   OrderStatus,
@@ -31,6 +33,7 @@ type OrderWithItems = {
   deliveryAddress: string | null;
   note: string | null;
   total: number;
+  paymentExpiry: Date | null;
   items: OrderItemWithProduct[];
 };
 
@@ -42,6 +45,30 @@ export function PesananViewClient({
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | "ALL">("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (!status) return;
+
+    if (status === "success") {
+      toast.success("Pembayaran berhasil! Pesanan Anda sedang diproses oleh petani.", { duration: 5000 });
+    } else if (status === "pending") {
+      toast("Pembayaran belum selesai. Selesaikan pembayaran Anda sebelum batas waktu.", {
+        icon: "⏳",
+        duration: 5000,
+      });
+    } else if (status === "error") {
+      toast.error("Terjadi kesalahan pada pembayaran. Silakan coba lagi atau hubungi kami.", { duration: 5000 });
+    }
+
+    // Hapus query param dari URL tanpa reload halaman
+    router.replace("/dashboard/pesanan", { scroll: false });
+  }, [searchParams, router]);
+
+
 
   const filteredOrders = initialOrders.filter(
     (order) => selectedStatus === "ALL" || order.status === selectedStatus
@@ -173,15 +200,87 @@ export function PesananViewClient({
                 </div>
 
                 {/* Footer Pesanan */}
-                <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
-                  <p className="text-xs text-gray-400">
-                    Alamat: <span className="font-medium text-gray-600">{order.deliveryAddress || "-"}</span>
-                  </p>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">Total Bayar</p>
-                    <p className="text-lg font-black text-gray-900 leading-tight">
-                      Rp {order.total.toLocaleString("id-ID")}
+                <div className="px-6 py-4 border-t border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">
+                      Alamat: <span className="font-medium text-gray-600">{order.deliveryAddress || "-"}</span>
                     </p>
+                    {order.note && (
+                      <p className="text-xs text-gray-400 italic">
+                        Catatan: <span className="text-gray-500">{order.note}</span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-6 self-end md:self-auto">
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Total Bayar</p>
+                      <p className="text-lg font-black text-gray-900 leading-tight">
+                        Rp {order.total.toLocaleString("id-ID")}
+                      </p>
+                    </div>
+                    
+                    {order.status === "PENDING" && (
+                      (() => {
+                        const now = new Date().getTime();
+                        let isExpired = false;
+                        
+                        if (order.paymentExpiry) {
+                          // Compare with Midtrans expiry time (minus 5s buffer)
+                          isExpired = now > (new Date(order.paymentExpiry).getTime() - 5000);
+                        } else {
+                          // Fallback to 24h if no expiry record yet
+                          isExpired = now - new Date(order.createdAt).getTime() > 24 * 60 * 60 * 1000;
+                        }
+
+                        if (isExpired) {
+                          return (
+                            <button
+                              onClick={() => {
+                                const product = order.items[0]?.product;
+                                if (product) {
+                                  router.push(`/checkout?productId=${product.id}&quantity=${order.items[0].quantity}`);
+                                }
+                              }}
+                              className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                            >
+                              Beli Ulang
+                            </button>
+                          );
+                        }
+                        return (
+                          <button
+                            onClick={() => {
+                              const params = new URLSearchParams({
+                                orderId: order.id,
+                                total: order.total.toString(),
+                                itemsCount: order.items.reduce((acc, item) => acc + item.quantity, 0).toString(),
+                                address: order.deliveryAddress || "",
+                                note: order.note || "",
+                                resume: "true"
+                              });
+                              router.push(`/payment?${params.toString()}`);
+                            }}
+                            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-200 active:scale-95"
+                          >
+                            Bayar Sekarang
+                          </button>
+                        );
+                      })()
+                    )}
+
+                    {order.status === "CANCELLED" && order.items[0]?.product && (
+                      <button
+                        onClick={() => {
+                          const product = order.items[0].product;
+                          if (product) {
+                            router.push(`/checkout?productId=${product.id}&quantity=${order.items[0].quantity}`);
+                          }
+                        }}
+                        className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                      >
+                        Beli Ulang
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

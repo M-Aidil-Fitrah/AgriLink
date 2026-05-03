@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath, unstable_noStore } from "next/cache";
 import { ActionResult } from "@/lib/types";
+import { ProductCategory, CultivationMethod } from "@prisma/client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,11 @@ export type CartItemData = {
   unit: string;
   farmerId: string;
   farmerName: string;
+  farmerLat?: number | null;
+  farmerLon?: number | null;
+  harvestDate?: Date | null;
+  category?: ProductCategory;
+  cultivationMethod?: CultivationMethod;
 };
 
 /** The shape returned by getCart */
@@ -80,8 +86,21 @@ export async function getCartAction(): Promise<ActionResult<CartData>> {
                 name: true,
                 images: true,
                 unit: true,
+                productCategory: true,
+                harvestDate: true,
+                cultivationMethod: true,
                 farmerId: true,
-                farmer: { select: { name: true } },
+                farmer: { 
+                  select: { 
+                    name: true,
+                    sellerApplication: {
+                      select: {
+                        latitude: true,
+                        longitude: true
+                      }
+                    }
+                  } 
+                },
               },
             },
           },
@@ -103,6 +122,11 @@ export async function getCartAction(): Promise<ActionResult<CartData>> {
       unit: ci.product.unit,
       farmerId: ci.product.farmerId,
       farmerName: ci.product.farmer.name ?? "Petani",
+      farmerLat: ci.product.farmer.sellerApplication?.latitude,
+      farmerLon: ci.product.farmer.sellerApplication?.longitude,
+      harvestDate: ci.product.harvestDate,
+      category: ci.product.productCategory,
+      cultivationMethod: ci.product.cultivationMethod,
     }));
 
     const totalPrice = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
@@ -152,8 +176,21 @@ export async function addToCartAction(
               name: true,
               images: true,
               unit: true,
+              productCategory: true,
+              harvestDate: true,
+              cultivationMethod: true,
               farmerId: true,
-              farmer: { select: { name: true } },
+              farmer: { 
+                select: { 
+                  name: true,
+                  sellerApplication: {
+                    select: {
+                      latitude: true,
+                      longitude: true
+                    }
+                  }
+                } 
+              },
             },
           },
         },
@@ -171,8 +208,21 @@ export async function addToCartAction(
               name: true,
               images: true,
               unit: true,
+              productCategory: true,
+              harvestDate: true,
+              cultivationMethod: true,
               farmerId: true,
-              farmer: { select: { name: true } },
+              farmer: { 
+                select: { 
+                  name: true,
+                  sellerApplication: {
+                    select: {
+                      latitude: true,
+                      longitude: true
+                    }
+                  }
+                } 
+              },
             },
           },
         },
@@ -195,6 +245,11 @@ export async function addToCartAction(
         unit: cartItem.product.unit,
         farmerId: cartItem.product.farmerId,
         farmerName: cartItem.product.farmer.name ?? "Petani",
+        farmerLat: cartItem.product.farmer.sellerApplication?.latitude,
+        farmerLon: cartItem.product.farmer.sellerApplication?.longitude,
+        harvestDate: cartItem.product.harvestDate,
+        category: cartItem.product.productCategory,
+        cultivationMethod: cartItem.product.cultivationMethod,
       },
     };
   } catch (e) {

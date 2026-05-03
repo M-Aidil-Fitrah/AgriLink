@@ -125,7 +125,7 @@ export function CartDrawer() {
                   <span className="text-xl font-extrabold text-emerald-700">Rp {totalPrice.toLocaleString("id-ID")}</span>
                 </div>
                 <Link
-                  href="/dashboard/checkout"
+                  href="/checkout"
                   onClick={closeCart}
                   className="w-full py-4 bg-emerald-600 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-[0.98]"
                 >

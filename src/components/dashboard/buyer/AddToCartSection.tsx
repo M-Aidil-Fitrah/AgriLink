@@ -28,23 +28,24 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
 
     setIsAdding(true);
     setTimeout(() => {
-      addItem({
-        id: `optimistic-${product.id}`,
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        images: product.images,
-        unit: product.unit,
-        farmerId: product.farmerId,
-        farmerName: product.farmer.name || "Petani Lokal",
-        quantity: quantity,
-      });
-      setIsAdding(false);
-      setShowSuccess(true);
-      toast.success(`${quantity} ${product.unit} ${product.name} ditambahkan`);
       if (redirect) {
-        router.push("/dashboard/checkout");
+        setIsAdding(false);
+        router.push(`/checkout?productId=${product.id}&quantity=${quantity}`);
       } else {
+        addItem({
+          id: `optimistic-${product.id}`,
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          images: product.images,
+          unit: product.unit,
+          farmerId: product.farmerId,
+          farmerName: product.farmer.name || "Petani Lokal",
+          quantity: quantity,
+        });
+        setIsAdding(false);
+        setShowSuccess(true);
+        toast.success(`${quantity} ${product.unit} ${product.name} ditambahkan`);
         setTimeout(() => setShowSuccess(false), 3000);
       }
     }, 600);

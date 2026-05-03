@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Package, Leaf, ArrowLeft, ChevronRight } from "lucide-react";
 import { CultivationMethod } from "@prisma/client";
-import { AddToCartButton } from "./AddToCartButton";
+import { BuyButtons } from "./BuyButtons";
 import { FavoriteButton } from "./FavoriteButton";
 
 const CULTIVATION_LABELS: Record<CultivationMethod, string> = {
@@ -207,17 +207,19 @@ export async function TokoDetailView({ sellerId }: TokoDetailViewProps) {
                     )}
                   </Link>
 
-                  <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-50">
-                    <div>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">Harga</p>
-                      <div className="flex items-baseline gap-0.5">
-                        <span className="text-sm font-black text-emerald-700">
-                          Rp {product.price.toLocaleString("id-ID")}
-                        </span>
-                        <span className="text-[9px] font-bold text-gray-400">/ {product.unit}</span>
+                  <div className="mt-auto pt-3 border-t border-gray-50 space-y-3">
+                    <div className="flex items-baseline justify-between">
+                      <div>
+                        <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Harga</p>
+                        <div className="flex items-baseline gap-0.5">
+                          <span className="text-[13px] font-black text-emerald-700">
+                            Rp {product.price.toLocaleString("id-ID")}
+                          </span>
+                          <span className="text-[9px] font-bold text-gray-400">/ {product.unit}</span>
+                        </div>
                       </div>
                     </div>
-                    <AddToCartButton
+                    <BuyButtons
                       item={{
                         productId: product.id,
                         name: product.name,

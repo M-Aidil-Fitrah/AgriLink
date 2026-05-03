@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { ActionResult } from "@/lib/types";
 import { OrderStatus } from "@prisma/client";
+import { createNotification } from "./notificationActions";
 
 export type OrderInput = {
   items: {
@@ -17,6 +18,9 @@ export type OrderInput = {
   deliveryLat?: number;
   deliveryLon?: number;
   note?: string;
+  shippingMethod: string;
+  shippingCost: number;
+  paymentMethod: string;
 };
 
 /**
@@ -30,16 +34,16 @@ export async function getUserPrimaryLocation(): Promise<ActionResult<{ address: 
     const location = await prisma.location.findFirst({
       where: { userId: session.user.id, isPrimary: true }
     });
-    
+
     if (!location) return { success: true, data: null };
-    
-    return { 
-      success: true, 
-      data: { 
-        address: location.address || "", 
-        lat: location.latitude, 
-        lon: location.longitude 
-      } 
+
+    return {
+      success: true,
+      data: {
+        address: location.address || "",
+        lat: location.latitude,
+        lon: location.longitude
+      }
     };
   } catch {
     return { success: false, error: "Failed to fetch location." };
@@ -56,6 +60,17 @@ export async function createOrderAction(input: OrderInput): Promise<ActionResult
   }
 
   try {
+    // 0. Verify all products exist to prevent Foreign Key errors
+    const productIds = input.items.map(i => i.productId);
+    const existingProducts = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true }
+    });
+
+    if (existingProducts.length !== productIds.length) {
+      return { success: false, error: "Salah satu produk tidak ditemukan. Silakan periksa kembali keranjang Anda." };
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create the base order, including the geographic coordinates
       const order = await tx.order.create({
@@ -67,6 +82,10 @@ export async function createOrderAction(input: OrderInput): Promise<ActionResult
           deliveryLon: input.deliveryLon ?? null,
           note: input.note || null,
           status: "PENDING",
+          shippingMethod: input.shippingMethod,
+          shippingCost: input.shippingCost,
+          paymentMethod: input.paymentMethod,
+          paymentExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
         }
       });
 
@@ -81,14 +100,40 @@ export async function createOrderAction(input: OrderInput): Promise<ActionResult
       });
 
       return order;
+    }, {
+      timeout: 15000 // Increase transaction timeout to 15s to handle pool delays
     });
+
+    // 3. Create notifications for farmers (outside transaction to avoid blocking)
+    try {
+      const productIds = input.items.map(i => i.productId);
+      const products = await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { farmerId: true }
+      });
+      
+      const uniqueFarmerIds = new Set(products.map(p => p.farmerId));
+
+      for (const farmerId of uniqueFarmerIds) {
+        await createNotification({
+          userId: farmerId,
+          title: "Pesanan Baru!",
+          message: `Anda menerima pesanan baru seharga Rp ${input.total.toLocaleString("id-ID")}.`,
+          type: "ORDER",
+          link: "/dashboard/pesanan"
+        });
+      }
+    } catch (notifErr) {
+      console.error("FAILED_TO_SEND_ORDER_NOTIFICATIONS:", notifErr);
+      // Don't fail the whole order if notification fails
+    }
 
     revalidatePath("/dashboard/pesanan");
     return { success: true, data: { id: result.id } };
   } catch (error: unknown) {
     const err = error as Error;
     console.error("ORDER_CREATE_EXCEPTION:", err.message);
-    
+
     // Fallback for general database errors
     return { success: false, error: `Sistem gagal memproses: ${err.message}` };
   }

@@ -167,6 +167,10 @@ model Order {
   deliveryLat     Float?
   deliveryLon     Float?
   geog            Unsupported("geography(Point, 4326)")?
+  shippingMethod  String?
+  shippingCost    Float?
+  paymentMethod   String?
+  paymentExpiry   DateTime?
 
   items OrderItem[]
 

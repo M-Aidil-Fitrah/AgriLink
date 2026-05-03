@@ -1,237 +1,492 @@
 "use client";
 
-import { useCart } from "@/context/CartContext";
-import { ChevronLeft, ShieldCheck, MapPin, CreditCard, ShoppingBag, Loader2, CheckCircle2, Info } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { useState, useTransition, useEffect } from "react";
-import { createOrderAction, getUserPrimaryLocation } from "@/app/actions/orderActions";
-import { useRouter } from "next/navigation";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { useCart, type CartItem } from "@/context/CartContext";
+import { calculateFoodMiles, getFreshnessScore } from "@/lib/metrics";
+import { 
+  ShieldCheck, 
+  MapPin, 
+  Sprout, 
+  Truck, 
+  ArrowRight, 
+  Check, 
+  Minus, 
+  Plus,
+  ArrowLeft
+} from "lucide-react";
 
-import { toast } from "react-hot-toast";
+export type CheckoutViewProps = {
+  userName: string;
+  userAddress: string;
+  userPhone: string;
+  userLat: number;
+  userLon: number;
+  directBuyItem?: CartItem | null;
+};
 
-export function CheckoutView() {
-  const { items, totalPrice, clearCart } = useCart();
+type ShippingOption = {
+  id: string;
+  label: string;
+  sub: string;
+  price: number;
+  desc: string;
+};
+
+const SHIPPING_OPTIONS: ShippingOption[] = [
+  { id: "sameday", label: "Same-day", sub: "EXPRESS", price: 25000, desc: "Hari ini" },
+  { id: "coldchain", label: "Cold-chain", sub: "CHILLED", price: 35000, desc: "Sayur segar" },
+  { id: "eco", label: "Eco delivery", sub: "REGULAR", price: 0, desc: "Gratis" }
+];
+
+export default function CheckoutView({ 
+  userName, 
+  userAddress, 
+  userPhone, 
+  userLat,
+  userLon,
+  directBuyItem 
+}: CheckoutViewProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { items: cartItems, totalItems: cartTotalItems, totalPrice: cartTotalPrice, updateQuantity: updateCartQuantity } = useCart();
+  
+  // Wrap items in useMemo to fix lint warning and prevent unnecessary re-renders
+  const items = useMemo(() => {
+    return directBuyItem ? [directBuyItem] : cartItems;
+  }, [directBuyItem, cartItems]);
 
-  // States for dynamic DB data
-  const [location, setLocation] = useState<{ address: string; lat: number; lon: number } | null>(null);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const totalPrice = directBuyItem ? (directBuyItem.price * directBuyItem.quantity) : cartTotalPrice;
+  const totalItemsCount = directBuyItem ? directBuyItem.quantity : cartTotalItems;
 
-  // Fetch real data from DB on mount
-  useEffect(() => {
-    const fetchLocation = async () => {
-      const res = await getUserPrimaryLocation();
-      if (res.success && res.data) {
-        setLocation(res.data);
+  const [shippingMethod, setShippingMethod] = useState<ShippingOption>(SHIPPING_OPTIONS[0]);
+  const [note, setNote] = useState<string>("");
+  const [coupon, setCoupon] = useState<string>("");
+  const [couponActive, setCouponActive] = useState<boolean>(false);
+
+  // For direct buy local state
+  const [directQuantity, setDirectQuantity] = useState(directBuyItem?.quantity || 1);
+  
+  const currentTotalPrice = directBuyItem ? (directBuyItem.price * directQuantity) : totalPrice;
+  const discount: number = couponActive ? 5000 : 0;
+  const serviceFee: number = 2500;
+  const finalTotal: number = currentTotalPrice + shippingMethod.price + serviceFee - discount;
+
+  // Calculate Distances and Freshness for each item
+  const itemsWithMetrics = useMemo(() => {
+    return items.map(item => {
+      // 1. Distance
+      let distance = 0;
+      if (userLat && userLon && item.farmerLat && item.farmerLon) {
+        distance = calculateFoodMiles(userLat, userLon, item.farmerLat, item.farmerLon);
       }
-      setIsLoadingLocation(false);
-    };
-    fetchLocation();
-  }, []);
 
-  const handleCheckout = () => {
-    if (!location) {
-      const msg = "Silakan atur alamat pengiriman terlebih dahulu di menu Profil.";
-      setError(msg);
-      toast.error(msg);
-      return;
-    }
+      // 2. Freshness
+      const freshness = getFreshnessScore(
+        item.harvestDate ? new Date(item.harvestDate) : null,
+        item.category,
+        item.cultivationMethod
+      );
 
-    setError(null);
-    startTransition(async () => {
-      const result = await createOrderAction({
-        items: items.map(i => ({
-          productId: i.productId,
-          quantity: i.quantity,
-          price: i.price
-        })),
-        total: totalPrice + 2000,
-        deliveryAddress: location.address,
-        deliveryLat: location.lat,
-        deliveryLon: location.lon
-      });
-
-      if (result.success) {
-        setIsSuccess(true);
-        toast.success("Pembayaran Berhasil! Pesanan Anda sedang diproses.");
-        setTimeout(() => {
-          clearCart();
-          router.push("/dashboard/pesanan");
-        }, 3000);
-      } else {
-        setError(result.error);
-        toast.error(result.error || "Gagal membuat pesanan");
-      }
+      return { ...item, distance, freshness };
     });
+  }, [items, userLat, userLon]);
+
+  // Average Food Miles (Weighted by items count if needed, but simple average is fine for display)
+  const averageFoodMiles = useMemo(() => {
+    if (itemsWithMetrics.length === 0) return 0;
+    const totalDist = itemsWithMetrics.reduce((acc, i) => acc + i.distance, 0);
+    return totalDist / itemsWithMetrics.length;
+  }, [itemsWithMetrics]);
+
+  // Dynamic Arrival Estimation based on distance
+  const getEstimation = () => {
+    if (averageFoodMiles === 0) return "Estimasi tiba 2–3 hari";
+    if (averageFoodMiles < 5) return "Estimasi tiba 1–2 jam (Sangat Dekat)";
+    if (averageFoodMiles < 20) return "Estimasi tiba 3–6 jam (Dekat)";
+    if (averageFoodMiles < 100) return "Estimasi tiba 1 hari (Antar Kota)";
+    return "Estimasi tiba 2–3 hari (Luar Kota)";
   };
 
-  if (isSuccess) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-6 text-center">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600">
-          <CheckCircle2 className="w-10 h-10" />
-        </motion.div>
-        <div className="space-y-3">
-          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Pesanan Berhasil!</h2>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest max-w-xs mx-auto">Redirecting ke halaman pesanan...</p>
-        </div>
-      </div>
-    );
-  }
+  const updateQuantity = (id: string, newQty: number) => {
+    if (directBuyItem && id === directBuyItem.id) {
+      setDirectQuantity(Math.max(1, newQty));
+    } else {
+      updateCartQuantity(id, newQty);
+    }
+  };
 
-  if (items.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <ShoppingBag className="w-10 h-10 text-gray-200" />
-        <h2 className="text-lg font-bold text-gray-900 uppercase">Keranjang Kosong</h2>
-        <Link href="/dashboard/produk" className="text-sm font-black text-emerald-600 underline uppercase tracking-widest">Mulai Belanja</Link>
-      </div>
-    );
-  }
+  const getImageUrl = (path: string | undefined): string => {
+    if (!path) return "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200";
+    if (path.startsWith("http") || path.startsWith("blob:") || path.startsWith("/")) return path;
+    return `https://osfmxafgxfasdfjyqvgt.supabase.co/storage/v1/object/public/agrilink-uploads/${path}`;
+  };
+
+  const handleCheckout = (): void => {
+    const params = new URLSearchParams({
+      total: finalTotal.toString(),
+      itemsCount: (directBuyItem ? directQuantity : items.length).toString(),
+      shippingId: shippingMethod.id,
+      shippingCost: shippingMethod.price.toString(),
+      note: note,
+      address: userAddress,
+      lat: userLat.toString(),
+      lon: userLon.toString()
+    });
+    
+    if (directBuyItem) {
+      params.append("productId", directBuyItem.productId);
+      params.append("quantity", directQuantity.toString());
+      params.append("directBuy", "true");
+    }
+
+    router.push(`/payment?${params.toString()}`);
+  };
+
+  const handleApplyCoupon = (): void => {
+    if (coupon.trim().toUpperCase() === "AGRILINK10") {
+      setCouponActive(true);
+    }
+  };
 
   return (
-    <div className="max-w-[1100px] mx-auto px-6 py-6 pb-24">
-      <Link href="/dashboard/produk" className="inline-flex items-center gap-1.5 text-xs font-black text-gray-400 hover:text-emerald-600 transition-all mb-6 uppercase tracking-[0.2em]">
-        <ChevronLeft className="w-3.5 h-3.5" />
-        Kembali Belanja
-      </Link>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-8 space-y-6">
-          <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase mb-4">Pembayaran</h1>
-
-          {/* Alamat Section - Fetched from DB */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-50 pb-3">
-              <h3 className="text-xs font-black text-gray-900 flex items-center gap-2 uppercase tracking-widest">
-                <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
-                  <MapPin className="w-4 h-4" />
-                </div>
-                Lokasi Pengiriman
-              </h3>
-              <Link href="/dashboard/profil" className="text-[10px] font-black text-emerald-600 hover:underline uppercase tracking-widest">Edit Alamat</Link>
+    <div className="min-h-screen bg-white text-slate-900 pb-24">
+      {/* Header */}
+      <header className="h-16 border-b border-black/10 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
+              <Image 
+                src="/logo_agrilink.png" 
+                alt="Logo Agrilink" 
+                fill 
+                className="object-contain"
+                priority
+              />
             </div>
+            <span className="font-bold text-xl tracking-tight text-stone-950">
+              AgriLink
+            </span>
+          </Link>
+        </div>
+        
+        <div className="flex items-center gap-4 text-sm font-medium">
+          <span className="text-emerald-900">01 — Checkout</span>
+          <span className="text-slate-300">→</span>
+          <span className="text-slate-400">02 — Payment</span>
+          <span className="text-slate-300">→</span>
+          <span className="text-slate-400">03 — Confirmation</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>Secure</span>
+        </div>
+      </header>
+
+      <main className="max-w-[1200px] mx-auto px-8 mt-12">
+        {/* Back Button */}
+        <button 
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-slate-400 hover:text-slate-900 transition-colors mb-6 group"
+        >
+          <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
+          Kembali
+        </button>
+
+        {/* Title */}
+        <motion.div 
+          initial={{ opacity: 0, y: 12 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
+          className="flex items-end justify-between mb-12"
+        >
+          <h1 className="text-[64px] font-light tracking-[-0.04em] leading-none">
+            CHECKOUT<span className="text-emerald-500">.</span>
+          </h1>
+          <div className="text-sm font-medium text-slate-500 pb-2">
+            {directBuyItem ? directQuantity : totalItemsCount} item · Food miles {averageFoodMiles.toFixed(1).replace(".", ",")} km
+          </div>
+        </motion.div>
+
+        {/* Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16">
+          
+          {/* Kolom Kiri */}
+          <div className="space-y-12">
             
-            {isLoadingLocation ? (
-              <div className="p-8 h-24 bg-gray-50/50 rounded-xl flex items-center justify-center gap-2 animate-pulse">
-                <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
-                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Mengambil Data...</span>
+            {/* A: Alamat Pengiriman */}
+            <section>
+              <div className="flex items-center gap-4 mb-4">
+                <span className="font-mono text-xs tracking-[0.32em] text-slate-400">A</span>
+                <h2 className="text-lg font-medium">Alamat pengiriman</h2>
+                <div className="flex-1 h-px bg-black/10"></div>
               </div>
-            ) : location ? (
-              <div className="p-5 bg-gray-50/50 rounded-xl border border-gray-100/50 relative overflow-hidden group">
-                <div className="relative z-10">
-                  <p className="font-black text-gray-900 text-sm uppercase tracking-tight">Lokasi Utama Anda</p>
-                  <p className="text-gray-500 mt-1 text-xs font-medium leading-relaxed max-w-sm">{location.address}</p>
-                  <div className="flex items-center gap-3 mt-4">
-                    <span className="text-[10px] font-black text-gray-400 bg-gray-200/50 px-3 py-1 rounded uppercase tracking-wider">Terverifikasi</span>
-                    <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/50 px-3 py-1 rounded uppercase tracking-wider">Default</span>
-                  </div>
-                </div>
-                <MapPin className="absolute -bottom-2 -right-2 w-20 h-20 text-gray-100 pointer-events-none -rotate-12" />
-              </div>
-            ) : (
-              <div className="p-8 h-24 bg-red-50/50 border border-red-50 rounded-xl flex flex-col items-center justify-center gap-2">
-                <p className="text-[10px] font-black text-red-600 uppercase">Alamat Belum Diatur</p>
-                <Link href="/dashboard/profil" className="text-[9px] font-bold text-red-500 underline">Klik Ke Profil Untuk Mengatur Alamat Utama</Link>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
-            <h3 className="text-xs font-black text-gray-900 flex items-center gap-2 uppercase tracking-widest border-b border-gray-50 pb-3">
-              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
-                <ShoppingBag className="w-4 h-4" />
-              </div>
-              Daftar Produk
-            </h3>
-            <div className="divide-y divide-gray-50">
-              {items.map(item => (
-                <div key={item.id} className="flex gap-5 py-4 group">
-                  <div className="w-16 h-16 relative bg-gray-50 rounded-lg overflow-hidden border border-gray-100 shrink-0">
-                    <Image src={item.images?.[0] || "https://images.unsplash.com/photo-1592419044706-39796d40f98c?q=80&w=200"} alt={item.name} fill className="object-cover" />
-                  </div>
-                  <div className="flex-1 flex justify-between items-center text-sm">
-                    <div>
-                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none mb-1.5">{item.farmerName}</p>
-                      <h4 className="font-bold text-gray-900 uppercase tracking-tight leading-none mb-2">{item.name}</h4>
-                      <span className="text-[11px] font-bold text-gray-400">{item.quantity} {item.unit} x Rp {item.price.toLocaleString("id-ID")}</span>
+              <div className="border border-black/10 rounded-xl overflow-hidden bg-white">
+                <div className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 bg-slate-50 flex items-center justify-center rounded-lg border border-black/5 shrink-0">
+                        <MapPin className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-lg">{userName}</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-emerald-900 text-white">Default</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border border-emerald-900/20 text-emerald-900">Verified</span>
+                        </div>
+                        <p className="text-slate-600 text-sm leading-relaxed max-w-md">{userAddress}</p>
+                        <p className="text-slate-500 text-sm mt-2">{userPhone}</p>
+                      </div>
                     </div>
-                    <span className="font-black text-gray-900">Rp {(item.price * item.quantity).toLocaleString("id-ID")}</span>
+                    <Link 
+                      href="/profile?tab=address"
+                      className="text-xs font-bold tracking-widest uppercase text-emerald-600 hover:text-emerald-800 transition-colors"
+                    >
+                      Edit
+                    </Link>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="bg-[#f2f4f0] px-6 py-4 flex items-center gap-3 border-t border-black/5">
+                  <Truck className="w-4 h-4 text-emerald-700" />
+                  <span className="text-sm font-medium text-emerald-900">
+                    {getEstimation()} · Food miles tertimbang {averageFoodMiles.toFixed(1).replace(".", ",")} km
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* B: Daftar Produk */}
+            <section>
+              <div className="flex items-center gap-4 mb-4">
+                <span className="font-mono text-xs tracking-[0.32em] text-slate-400">B</span>
+                <h2 className="text-lg font-medium">Daftar produk</h2>
+                <div className="flex-1 h-px bg-black/10"></div>
+              </div>
+              <div className="border border-black/10 rounded-xl bg-white divide-y divide-black/5">
+                {itemsWithMetrics.length === 0 ? (
+                  <div className="p-8 text-center text-slate-500">Keranjang kosong.</div>
+                ) : (
+                  itemsWithMetrics.map((item, idx: number) => (
+                    <motion.div 
+                      key={item.id}
+                      initial={{ opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.06 }}
+                      className="p-6 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-black/5 relative">
+                          <Image 
+                            src={getImageUrl(item.images?.[0])} 
+                            alt={item.name} 
+                            fill 
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-600 mb-1">
+                            {item.farmerName}
+                          </p>
+                          <h3 className="font-medium text-base mb-2">{item.name}</h3>
+                          <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" /> 
+                              Jarak {item.distance.toFixed(1).replace(".", ",")} km
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className="flex items-center gap-1">
+                              <Sprout className={`w-3 h-3 ${item.freshness.score >= 85 ? 'text-emerald-600' : item.freshness.score >= 65 ? 'text-emerald-500' : 'text-amber-500'}`} /> 
+                              Fresh {item.freshness.score}%
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span>Rp {item.price.toLocaleString("id-ID")}/{item.unit}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-end gap-3">
+                        <span className="font-bold text-lg">Rp {(item.price * (directBuyItem && item.id === directBuyItem.id ? directQuantity : item.quantity)).toLocaleString("id-ID")}</span>
+                        <div className="flex items-center border border-black/10 rounded-md overflow-hidden bg-white">
+                          <button 
+                            onClick={() => updateQuantity(item.id, (directBuyItem && item.id === directBuyItem.id ? directQuantity : item.quantity) - 1)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-emerald-900 hover:text-white transition-colors"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-medium tabular-nums">{directBuyItem && item.id === directBuyItem.id ? directQuantity : item.quantity}</span>
+                          <button 
+                            onClick={() => updateQuantity(item.id, (directBuyItem && item.id === directBuyItem.id ? directQuantity : item.quantity) + 1)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-emerald-900 hover:text-white transition-colors"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* C: Pilihan Pengiriman */}
+            <section>
+              <div className="flex items-center gap-4 mb-4">
+                <span className="font-mono text-xs tracking-[0.32em] text-slate-400">C</span>
+                <h2 className="text-lg font-medium">Pilihan pengiriman</h2>
+                <div className="flex-1 h-px bg-black/10"></div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                {SHIPPING_OPTIONS.map((opt) => {
+                  const isActive = shippingMethod.id === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => setShippingMethod(opt)}
+                      className={`relative p-5 rounded-xl text-left transition-all duration-300 ${
+                        isActive 
+                          ? "bg-emerald-900 text-white shadow-lg shadow-emerald-900/20" 
+                          : "bg-white text-slate-900 border border-black/10 hover:border-emerald-600/50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isActive ? "bg-white/10" : "bg-[#f2f4f0]"}`}>
+                          <Truck className={`w-5 h-5 ${isActive ? "text-white" : "text-emerald-700"}`} />
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? "border-emerald-400 bg-emerald-400" : "border-slate-300"}`}>
+                          {isActive && <Check className="w-3 h-3 text-emerald-950" strokeWidth={3} />}
+                        </div>
+                      </div>
+                      <div className={`text-[10px] font-bold tracking-widest uppercase mb-1 ${isActive ? "text-emerald-300" : "text-emerald-700"}`}>
+                        {opt.sub}
+                      </div>
+                      <h3 className="font-medium text-base mb-1">{opt.label}</h3>
+                      <p className={`text-sm ${isActive ? "text-white/80" : "text-slate-500"}`}>
+                        {opt.price === 0 ? "Gratis" : `Rp ${opt.price.toLocaleString("id-ID")}`}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* D: Catatan untuk petani */}
+            <section>
+              <div className="flex items-center gap-4 mb-4">
+                <span className="font-mono text-xs tracking-[0.32em] text-slate-400">D</span>
+                <h2 className="text-lg font-medium">Catatan untuk petani <span className="text-slate-400 font-normal">(Opsional)</span></h2>
+                <div className="flex-1 h-px bg-black/10"></div>
+              </div>
+              <textarea 
+                rows={3}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="tolong dipanen pagi hari, kemas tanpa plastik"
+                className="w-full border border-black/10 rounded-xl p-4 bg-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all resize-none"
+              />
+            </section>
+
           </div>
+
+          {/* Kolom Kanan */}
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="sticky top-24"
+            >
+              <div className="bg-[#1a3d2e] text-white rounded-2xl p-8 shadow-xl shadow-emerald-900/10">
+                <h3 className="text-xs font-bold tracking-widest uppercase text-white/60 mb-2">Ringkasan pesanan</h3>
+                <div className="text-[40px] font-normal tracking-[-0.04em] leading-none mb-1">
+                  Rp {finalTotal.toLocaleString("id-ID")}
+                </div>
+                <div className="text-emerald-400 text-sm font-medium mb-8">Total tagihan</div>
+
+                <div className="space-y-4 mb-8">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/60">Subtotal</span>
+                    <span className="font-medium text-white">Rp {currentTotalPrice.toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/60">Pengiriman</span>
+                    <span className="font-medium text-white">
+                      {shippingMethod.price === 0 ? "Gratis" : `Rp ${shippingMethod.price.toLocaleString("id-ID")}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/60">Biaya layanan</span>
+                    <span className="font-medium text-white">Rp {serviceFee.toLocaleString("id-ID")}</span>
+                  </div>
+                  {couponActive && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-emerald-400">Diskon kupon</span>
+                      <span className="font-medium text-emerald-400">- Rp {discount.toLocaleString("id-ID")}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-px bg-white/15 w-full mb-8"></div>
+
+                {/* Kupon */}
+                <div className="mb-8">
+                  {couponActive ? (
+                    <div className="bg-emerald-950/50 border border-emerald-500/30 rounded-lg p-3 flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 text-[#1a3d2e]" strokeWidth={3} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-emerald-400">Kupon aktif</p>
+                        <p className="text-xs text-emerald-400/80">Hemat Rp 5.000</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 border-b border-white/20 pb-2 focus-within:border-emerald-400 transition-colors">
+                      <input 
+                        type="text" 
+                        value={coupon}
+                        onChange={(e) => setCoupon(e.target.value)}
+                        placeholder="AGRILINK10"
+                        className="bg-transparent border-none outline-none w-full text-sm placeholder:text-white/30 uppercase"
+                      />
+                      <button 
+                        onClick={handleApplyCoupon}
+                        className="text-xs font-medium px-3 py-1.5 bg-emerald-600 rounded text-white hover:bg-emerald-500 transition-colors shrink-0"
+                      >
+                        Terapkan
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <button 
+                  onClick={handleCheckout}
+                  disabled={items.length === 0}
+                  className="w-full bg-white text-[#1a3d2e] py-4 rounded-xl font-semibold flex items-center justify-center gap-2 group hover:bg-emerald-500 hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Lanjut ke pembayaran
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </button>
+
+                <div className="mt-6 flex items-center justify-center gap-2 text-white/40 text-xs font-bold tracking-widest uppercase">
+                  <ShieldCheck className="w-4 h-4" />
+                  AgriLink Secure
+                </div>
+              </div>
+
+              {/* Edu Card */}
+              <div className="mt-6 bg-white border border-y-slate-200 border-r-slate-200 border-l-2 border-l-emerald-500 p-5 shadow-sm rounded-r-xl">
+                <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                  <span className="text-slate-900 font-bold">Traceable.</span> Setiap produk dapat dilacak hingga ke petani asal. Pembayaran diteruskan langsung tanpa perantara.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
         </div>
-
-        {/* Sidebar Summary */}
-        <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-8">
-          <div className="bg-emerald-900 text-white rounded-4xl p-7 shadow-xl relative overflow-hidden">
-            <div className="relative z-10 space-y-7">
-              <div>
-                <h3 className="text-[10px] font-black opacity-40 uppercase tracking-[0.2em] mb-2">Total Tagihan</h3>
-                <p className="text-3xl font-black tracking-tighter">Rp {(totalPrice + 2000).toLocaleString("id-ID")}</p>
-              </div>
-
-              <div className="space-y-4 pt-5 border-t border-white/10 text-[11px] font-bold opacity-60 uppercase tracking-widest">
-                <div className="flex justify-between items-center">
-                  <span>Subtotal</span>
-                  <span>Rp {totalPrice.toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Biaya Layanan</span>
-                  <span>Rp 2.000</span>
-                </div>
-              </div>
-
-              <div className="pt-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-[10px] font-black uppercase tracking-widest opacity-40">Metode Bayar</div>
-                  <span className="text-[8px] font-black bg-white/10 px-2 py-0.5 rounded uppercase">Otomatis</span>
-                </div>
-                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer group/btn">
-                  <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-black text-[11px] uppercase tracking-tight leading-none">V-Account BCA</p>
-                    <p className="text-[9px] opacity-40 mt-1 uppercase font-bold">Instan & Aman</p>
-                  </div>
-                </div>
-              </div>
-
-              {error && (
-                <p className="text-[10px] font-bold text-red-300 bg-red-900/40 p-2.5 rounded-lg border border-red-800/50">{error}</p>
-              )}
-
-              <button
-                onClick={handleCheckout}
-                disabled={isPending || isLoadingLocation}
-                className="w-full h-12 bg-white text-emerald-900 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-emerald-50 transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
-              >
-                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "BAYAR SEKARANG"}
-              </button>
-
-              <div className="flex items-center gap-2 justify-center text-[9px] font-black opacity-30 tracking-[0.2em] uppercase">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                AGRILINK SECURE
-              </div>
-            </div>
-          </div>
-
-          <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
-            <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-[10px] font-bold text-amber-800/80 leading-relaxed uppercase tracking-tighter">
-              Simulasi pembayaran otomatis. Pesanan akan langsung diteruskan ke dasbor petani.
-            </p>
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
