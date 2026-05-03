@@ -5,6 +5,7 @@ import { CartProvider } from "@/context/CartContext";
 import dynamic from 'next/dynamic';
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getCartAction, type CartItemData } from "@/app/actions/cartActions";
 
 // Lazy load the CartDrawer as it's not needed for initial page paint
 const CartDrawer = dynamic(() => import("@/components/dashboard/buyer/CartDrawer").then(mod => mod.CartDrawer));
@@ -54,14 +55,26 @@ export default async function RootLayout({
   // Cart is only for buyers (USER role)
   const showCart = userRole === "USER";
 
+  // Pre-fetch cart on server to prevent client-side infinite loops and hydration hangs
+  let initialCartItems: CartItemData[] = [];
+  if (showCart) {
+    try {
+      const cartResult = await getCartAction();
+      if (cartResult.success && cartResult.data) {
+        initialCartItems = cartResult.data.items;
+      }
+    } catch (e) {
+      console.error("Failed to pre-fetch cart on server:", e);
+    }
+  }
+
   return (
     <html lang="id">
       <body
         suppressHydrationWarning
         className={`${jakartaSans.variable} ${jakartaSans.className} antialiased selection:bg-emerald-200 selection:text-emerald-900 bg-white`}
       >
-        {/* CartProvider listens to userId changes to refresh the cart when switching accounts */}
-        <CartProvider userId={userId}>
+        <CartProvider userId={userId} initialItems={initialCartItems}>
           {children}
           {showCart && <CartDrawer />}
           <Suspense fallback={null}>

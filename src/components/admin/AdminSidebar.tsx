@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, FileCheck } from "lucide-react";
 
 const ADMIN_LINKS = [
@@ -9,6 +12,8 @@ const ADMIN_LINKS = [
 ];
 
 export function AdminSidebar() {
+  const pathname = usePathname();
+
   return (
     <aside className="w-64 bg-white border-r border-gray-100 flex flex-col pt-6 pb-6 shadow-sm z-20 shrink-0">
       <div className="px-6 mb-8 flex flex-col items-center text-center">
@@ -26,16 +31,23 @@ export function AdminSidebar() {
       </div>
 
       <nav className="flex-1 px-4 space-y-1">
-        {ADMIN_LINKS.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-500 hover:bg-emerald-50 hover:text-emerald-700"
-          >
-            <item.icon className="w-5 h-5 shrink-0" />
-            {item.name}
-          </Link>
-        ))}
+        {ADMIN_LINKS.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                isActive 
+                  ? "bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-700/5" 
+                  : "text-gray-500 hover:bg-emerald-50 hover:text-emerald-700"
+              }`}
+            >
+              <item.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-emerald-700" : ""}`} />
+              {item.name}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="px-4 mt-4">

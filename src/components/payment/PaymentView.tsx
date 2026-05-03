@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCart, type CartItem } from "@/context/CartContext";
+import { type CartItem } from "@/context/CartContext";
 import { createOrderAction } from "@/app/actions/orderActions";
 import { createMidtransTransactionAction, getMidtransStatusAction } from "@/app/actions/paymentActions";
 import { toast } from "react-hot-toast";
@@ -67,7 +67,6 @@ type PaymentState = "select" | "instruction";
 export default function PaymentView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { items, clearCart } = useCart();
   
   const rawTotal: string | null = searchParams.get("total");
   const rawShippingCost: string | null = searchParams.get("shippingCost");
@@ -75,10 +74,25 @@ export default function PaymentView() {
   const note: string | null = searchParams.get("note");
   const address: string | null = searchParams.get("address");
   const rawItemsCount: string | null = searchParams.get("itemsCount");
-  
+
+  // State for session items
+  const [items, setItems] = useState<CartItem[]>([]);
+
+  useEffect(() => {
+    if (searchParams.get("checkoutSession") === "true") {
+      const saved = sessionStorage.getItem("agrilink_checkout_items");
+      if (saved) {
+        try {
+          setItems(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse checkout items", e);
+        }
+      }
+    }
+  }, [searchParams]);
+
   const total: number = rawTotal ? parseInt(rawTotal, 10) : 0;
   const itemsCount: number = rawItemsCount ? parseInt(rawItemsCount, 10) : 0;
-
   const shipping: number = rawShippingCost ? parseInt(rawShippingCost, 10) : 25000;
   
   // Dynamic Service Fee Calculation based on Midtrans standards
@@ -122,12 +136,6 @@ export default function PaymentView() {
         if (result.success && result.data) {
           const status = result.data.transaction_status;
           if (status === "settlement" || status === "capture") {
-            // Only clear cart if it's a fresh cart checkout (not direct buy, not re-paying existing order)
-            const isDirectBuy = searchParams.get("directBuy") === "true";
-            const isExistingOrder = !!searchParams.get("orderId");
-            if (!isDirectBuy && !isExistingOrder) {
-              clearCart();
-            }
             router.push(`/payment/status/${existingOrderId}`);
             return;
           } else if (status === "pending") {
@@ -157,7 +165,7 @@ export default function PaymentView() {
       };
       fetchStatus();
     }
-  }, [searchParams, state, clearCart, router]);
+  }, [searchParams, state, router]);
 
   useEffect(() => {
     if (midtransResponse) {
@@ -203,13 +211,6 @@ export default function PaymentView() {
               id: "payment-success", // Prevent duplicate toasts
             });
             
-            // Only clear cart if it's a fresh cart checkout
-            const isDirectBuy = searchParams.get("directBuy") === "true";
-            const isExistingOrder = !!searchParams.get("orderId");
-            if (!isDirectBuy && !isExistingOrder) {
-              clearCart();
-            }
-
             router.push(`/payment/status/${orderId}`);
           } else if (status === "expire" || status === "cancel" || status === "deny") {
             toast.error("Transaksi telah berakhir atau dibatalkan.");
@@ -231,7 +232,7 @@ export default function PaymentView() {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [state, midtransResponse?.order_id, searchParams, router, clearCart]);
+  }, [state, midtransResponse?.order_id, searchParams, router]);
 
   const handlePay = async (): Promise<void> => {
     if (!selectedMethod) {
@@ -268,7 +269,7 @@ export default function PaymentView() {
               price: Math.round(itemTotal / directQuantity) 
             }]
           : items.map((item: CartItem) => ({
-              productId: item.id,
+              productId: item.productId,
               quantity: item.quantity,
               price: Math.round(item.price)
             }));
@@ -360,13 +361,7 @@ export default function PaymentView() {
   };
 
   const handleCheckStatus = async (): Promise<void> => {
-    const isDirectBuy = searchParams.get("directBuy") === "true";
-    const isExistingOrder = !!searchParams.get("orderId");
-
     if (midtransResponse?.order_id) {
-      if (!isDirectBuy && !isExistingOrder) {
-        clearCart();
-      }
       router.push(`/payment/status/${midtransResponse.order_id}`);
     } else {
       const existingOrderId = searchParams.get("orderId");

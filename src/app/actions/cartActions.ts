@@ -95,6 +95,7 @@ export async function getCartAction(): Promise<ActionResult<CartData>> {
                     name: true,
                     sellerApplication: {
                       select: {
+                        businessName: true,
                         latitude: true,
                         longitude: true
                       }
@@ -121,7 +122,7 @@ export async function getCartAction(): Promise<ActionResult<CartData>> {
       images: ci.product.images as string[],
       unit: ci.product.unit,
       farmerId: ci.product.farmerId,
-      farmerName: ci.product.farmer.name ?? "Petani",
+      farmerName: ci.product.farmer.sellerApplication?.businessName ?? ci.product.farmer.name ?? "Toko Petani",
       farmerLat: ci.product.farmer.sellerApplication?.latitude,
       farmerLon: ci.product.farmer.sellerApplication?.longitude,
       harvestDate: ci.product.harvestDate,
@@ -185,6 +186,7 @@ export async function addToCartAction(
                   name: true,
                   sellerApplication: {
                     select: {
+                      businessName: true,
                       latitude: true,
                       longitude: true
                     }
@@ -217,6 +219,7 @@ export async function addToCartAction(
                   name: true,
                   sellerApplication: {
                     select: {
+                      businessName: true,
                       latitude: true,
                       longitude: true
                     }
@@ -244,7 +247,7 @@ export async function addToCartAction(
         images: cartItem.product.images as string[],
         unit: cartItem.product.unit,
         farmerId: cartItem.product.farmerId,
-        farmerName: cartItem.product.farmer.name ?? "Petani",
+        farmerName: cartItem.product.farmer.sellerApplication?.businessName ?? cartItem.product.farmer.name ?? "Toko Petani",
         farmerLat: cartItem.product.farmer.sellerApplication?.latitude,
         farmerLon: cartItem.product.farmer.sellerApplication?.longitude,
         harvestDate: cartItem.product.harvestDate,
