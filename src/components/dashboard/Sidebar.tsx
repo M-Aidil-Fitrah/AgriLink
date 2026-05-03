@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   PackageSearch,
@@ -19,6 +22,7 @@ const BUYER_SECONDARY_LINKS = [
 
 export function Sidebar({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } | null }) {
   const isFarmer = user?.role === "FARMER";
+  const pathname = usePathname();
   
   const getSidebarLinks = () => {
     if (!user) return [
@@ -65,16 +69,23 @@ export function Sidebar({ user }: { user: { id: string, name: string | null, ema
       </div>
 
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-        {finalLinks.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-500 hover:bg-emerald-50 hover:text-emerald-700"
-          >
-            <item.icon className="w-5 h-5 shrink-0" />
-            {item.name}
-          </Link>
-        ))}
+        {finalLinks.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                isActive 
+                  ? "bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-700/5" 
+                  : "text-gray-500 hover:bg-emerald-50 hover:text-emerald-700"
+              }`}
+            >
+              <item.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-emerald-700" : ""}`} />
+              {item.name}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Seller application link for buyers/guests only */}
