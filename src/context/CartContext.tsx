@@ -11,7 +11,6 @@ import React, {
   useTransition,
 } from "react";
 import {
-  getCartAction,
   addToCartAction,
   removeFromCartAction,
   updateCartQuantityAction,
@@ -28,6 +27,8 @@ type CartContextType = {
   isLoading: boolean;
   addItem: (item: CartItem) => void;
   removeItem: (cartItemId: string) => void;
+  /** Remove multiple cart items at once (e.g. after a selective checkout) */
+  removeItems: (cartItemIds: string[]) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
   totalPrice: number;
@@ -40,24 +41,21 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ userId, children }: { userId: string | null, children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+export function CartProvider({ userId, initialItems = [], children }: { userId: string | null, initialItems?: CartItem[], children: React.ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>(initialItems);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [isFetching, setIsFetching] = useState(true);
 
-  // ── Initial load from DB ─────────────────────────────────────────────────
+  // Sync state if initialItems changes from server (e.g. after a navigation/login)
   useEffect(() => {
-    let cancelled = false;
-    getCartAction().then((result) => {
-      if (!cancelled) {
-        if (result.success) setItems(result.data.items);
-        else setItems([]); // Clear cart items if no session or error
-        setIsFetching(false);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [userId]);
+    setItems(initialItems);
+  }, [initialItems]);
+
+  // ── Initial load from DB + Reset on user change ───────────────────────────
+  // REMOVED: Client-side fetching on mount using getCartAction in useEffect.
+  // This prevents the "infinite loop" / stuck spinner bug when navigating or switching users,
+  // because Server Actions inside useEffect on mount can get blocked by Next.js App Router hydration.
+  // Instead, layout.tsx fetches the cart directly and passes `initialItems`.
 
   // ── Mutations ────────────────────────────────────────────────────────────
 
@@ -100,7 +98,16 @@ export function CartProvider({ userId, children }: { userId: string | null, chil
 
     startTransition(async () => {
       await removeFromCartAction(cartItemId);
-      // Re-sync from DB on error (simple: just refetch)
+    });
+  }, []);
+
+  /** Remove multiple items at once (e.g. after a successful selective checkout) */
+  const removeItems = useCallback((cartItemIds: string[]) => {
+    const idSet = new Set(cartItemIds);
+    setItems((prev) => prev.filter((i) => !idSet.has(i.id)));
+
+    startTransition(async () => {
+      await Promise.all(cartItemIds.map((id) => removeFromCartAction(id)));
     });
   }, []);
 
@@ -144,9 +151,10 @@ export function CartProvider({ userId, children }: { userId: string | null, chil
     <CartContext.Provider
       value={{
         items,
-        isLoading: isFetching || isPending,
+        isLoading: isPending,
         addItem,
         removeItem,
+        removeItems,
         updateQuantity,
         clearCart,
         totalPrice,

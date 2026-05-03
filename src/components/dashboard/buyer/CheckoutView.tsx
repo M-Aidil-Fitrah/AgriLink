@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useCart, type CartItem } from "@/context/CartContext";
+import { type CartItem } from "@/context/CartContext";
 import { calculateFoodMiles, getFreshnessScore } from "@/lib/metrics";
-import { 
-  ShieldCheck, 
-  MapPin, 
-  Sprout, 
-  Truck, 
-  ArrowRight, 
-  Check, 
-  Minus, 
+import {
+  ShieldCheck,
+  MapPin,
+  Sprout,
+  Truck,
+  ArrowRight,
+  Check,
+  Minus,
   Plus,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
 
 export type CheckoutViewProps = {
@@ -42,24 +42,45 @@ const SHIPPING_OPTIONS: ShippingOption[] = [
   { id: "eco", label: "Eco delivery", sub: "REGULAR", price: 0, desc: "Gratis" }
 ];
 
-export default function CheckoutView({ 
-  userName, 
-  userAddress, 
-  userPhone, 
+export default function CheckoutView({
+  userName,
+  userAddress,
+  userPhone,
   userLat,
   userLon,
-  directBuyItem 
+  directBuyItem,
 }: CheckoutViewProps) {
   const router = useRouter();
-  const { items: cartItems, totalItems: cartTotalItems, totalPrice: cartTotalPrice, updateQuantity: updateCartQuantity } = useCart();
   
-  // Wrap items in useMemo to fix lint warning and prevent unnecessary re-renders
-  const items = useMemo(() => {
-    return directBuyItem ? [directBuyItem] : cartItems;
-  }, [directBuyItem, cartItems]);
+  const [sessionItems, setSessionItems] = useState<CartItem[]>([]);
 
-  const totalPrice = directBuyItem ? (directBuyItem.price * directBuyItem.quantity) : cartTotalPrice;
-  const totalItemsCount = directBuyItem ? directBuyItem.quantity : cartTotalItems;
+  useEffect(() => {
+    if (!directBuyItem) {
+      const saved = sessionStorage.getItem("agrilink_checkout_items");
+      if (saved) {
+        try {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setSessionItems(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse checkout items", e);
+        }
+      }
+    }
+  }, [directBuyItem]);
+
+  const items = useMemo<CartItem[]>(() => {
+    if (directBuyItem) return [directBuyItem];
+    return sessionItems;
+  }, [directBuyItem, sessionItems]);
+
+  const totalPrice = useMemo(
+    () => items.reduce((acc, i) => acc + i.price * i.quantity, 0),
+    [items]
+  );
+  const totalItemsCount = useMemo(
+    () => items.reduce((acc, i) => acc + i.quantity, 0),
+    [items]
+  );
 
   const [shippingMethod, setShippingMethod] = useState<ShippingOption>(SHIPPING_OPTIONS[0]);
   const [note, setNote] = useState<string>("");
@@ -114,7 +135,11 @@ export default function CheckoutView({
     if (directBuyItem && id === directBuyItem.id) {
       setDirectQuantity(Math.max(1, newQty));
     } else {
-      updateCartQuantity(id, newQty);
+      setSessionItems((prev) => {
+        const next = prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i));
+        sessionStorage.setItem("agrilink_checkout_items", JSON.stringify(next));
+        return next;
+      });
     }
   };
 
@@ -127,19 +152,22 @@ export default function CheckoutView({
   const handleCheckout = (): void => {
     const params = new URLSearchParams({
       total: finalTotal.toString(),
-      itemsCount: (directBuyItem ? directQuantity : items.length).toString(),
+      itemsCount: (directBuyItem ? directQuantity : totalItemsCount).toString(),
       shippingId: shippingMethod.id,
       shippingCost: shippingMethod.price.toString(),
       note: note,
       address: userAddress,
       lat: userLat.toString(),
-      lon: userLon.toString()
+      lon: userLon.toString(),
     });
-    
+
     if (directBuyItem) {
       params.append("productId", directBuyItem.productId);
       params.append("quantity", directQuantity.toString());
       params.append("directBuy", "true");
+    } else {
+      // Items are passed via sessionStorage to PaymentView.
+      params.append("checkoutSession", "true");
     }
 
     router.push(`/payment?${params.toString()}`);
