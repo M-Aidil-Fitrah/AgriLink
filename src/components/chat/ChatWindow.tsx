@@ -1,10 +1,10 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, Bot } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Send, X, Bot, Loader2 } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
+import { useChat, type UIMessage } from '@ai-sdk/react';
 import { ChatMessage } from './ChatMessage';
-import { type ChatMessage as ChatMessageType } from './types';
 import { cn } from '@/lib/utils';
 
 interface ChatWindowProps {
@@ -13,15 +13,25 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
-  const [messages, setMessages] = useState<ChatMessageType[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Halo! Saya AgriConsult. Ada yang bisa saya bantu terkait pertanian hari ini?',
-      timestamp: new Date(),
-    }
-  ]);
-  const [inputValue, setInputValue] = useState('');
+  // Manual input state for AI SDK 6.0 compatibility
+  const [input, setInput] = useState('');
+  
+  const { 
+    messages, 
+    sendMessage,
+    status 
+  } = useChat({
+    // In SDK 6.0, 'initialMessages' is now 'messages' in the options object
+    messages: [
+      {
+        id: '1',
+        role: 'assistant',
+        parts: [{ type: 'text', text: 'Halo! Saya AgriConsult. Ada yang bisa saya bantu terkait pertanian hari ini?' }],
+      } as UIMessage
+    ],
+  });
+
+  const isStreaming = status === 'streaming';
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,29 +40,18 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     }
   }, [messages]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isStreaming) return;
 
-    const newUserMessage: ChatMessageType = {
-      id: Date.now().toString(),
+    const currentInput = input;
+    setInput('');
+
+    // Type-safe message submission following UIMessage structure
+    await sendMessage({
       role: 'user',
-      content: inputValue,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, newUserMessage]);
-    setInputValue('');
-
-    // Simulate AI response for UI demo
-    setTimeout(() => {
-      const aiResponse: ChatMessageType = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Terima kasih atas pertanyaannya. Sebagai AI AgriConsult, saya sedang mempelajari data terbaru untuk memberikan saran terbaik bagi Anda.',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+      parts: [{ type: 'text', text: currentInput }],
+    });
   };
 
   return (
@@ -70,7 +69,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="w-10 h-10 bg-brand-deep rounded-full flex items-center justify-center text-white">
-                  <Bot className="w-4 h-4" />
+                  <Bot className="w-5 h-5" />
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-brand-leaf rounded-full border-2 border-white" />
               </div>
@@ -101,35 +100,64 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             ref={scrollRef}
             className="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar bg-[#fcfcfc]"
           >
-            {messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} />
-            ))}
+            {messages.map((msg: UIMessage) => {
+              // Extract text content from multimodal parts in v6.0
+              const textContent = msg.parts
+                .filter(part => part.type === 'text')
+                .map(part => (part as any).text || '')
+                .join('\n');
+
+              return (
+                <ChatMessage 
+                  key={msg.id} 
+                  message={{
+                    id: msg.id,
+                    role: msg.role as any,
+                    content: textContent,
+                    timestamp: new Date(),
+                  }} 
+                />
+              );
+            })}
+            {isStreaming && messages[messages.length - 1]?.role === 'user' && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-start mb-6"
+              >
+                <div className="bg-brand-offwhite px-4 py-3 rounded-2xl rounded-bl-none border border-black/5">
+                  <Loader2 className="w-4 h-4 text-brand-leaf animate-spin" />
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* Input Area */}
           <div className="p-6 bg-white border-t border-black/5">
-            <div className="relative flex items-center bg-brand-offwhite rounded-2xl border border-black/5 focus-within:border-brand-leaf/30 transition-colors duration-300">
+            <form 
+              onSubmit={handleFormSubmit}
+              className="relative flex items-center bg-brand-offwhite rounded-2xl border border-black/5 focus-within:border-brand-leaf/30 transition-colors duration-300"
+            >
               <input
                 type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder="Tanyakan sesuatu..."
                 className="w-full bg-transparent px-5 py-4 text-sm text-brand-deep placeholder:text-brand-deep/30 outline-none font-medium tracking-tight"
               />
               <button 
-                onClick={handleSend}
-                disabled={!inputValue.trim()}
+                type="submit"
+                disabled={!input.trim() || isStreaming}
                 className={cn(
                   "mr-3 p-2 rounded-xl transition-all duration-300",
-                  inputValue.trim() 
+                  input.trim() && !isStreaming
                     ? "bg-brand-deep text-white shadow-lg shadow-brand-deep/20" 
                     : "bg-transparent text-brand-deep opacity-20"
                 )}
               >
                 <Send className="w-4 h-4" />
               </button>
-            </div>
+            </form>
             <p className="mt-4 text-[10px] text-center text-brand-deep opacity-20 uppercase tracking-[0.2em] font-bold">
               Powered by AgriLink Intelligence
             </p>
