@@ -9,6 +9,7 @@ import { getCartAction, type CartItemData } from "@/app/actions/cartActions";
 
 // Lazy load the CartDrawer as it's not needed for initial page paint
 const CartDrawer = dynamic(() => import("@/components/dashboard/buyer/CartDrawer").then(mod => mod.CartDrawer));
+import { AgriConsultChat } from "@/components/chat/AgriConsultChat";
 
 const jakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -77,6 +78,7 @@ export default async function RootLayout({
         <CartProvider userId={userId} initialItems={initialCartItems}>
           {children}
           {showCart && <CartDrawer />}
+          <AgriConsultChat />
           <Suspense fallback={null}>
             <ToastProvider />
           </Suspense>
