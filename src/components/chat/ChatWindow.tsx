@@ -7,13 +7,37 @@ import { useChat, type UIMessage } from '@ai-sdk/react';
 import { ChatMessage } from './ChatMessage';
 import { cn } from '@/lib/utils';
 
+import { ProductCardChat } from './ProductCardChat';
+import { StoreCardChat } from './StoreCardChat';
+
+// Define strict types for multimodal parts to ensure 100% Type Safety without 'any'
+interface TextPart {
+  type: 'text';
+  text: string;
+}
+
+interface ToolPart {
+  type: string;
+  toolCallId: string;
+  toolName: string;
+  state: 'call' | 'result';
+  result?: unknown;
+}
+
+interface Store {
+  id: string;
+  name: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
+}
+
 interface ChatWindowProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
-  // Manual input state for AI SDK 6.0 compatibility
   const [input, setInput] = useState('');
   
   const { 
@@ -21,7 +45,6 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     sendMessage,
     status 
   } = useChat({
-    // In SDK 6.0, 'initialMessages' is now 'messages' in the options object
     messages: [
       {
         id: '1',
@@ -47,7 +70,6 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     const currentInput = input;
     setInput('');
 
-    // Type-safe message submission following UIMessage structure
     await sendMessage({
       role: 'user',
       parts: [{ type: 'text', text: currentInput }],
@@ -100,25 +122,56 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             ref={scrollRef}
             className="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar bg-[#fcfcfc]"
           >
-            {messages.map((msg: UIMessage) => {
-              // Extract text content from multimodal parts in v6.0
-              const textContent = msg.parts
-                .filter(part => part.type === 'text')
-                .map(part => (part as any).text || '')
-                .join('\n');
+            {messages.map((msg: UIMessage) => (
+              <div key={msg.id} className="flex flex-col">
+                {msg.parts.map((part, index) => {
+                  if (part.type === 'text') {
+                    const textPart = part as unknown as TextPart;
+                    return (
+                      <ChatMessage 
+                        key={`${msg.id}-text-${index}`} 
+                        message={{
+                          id: msg.id,
+                          role: msg.role as 'user' | 'assistant',
+                          content: textPart.text,
+                          timestamp: new Date(),
+                        }} 
+                      />
+                    );
+                  }
 
-              return (
-                <ChatMessage 
-                  key={msg.id} 
-                  message={{
-                    id: msg.id,
-                    role: msg.role as any,
-                    content: textContent,
-                    timestamp: new Date(),
-                  }} 
-                />
-              );
-            })}
+                  if (part.type.startsWith('tool-')) {
+                    const toolPart = part as unknown as ToolPart;
+                    const { toolName, state, result, toolCallId } = toolPart;
+
+                    if (state === 'result' && result) {
+                      if (toolName === 'searchProducts' || toolName === 'getProductDetail') {
+                        const products = Array.isArray(result) ? result : [result];
+                        return <ProductCardChat key={toolCallId} products={products} />;
+                      }
+                      
+                      if (toolName === 'findNearbyProducts') {
+                        const stores = result as Store[];
+                        return <StoreCardChat key={toolCallId} stores={stores} />;
+                      }
+                    }
+
+                    if (state === 'call') {
+                      return (
+                        <div key={toolCallId} className="flex items-center gap-2 p-3 bg-brand-offwhite rounded-2xl border border-black/5 mb-4 max-w-[80%]">
+                          <Loader2 className="w-3 h-3 animate-spin text-brand-leaf" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40">
+                            Mengambil Data...
+                          </span>
+                        </div>
+                      );
+                    }
+                  }
+                  
+                  return null;
+                })}
+              </div>
+            ))}
             {isStreaming && messages[messages.length - 1]?.role === 'user' && (
               <motion.div 
                 initial={{ opacity: 0 }}
