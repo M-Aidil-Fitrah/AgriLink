@@ -1,15 +1,8 @@
 import { google } from '@ai-sdk/google';
-import { createOpenAI } from '@ai-sdk/openai';
-import { streamText, tool } from 'ai';
+import { streamText } from 'ai';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { ProductCategory } from '@prisma/client';
-
-// Groq configuration using OpenAI provider (compatible)
-const groq = createOpenAI({
-  baseURL: 'https://api.groq.com/openai/v1',
-  apiKey: process.env.GROQ_API_KEY,
-});
 
 export const maxDuration = 30;
 

@@ -10,19 +10,21 @@ import { cn } from '@/lib/utils';
 import { ProductCardChat } from './ProductCardChat';
 import { StoreCardChat } from './StoreCardChat';
 
-// Define strict types for multimodal parts to ensure 100% Type Safety without 'any'
+// Define strict types for 100% Type Safety
 interface TextPart {
   type: 'text';
   text: string;
 }
 
 interface ToolPart {
-  type: string;
+  type: string; // SDK version uses 'tool-call' | 'tool-result' prefix
   toolCallId: string;
   toolName: string;
   state: 'call' | 'result';
   result?: unknown;
 }
+
+
 
 interface Store {
   id: string;
@@ -39,6 +41,8 @@ interface ChatWindowProps {
 
 export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
   const [input, setInput] = useState('');
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   const { 
     messages, 
@@ -54,8 +58,24 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     ],
   });
 
+  // Geolocation Intelligence
+  useEffect(() => {
+    if (isOpen && "geolocation" in navigator && !location) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn("Geolocation access denied:", error.message);
+        }
+      );
+    }
+  }, [isOpen, location]);
+
   const isStreaming = status === 'streaming';
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -70,10 +90,15 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     const currentInput = input;
     setInput('');
 
-    await sendMessage({
-      role: 'user',
-      parts: [{ type: 'text', text: currentInput }],
-    });
+    await sendMessage(
+      {
+        role: 'user',
+        parts: [{ type: 'text', text: currentInput }],
+      },
+      {
+        body: { location }
+      }
+    );
   };
 
   return (
@@ -102,7 +127,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 bg-brand-leaf rounded-full animate-pulse" />
                   <span className="text-[10px] font-bold text-brand-leaf uppercase tracking-widest">
-                    Live
+                    {location ? 'Live • Connected' : 'Live'}
                   </span>
                 </div>
               </div>
@@ -117,23 +142,24 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             </div>
           </div>
 
-          {/* Messages Area - High Whitespace */}
+          {/* Messages Area */}
           <div 
             ref={scrollRef}
             className="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar bg-[#fcfcfc]"
           >
             {messages.map((msg: UIMessage) => (
               <div key={msg.id} className="flex flex-col">
-                {msg.parts.map((part, index) => {
+                {msg.parts.map((part, partIdx) => {
+                  // Strict type narrowing without 'any'
                   if (part.type === 'text') {
-                    const textPart = part as unknown as TextPart;
+                    const p = part as unknown as TextPart;
                     return (
                       <ChatMessage 
-                        key={`${msg.id}-text-${index}`} 
+                        key={`${msg.id}-text-${partIdx}`} 
                         message={{
                           id: msg.id,
                           role: msg.role as 'user' | 'assistant',
-                          content: textPart.text,
+                          content: p.text,
                           timestamp: new Date(),
                         }} 
                       />
@@ -141,8 +167,8 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                   }
 
                   if (part.type.startsWith('tool-')) {
-                    const toolPart = part as unknown as ToolPart;
-                    const { toolName, state, result, toolCallId } = toolPart;
+                    const p = part as unknown as ToolPart;
+                    const { toolName, state, result, toolCallId } = p;
 
                     if (state === 'result' && result) {
                       if (toolName === 'searchProducts' || toolName === 'getProductDetail') {

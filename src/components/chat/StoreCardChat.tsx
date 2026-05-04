@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Star } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 
 interface Store {
   id: string;

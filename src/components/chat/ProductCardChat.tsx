@@ -1,9 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShoppingCart, ArrowRight, Package } from 'lucide-react';
-import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { ArrowRight, Package } from 'lucide-react';
+
 
 interface Product {
   id: string;
