@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getCartAction, type CartItemData } from "@/app/actions/cartActions";
+import { Analytics } from '@vercel/analytics/next';
 
 // Lazy load the CartDrawer as it's not needed for initial page paint
 const CartDrawer = dynamic(() => import("@/components/dashboard/buyer/CartDrawer").then(mod => mod.CartDrawer));
@@ -83,6 +84,7 @@ export default async function RootLayout({
             <ToastProvider />
           </Suspense>
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );
