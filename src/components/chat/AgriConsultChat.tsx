@@ -15,6 +15,9 @@ export function AgriConsultChat() {
     pathname?.startsWith('/login') || 
     pathname?.startsWith('/register');
 
+  // Always render ChatWindow so its hooks (useChat, useState, useEffect)
+  // are never conditionally mounted — avoids React error #310.
+  // Visibility is controlled internally by the isOpen prop.
   if (isHiddenPage) return null;
 
   return (
