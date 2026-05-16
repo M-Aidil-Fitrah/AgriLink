@@ -126,6 +126,22 @@ export function ChatMessage({ message, animateOnMount = true }: ChatMessageProps
               pre: ({ node, ...props }) => <pre className="bg-black/5 rounded p-2 my-2 font-mono text-xs overflow-x-auto" {...props} />,
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               code: ({ node, ...props }) => <code className="bg-black/5 rounded px-1 py-0.5 font-mono text-xs" {...props} />,
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              table: ({ node, ...props }) => (
+                <div className="overflow-x-auto my-4 border border-black/10 rounded-xl overflow-hidden">
+                  <table className="w-full text-sm text-left border-collapse" {...props} />
+                </div>
+              ),
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              thead: ({ node, ...props }) => <thead className="bg-black/5 border-b border-black/10" {...props} />,
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              tbody: ({ node, ...props }) => <tbody className="divide-y divide-black/10" {...props} />,
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              tr: ({ node, ...props }) => <tr className="transition-colors hover:bg-black/5" {...props} />,
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              th: ({ node, ...props }) => <th className="px-4 py-2.5 font-bold border-r border-black/10 last:border-r-0" {...props} />,
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              td: ({ node, ...props }) => <td className="px-4 py-2.5 border-r border-black/10 last:border-r-0 align-top" {...props} />,
             }}
           >
             {renderContent}

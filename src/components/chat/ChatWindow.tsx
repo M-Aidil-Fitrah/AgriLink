@@ -73,6 +73,11 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
   const [artificialThinking, setArtificialThinking] = useState(false);
   const [thinkingUntil, setThinkingUntil] = useState<number>(0);
 
+  // Stable timestamps for messages
+  const [msgTimes, setMsgTimes] = useState<Record<string, Date>>({
+    welcome: new Date(),
+  });
+
   const { messages, sendMessage, status } = useChat({
     transport: chatTransport,
     messages: INITIAL_MESSAGES,
@@ -115,6 +120,24 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, artificialThinking]); // also scroll when artificial thinking changes
+
+  // Update stable timestamps when new messages arrive
+  useEffect(() => {
+    let hasNew = false;
+    const updatedTimes = { ...msgTimes };
+    messages.forEach((m) => {
+      if (!updatedTimes[m.id]) {
+        updatedTimes[m.id] = new Date();
+        hasNew = true;
+      }
+    });
+    if (hasNew) {
+      const timer = setTimeout(() => {
+        setMsgTimes(updatedTimes);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, msgTimes]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,7 +215,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                             id: msg.id,
                             role: msg.role as 'user' | 'assistant',
                             content: p.text,
-                            timestamp: new Date(),
+                            timestamp: msgTimes[msg.id] || new Date(),
                           }}
                           animateOnMount={!seenMessageIds.has(msg.id)}
                         />
