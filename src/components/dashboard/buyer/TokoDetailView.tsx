@@ -80,7 +80,7 @@ export async function TokoDetailView({ sellerId }: TokoDetailViewProps) {
   }
 
   return (
-    <div className="p-6 pb-20 max-w-[1200px] mx-auto">
+    <div className="p-4 md:p-6 pb-20 max-w-[1200px] mx-auto">
       {/* Back navigation */}
       <Link
         href="/dashboard/toko"

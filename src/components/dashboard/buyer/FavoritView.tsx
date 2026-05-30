@@ -45,7 +45,7 @@ export async function FavoritView() {
   });
 
   return (
-    <div className="p-6 pb-20 max-w-[1400px] mx-auto">
+    <div className="p-4 md:p-6 pb-20 max-w-[1400px] mx-auto">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Favorit</h2>
         <p className="text-sm text-gray-500 font-medium">

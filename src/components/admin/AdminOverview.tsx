@@ -14,12 +14,12 @@ export async function AdminOverview() {
   ];
 
   return (
-    <div className="p-8 pb-20">
+    <div className="p-4 md:p-8 pb-20">
       {/* Hero Banner */}
-      <div className="bg-linear-to-r from-emerald-700 to-emerald-900 rounded-3xl p-8 mb-8 text-white relative overflow-hidden">
+      <div className="bg-linear-to-r from-emerald-700 to-emerald-900 rounded-2xl md:rounded-3xl p-5 md:p-8 mb-6 md:mb-8 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_70%_50%,white,transparent)]" />
-        <h2 className="text-3xl font-extrabold mb-2 relative z-10">Panel Admin</h2>
-        <p className="text-emerald-100 font-medium relative z-10 max-w-md">
+        <h2 className="text-2xl md:text-3xl font-extrabold mb-2 relative z-10">Panel Admin</h2>
+        <p className="text-emerald-100 font-medium relative z-10 max-w-md text-sm md:text-base">
           Kelola pengguna, tinjau pengajuan seller, dan pantau aktivitas platform Agrilink.
         </p>
       </div>
@@ -40,7 +40,7 @@ export async function AdminOverview() {
       )}
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-6 md:mb-8">
         {metrics.map((m) => (
           <Link key={m.label} href={m.href}>
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
@@ -55,7 +55,7 @@ export async function AdminOverview() {
       </div>
 
       {/* Quick Links */}
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
         <Link href="/admin/users">
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:border-emerald-200 hover:shadow-md transition-all group">
             <div className="flex items-center gap-4">

@@ -197,9 +197,9 @@ export function AdminApplicationsView({
   const [tab, setTab] = useState<"pending" | "reviewed">("pending");
 
   return (
-    <div className="p-8 pb-20">
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-gray-900">Pengajuan Seller</h2>
+    <div className="p-4 md:p-8 pb-20">
+      <div className="mb-6 md:mb-8">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Pengajuan Seller</h2>
         <p className="text-gray-500 font-medium mt-1">
           {pending.length} menunggu · {reviewed.length} sudah ditinjau
         </p>

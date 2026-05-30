@@ -29,22 +29,22 @@ export async function FarmerDashboardView() {
   const userName = session.user.name?.split(" ")[0] ?? "Petani";
 
   return (
-    <div className="p-8 pb-20">
+    <div className="p-4 md:p-8 pb-20">
       {/* Hero Banner */}
-      <div className="relative rounded-3xl overflow-hidden bg-emerald-900 text-white p-8 mb-8">
+      <div className="relative rounded-2xl md:rounded-3xl overflow-hidden bg-emerald-900 text-white p-5 md:p-8 mb-6 md:mb-8">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?q=80&w=1200')] bg-cover bg-center opacity-20" />
         <div className="relative z-10">
-          <h2 className="text-3xl font-extrabold mb-2">
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-2">
             Selamat datang, <span className="text-emerald-400">{userName}!</span>
           </h2>
-          <p className="text-emerald-100 font-medium max-w-lg">
+          <p className="text-emerald-100 font-medium max-w-lg text-sm md:text-base">
             Pantau performa penjualan Anda, kelola katalog, dan pastikan produk terbaik sampai ke tangan pembeli.
           </p>
         </div>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-6 md:mb-8">
         {[
           {
             label: "Total Pendapatan",
@@ -77,7 +77,7 @@ export async function FarmerDashboardView() {
         ].map((metric) => (
           <div
             key={metric.label}
-            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm"
+            className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm"
           >
             <div
               className={`w-12 h-12 ${metric.bg} ${metric.color} rounded-xl flex items-center justify-center mb-4`}
@@ -93,7 +93,7 @@ export async function FarmerDashboardView() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm p-4 md:p-6">
         <h3 className="font-bold text-gray-900 mb-4">Pesanan Terbaru</h3>
         {orders.length === 0 ? (
           <p className="text-gray-400 text-sm py-8 text-center">Belum ada pesanan masuk</p>
