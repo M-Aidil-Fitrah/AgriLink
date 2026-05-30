@@ -166,7 +166,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          className="fixed bottom-24 right-6 z-50 w-[400px] max-h-[600px] h-[70vh] bg-white border border-black/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+          className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-6 z-50 w-auto sm:w-[400px] max-h-[600px] h-[70vh] bg-white border border-black/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="px-6 py-5 border-b border-black/5 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">

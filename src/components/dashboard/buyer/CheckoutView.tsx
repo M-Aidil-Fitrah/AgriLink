@@ -428,7 +428,7 @@ export default function CheckoutView({
             >
               <div className="bg-[#1a3d2e] text-white rounded-2xl p-8 shadow-xl shadow-emerald-900/10">
                 <h3 className="text-xs font-bold tracking-widest uppercase text-white/60 mb-2">Ringkasan pesanan</h3>
-                <div className="text-[40px] font-normal tracking-[-0.04em] leading-none mb-1">
+                <div className="text-3xl md:text-[40px] font-normal tracking-[-0.04em] leading-none mb-1">
                   Rp {finalTotal.toLocaleString("id-ID")}
                 </div>
                 <div className="text-emerald-400 text-sm font-medium mb-8">Total tagihan</div>

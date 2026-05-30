@@ -27,7 +27,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                 initial={{ y: -12, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-                    isScrolled ? 'py-4' : 'py-6'
+                    isScrolled ? 'py-3 md:py-4' : 'py-4 md:py-6'
                 }`}
             >
             <div className="container mx-auto px-4 max-w-7xl">
@@ -49,7 +49,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                                 priority
                             />
                         </div>
-                        <span className="font-bold text-xl tracking-tight text-stone-950">
+                        <span className="font-bold text-lg md:text-xl tracking-tight text-stone-950">
                             AgriLink
                         </span>
                     </Link>
@@ -70,7 +70,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                             /* User is logged in — show only "Mulai Sekarang" as dashboard link */
                             <Link 
                                 href="/dashboard" 
-                                className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-6 py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
+                                className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-5 py-2 md:px-6 md:py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
                             >
                                 Mulai Sekarang
                                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -86,7 +86,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                                 </Link>
                                 <Link 
                                     href="/register" 
-                                    className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-6 py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
+                                    className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-5 py-2 md:px-6 md:py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
                                 >
                                     Mulai Sekarang
                                     <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -117,7 +117,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                         <div className="flex flex-col gap-4 p-6">
                             <Link 
                                 href="/dashboard"
-                                className="text-lg font-semibold text-stone-950 px-2 py-1"
+                                className="text-base md:text-lg font-semibold text-stone-950 px-2 py-1"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Lihat Dashboard
@@ -126,7 +126,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                             {isLoggedIn ? (
                                 <Link 
                                     href="/dashboard" 
-                                    className="text-lg font-semibold text-green-600 px-2 py-1"
+                                    className="text-base md:text-lg font-semibold text-green-600 px-2 py-1"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     Mulai Sekarang
@@ -134,7 +134,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                             ) : (
                                 <Link 
                                     href="/login" 
-                                    className="text-lg font-semibold text-stone-950 px-2 py-1"
+                                    className="text-base md:text-lg font-semibold text-stone-950 px-2 py-1"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     Masuk
