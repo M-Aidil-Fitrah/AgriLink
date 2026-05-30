@@ -89,16 +89,16 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
   };
 
   return (
-    <div className="p-8 pb-20 max-w-4xl">
+    <div className="p-4 md:p-8 pb-20 max-w-4xl w-full">
       <div className="mb-8">
         <h2 className="text-3xl font-extrabold text-gray-900">Pengaturan Profil</h2>
         <p className="text-gray-500 font-medium">Kelola informasi pribadi, keamanan, dan alamat pengiriman Anda</p>
       </div>
 
-      <div className="flex flex-wrap gap-1 bg-gray-100 p-1.5 rounded-2xl w-fit mb-8">
+      <div className="flex flex-wrap gap-1 bg-gray-100 p-1.5 rounded-2xl w-full sm:w-fit mb-6 md:mb-8">
         <button
           onClick={() => { setActiveTab("biodata"); }}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "biodata" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+          className={`flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "biodata" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
         >
           <UserIcon className="w-4 h-4" />
           Biodata
@@ -120,7 +120,7 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
       </div>
 
       {activeTab === "biodata" && (
-        <form onSubmit={handleUpdateProfile} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <form onSubmit={handleUpdateProfile} className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm p-5 md:p-8 space-y-5 md:space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Nama Lengkap</label>
@@ -139,7 +139,7 @@ export function ProfileView({ user, initialLocations }: { user: User; initialLoc
       )}
 
       {activeTab === "password" && (
-        <form onSubmit={handleUpdatePassword} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <form onSubmit={handleUpdatePassword} className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm p-5 md:p-8 space-y-5 md:space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="grid grid-cols-1 gap-6 max-w-md">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Password Lama</label>

@@ -90,7 +90,7 @@ function AddUserModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative">
+      <div className="bg-white rounded-3xl shadow-2xl w-[calc(100%-2rem)] max-w-md p-6 md:p-8 relative">
         <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 transition-colors">
           <X className="w-5 h-5" />
         </button>
@@ -148,7 +148,7 @@ export function AdminUsersView({ users }: { users: UserRow[] }) {
   );
 
   return (
-    <div className="p-8 pb-20">
+    <div className="p-4 md:p-8 pb-20">
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900">Manajemen Pengguna</h2>
@@ -180,8 +180,9 @@ export function AdminUsersView({ users }: { users: UserRow[] }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto w-full">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="bg-gray-50/80 border-b border-gray-100">
               {["Pengguna", "Role", "Pesanan", "Produk", "Bergabung", "Aksi"].map((h) => (
@@ -233,6 +234,7 @@ export function AdminUsersView({ users }: { users: UserRow[] }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <Pagination

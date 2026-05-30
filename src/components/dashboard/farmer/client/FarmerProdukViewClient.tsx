@@ -53,7 +53,7 @@ export function FarmerProdukViewClient({ products }: Props) {
   );
 
   return (
-    <div className="p-6 pb-20 max-w-[1400px] mx-auto">
+    <div className="p-4 md:p-6 pb-20 max-w-[1400px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Etalase Sayur</h2>

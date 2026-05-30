@@ -71,10 +71,10 @@ export default async function DashboardOverview() {
   const userName = session?.user?.name?.split(" ")[0] ?? "Teman";
 
   return (
-    <div className="p-6 pb-20 max-w-[1400px] mx-auto space-y-8">
+    <div className="p-4 md:p-6 pb-20 max-w-[1400px] mx-auto space-y-6 md:space-y-8">
       {/* Compact Hero */}
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 relative rounded-2xl p-7 overflow-hidden bg-emerald-600 text-white shadow-lg">
+        <div className="flex-1 relative rounded-2xl p-5 md:p-7 overflow-hidden bg-emerald-600 text-white shadow-lg">
           <div className="relative z-10">
             <h2 className="text-2xl font-bold tracking-tight">
               Halo, <span className="text-emerald-200">{userName}!</span>
@@ -98,7 +98,7 @@ export default async function DashboardOverview() {
       </div>
 
       {/* Tighter Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
           { label: "Pesanan", value: ordersCount.toString(), Icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Favorit", value: favorites.toString(), Icon: Heart, color: "text-red-500", bg: "bg-red-50" },
@@ -129,7 +129,7 @@ export default async function DashboardOverview() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {products.map((product) => {
             const businessName =
               product.farmer.sellerApplication?.businessName ||

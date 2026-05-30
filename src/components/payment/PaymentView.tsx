@@ -385,7 +385,7 @@ export default function PaymentView() {
   return (
     <div className="min-h-screen bg-white text-slate-900 pb-24">
       {/* Header */}
-      <header className="h-16 border-b border-black/10 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40">
+      <header className="h-14 md:h-16 border-b border-black/10 flex items-center justify-between px-4 md:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
@@ -394,7 +394,7 @@ export default function PaymentView() {
             <span className="font-bold text-xl tracking-tight text-stone-950">AgriLink</span>
           </Link>
         </div>
-        <div className="flex items-center gap-4 text-sm font-medium">
+        <div className="hidden sm:flex items-center gap-4 text-sm font-medium">
           <span className="text-slate-400">01 — Checkout</span>
           <span className="text-slate-300">→</span>
           <span className="text-emerald-900">02 — Payment</span>
@@ -407,7 +407,7 @@ export default function PaymentView() {
         </div>
       </header>
 
-      <main className="max-w-[1200px] mx-auto px-8 mt-12">
+      <main className="max-w-[1200px] mx-auto px-4 md:px-8 mt-6 md:mt-12">
         {/* Back Button */}
         <button 
           onClick={() => router.back()}
@@ -424,13 +424,13 @@ export default function PaymentView() {
           transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
           className="mb-12"
         >
-          <h1 className="text-[64px] font-light tracking-[-0.04em] leading-none">
+          <h1 className="text-4xl md:text-[64px] font-light tracking-[-0.04em] leading-none">
             PEMBAYARAN<span className="text-emerald-500">.</span>
           </h1>
         </motion.div>
 
         {/* Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 md:gap-16">
           
           {/* Kolom Kiri */}
           <div className="relative">

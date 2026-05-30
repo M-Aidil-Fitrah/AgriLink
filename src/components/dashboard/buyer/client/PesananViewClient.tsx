@@ -81,10 +81,10 @@ export function PesananViewClient({
   );
 
   return (
-    <div className="p-8 pb-20">
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="p-4 md:p-8 pb-20">
+      <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold text-gray-900">Pesanan Saya</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Pesanan Saya</h2>
           <p className="text-gray-500 font-medium mt-1">
             Lacak status pengiriman produk Anda
           </p>
@@ -92,7 +92,7 @@ export function PesananViewClient({
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 mb-8 bg-gray-50/50 p-2 rounded-2xl w-fit">
+      <div className="flex flex-wrap items-center gap-2 mb-6 md:mb-8 bg-gray-50/50 p-2 rounded-2xl w-full md:w-fit overflow-x-auto">
         <button
           onClick={() => { setSelectedStatus("ALL"); setCurrentPage(1); }}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -143,7 +143,7 @@ export function PesananViewClient({
                 className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
               >
                 {/* Header Pesanan */}
-                <div className="flex items-center justify-between px-6 py-4 bg-gray-50/50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-gray-50/50">
                   <div className="flex items-center gap-4">
                     <p className="text-xs font-bold text-gray-400 tracking-wider">
                       ID: #{order.id.slice(-8).toUpperCase()}
@@ -169,7 +169,7 @@ export function PesananViewClient({
                   {order.items.map((item) => {
                     const product = item.product;
                     return (
-                      <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex gap-5">
+                      <div key={item.id} className="py-3 md:py-4 first:pt-0 last:pb-0 flex gap-3 md:gap-5">
                         <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden relative shrink-0">
                           <Image
                             src={

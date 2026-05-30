@@ -14,7 +14,7 @@ export function ProductDetails({ product }: { product: ProductWithFarmer }) {
   const sellerLon = product.farmer.sellerApplication?.longitude ?? null;
 
   return (
-    <div className="max-w-[1000px] mx-auto px-6 py-6 pb-20">
+    <div className="max-w-[1000px] mx-auto px-4 md:px-6 py-4 md:py-6 pb-20">
       {/* Breadcrumb */}
       <Link
         href="/dashboard/produk"

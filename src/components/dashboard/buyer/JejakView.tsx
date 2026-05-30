@@ -140,8 +140,8 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       : null;
 
   return (
-    <div className="p-6 pb-20 max-w-[1400px] mx-auto">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="p-4 md:p-6 pb-20 max-w-[1400px] mx-auto">
+      <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
             Traceability
@@ -161,7 +161,7 @@ export function JejakView({ products }: { products: ProductRow[] }) {
       </div>
 
       {avgMiles !== null && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
           <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-[9px] font-black uppercase tracking-widest opacity-80 mb-2">

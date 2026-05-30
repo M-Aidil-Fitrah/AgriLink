@@ -28,7 +28,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                             <span className="text-[11px] font-bold tracking-[0.18em] text-green-400/60 uppercase mb-6 block">
                                 Inovasi Pertanian
                             </span>
-                            <h3 className="text-[40px] leading-none font-extrabold text-white uppercase italic mb-6">
+                            <h3 className="text-3xl md:text-[40px] leading-none font-extrabold text-white uppercase italic mb-6">
                                 Teknologi <br />
                                 <span className="text-green-500 not-italic">Untuk</span> <br />
                                 Petani <br />
@@ -139,7 +139,7 @@ export const FeatureBento = ({ images }: { images: { tomatoes: string } }) => {
                                     </div>
                                     <span className="text-[11px] font-bold tracking-[0.2em] text-green-400 uppercase">Traceability</span>
                                 </div>
-                                <h3 className="text-3xl font-extrabold text-white uppercase not-italic tracking-tighter mb-2">
+                                <h3 className="text-2xl md:text-3xl font-extrabold text-white uppercase not-italic tracking-tighter mb-2">
                                     Lacak Dari <span className="text-green-500 italic">Benih</span> <br /> 
                                     Hingga <span className="text-green-500 italic">Meja Makan</span>
                                 </h3>

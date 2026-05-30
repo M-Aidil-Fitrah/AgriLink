@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopHeader } from "@/components/dashboard/TopHeader";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { SidebarProvider } from "@/context/SidebarContext";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -13,16 +14,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }) : null;
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-      <Sidebar user={user} />
-      <main className="flex-1 flex flex-col overflow-hidden relative">
-        <TopHeader user={user} />
-        <div className="flex-1 overflow-y-auto w-full flex justify-center">
+    <SidebarProvider>
+      <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
+        <Sidebar user={user} />
+        <main className="flex-1 flex flex-col overflow-hidden relative min-w-0">
+          <TopHeader user={user} />
+          <div className="flex-1 overflow-y-auto w-full flex justify-center">
             <div className="w-full max-w-[1400px]">
-               {children}
+              {children}
             </div>
-        </div>
-      </main>
-    </div>
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }

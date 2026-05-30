@@ -1,25 +1,41 @@
 "use client";
 
-import { ShoppingCart, LogOut } from "lucide-react";
+import { ShoppingCart, LogOut, Menu } from "lucide-react";
 import { LocationDisplay } from "./LocationDisplay";
 import { logout } from "@/app/actions/authActions";
 import { useCart } from "@/context/CartContext";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { SearchBar } from "./SearchBar";
 import Link from "next/link";
+import { useSidebar } from "@/context/SidebarContext";
 
 export function TopHeader({ user }: { user: { id: string, name: string | null, email: string | null, role: "USER" | "FARMER" | "ADMIN" } | null }) {
   const { totalItems, openCart } = useCart();
+  const { toggleSidebar } = useSidebar();
 
   // Cart is only visible for USER role (buyers)
   const isUser = user?.role === "USER";
 
   return (
-    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 z-800 shrink-0">
+    <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 md:px-8 z-40 shrink-0 gap-3">
 
-      <SearchBar />
-      <div className="flex items-center gap-5 ml-4">
-        <LocationDisplay />
+      {/* Hamburger button — mobile & tablet only */}
+      <button
+        onClick={toggleSidebar}
+        className="md:hidden p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors shrink-0"
+        aria-label="Buka navigasi"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      <div className="flex-1 min-w-0">
+        <SearchBar />
+      </div>
+
+      <div className="flex items-center gap-2 md:gap-5 shrink-0">
+        <div className="hidden lg:block">
+          <LocationDisplay />
+        </div>
         {user && <NotificationDropdown />}
 
         {/* Shopping cart — buyers only */}
@@ -37,14 +53,14 @@ export function TopHeader({ user }: { user: { id: string, name: string | null, e
           </button>
         )}
 
-        <div className="h-6 w-px bg-gray-200 mx-2"></div>
+        <div className="hidden md:block h-6 w-px bg-gray-200 mx-1" />
 
         {user ? (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold shadow-xs border border-emerald-200">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-9 h-9 md:w-10 md:h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold shadow-xs border border-emerald-200 shrink-0">
               {user.name?.charAt(0) || "U"}
             </div>
-            <div className="flex flex-col min-w-[80px]">
+            <div className="hidden md:flex flex-col min-w-[80px]">
               <span className="text-sm font-bold text-gray-900 leading-tight">{user.name}</span>
               <span className="text-[10px] uppercase font-semibold text-gray-500">{user.role}</span>
             </div>
@@ -58,13 +74,13 @@ export function TopHeader({ user }: { user: { id: string, name: string | null, e
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="px-4 py-2 text-sm font-bold text-gray-700 hover:text-emerald-600 transition-colors"
+              className="px-3 md:px-4 py-2 text-sm font-bold text-gray-700 hover:text-emerald-600 transition-colors"
             >
               Masuk
             </Link>
             <Link
               href="/register"
-              className="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-sm active:scale-95"
+              className="px-3 md:px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-sm active:scale-95"
             >
               Daftar
             </Link>

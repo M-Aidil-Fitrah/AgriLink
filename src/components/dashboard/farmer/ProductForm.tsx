@@ -69,7 +69,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
+    <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8 max-w-2xl w-full">
       {error && (
         <div className="px-5 py-4 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-2xl">
           {error}
@@ -77,7 +77,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
       )}
 
       {/* Informasi Produk */}
-      <section className="bg-white rounded-3xl border border-gray-100 p-6 space-y-5">
+      <section className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 p-4 md:p-6 space-y-4 md:space-y-5">
         <h3 className="font-bold text-gray-900">Informasi Produk</h3>
 
         <div className="space-y-1.5">
@@ -102,7 +102,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-gray-700">Harga (Rp)</label>
             <input
@@ -129,7 +129,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-gray-700">Stok</label>
             <input
@@ -209,7 +209,7 @@ export function ProductForm({ product }: { product?: Product | null }) {
       </section>
 
       {/* Actions */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
         <button
           type="submit"
           disabled={isPending}
