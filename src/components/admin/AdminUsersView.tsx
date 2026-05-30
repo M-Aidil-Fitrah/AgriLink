@@ -90,7 +90,7 @@ function AddUserModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative">
+      <div className="bg-white rounded-3xl shadow-2xl w-[calc(100%-2rem)] max-w-md p-6 md:p-8 relative">
         <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 transition-colors">
           <X className="w-5 h-5" />
         </button>

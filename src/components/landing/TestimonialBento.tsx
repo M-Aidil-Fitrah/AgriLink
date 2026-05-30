@@ -63,7 +63,7 @@ export const TestimonialBento = () => {
                 <span className="text-[11px] font-bold tracking-[0.18em] text-stone-400 uppercase mb-3 text-center block">
                     Suara Komunitas
                 </span>
-                <h2 className="text-4xl font-extrabold text-stone-950 uppercase not-italic tracking-tighter text-center">
+                <h2 className="text-3xl md:text-4xl font-extrabold text-stone-950 uppercase not-italic tracking-tighter text-center">
                     Tumbuh <span className="text-green-600 italic">Bersama</span> <br /> 
                     Di <span className="text-green-600 italic">AgriLink.</span>
                 </h2>

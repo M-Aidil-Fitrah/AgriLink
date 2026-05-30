@@ -129,7 +129,7 @@ export default function PaymentStatusView() {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans overflow-hidden">
       {/* Header */}
-      <header className="h-16 border-b border-black/10 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40">
+      <header className="h-14 md:h-16 border-b border-black/10 flex items-center justify-between px-4 md:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
@@ -138,7 +138,7 @@ export default function PaymentStatusView() {
             <span className="font-bold text-xl tracking-tight text-stone-950">AgriLink</span>
           </Link>
         </div>
-        <div className="flex items-center gap-4 text-sm font-medium">
+        <div className="hidden sm:flex items-center gap-4 text-sm font-medium">
           <span className="text-slate-400">01 — Checkout</span>
           <span className="text-slate-300">→</span>
           <span className="text-slate-400">02 — Payment</span>
@@ -151,7 +151,7 @@ export default function PaymentStatusView() {
         </div>
       </header>
 
-      <main className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6">
+      <main className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4 md:p-6">
         <div className="max-w-xl w-full">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -164,7 +164,7 @@ export default function PaymentStatusView() {
               <Icon className={`w-8 h-8 ${config.color}`} strokeWidth={2.5} />
             </div>
 
-            <h1 className="text-[42px] font-light tracking-[-0.04em] leading-tight mb-2">
+            <h1 className="text-3xl md:text-[42px] font-light tracking-[-0.04em] leading-tight mb-2">
               {config.title.toUpperCase()}<span className="text-emerald-500">.</span>
             </h1>
             

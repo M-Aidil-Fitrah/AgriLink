@@ -31,7 +31,7 @@ export const ProductBento = ({ images }: { images: { tomatoes: string } }) => {
                     <span className="text-[11px] font-bold tracking-[0.18em] text-stone-400 uppercase mb-3 block">
                         Katalog Unggulan
                     </span>
-                    <h2 className="text-4xl font-extrabold text-stone-950 uppercase tracking-tighter">
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-stone-950 uppercase tracking-tighter">
                         Pilih Produk <span className="text-green-600 font-bold">Terbaik</span> <br /> 
                         Sesuai <span className="text-green-600 font-bold">Kebutuhanmu.</span>
                     </h2>
@@ -57,7 +57,7 @@ export const ProductBento = ({ images }: { images: { tomatoes: string } }) => {
                     <div className="absolute inset-0 bg-linear-to-t from-green-950 via-green-950/40 to-transparent" />
                     
                     <div className="relative z-10">
-                        <h3 className="text-[40px] leading-none font-extrabold text-white uppercase not-italic mb-6">
+                        <h3 className="text-3xl md:text-[40px] leading-none font-extrabold text-white uppercase not-italic mb-6">
                             18.000+ Produk <br />
                             <span className="text-green-500 italic">Segar</span> Langsung <br />
                             <span className="text-green-500 italic">Dari Kebun.</span>
