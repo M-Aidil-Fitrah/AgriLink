@@ -182,7 +182,7 @@ export default function CheckoutView({
   return (
     <div className="min-h-screen bg-white text-slate-900 pb-24">
       {/* Header */}
-      <header className="h-16 border-b border-black/10 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40">
+      <header className="h-14 md:h-16 border-b border-black/10 flex items-center justify-between px-4 md:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
@@ -200,7 +200,7 @@ export default function CheckoutView({
           </Link>
         </div>
         
-        <div className="flex items-center gap-4 text-sm font-medium">
+        <div className="hidden sm:flex items-center gap-4 text-sm font-medium">
           <span className="text-emerald-900">01 — Checkout</span>
           <span className="text-slate-300">→</span>
           <span className="text-slate-400">02 — Payment</span>
@@ -208,13 +208,13 @@ export default function CheckoutView({
           <span className="text-slate-400">03 — Confirmation</span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
           <span>Secure</span>
         </div>
       </header>
 
-      <main className="max-w-[1200px] mx-auto px-8 mt-12">
+      <main className="max-w-[1200px] mx-auto px-4 md:px-8 mt-6 md:mt-12">
         {/* Back Button */}
         <button 
           onClick={() => router.back()}
@@ -229,9 +229,9 @@ export default function CheckoutView({
           initial={{ opacity: 0, y: 12 }} 
           animate={{ opacity: 1, y: 0 }} 
           transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
-          className="flex items-end justify-between mb-12"
+          className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 md:mb-12"
         >
-          <h1 className="text-[64px] font-light tracking-[-0.04em] leading-none">
+          <h1 className="text-4xl md:text-[64px] font-light tracking-[-0.04em] leading-none">
             CHECKOUT<span className="text-emerald-500">.</span>
           </h1>
           <div className="text-sm font-medium text-slate-500 pb-2">
@@ -240,7 +240,7 @@ export default function CheckoutView({
         </motion.div>
 
         {/* Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 md:gap-16">
           
           {/* Kolom Kiri */}
           <div className="space-y-12">
@@ -303,7 +303,7 @@ export default function CheckoutView({
                       initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.06 }}
-                      className="p-6 flex items-center justify-between"
+                      className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-black/5 relative">
@@ -366,7 +366,7 @@ export default function CheckoutView({
                 <h2 className="text-lg font-medium">Pilihan pengiriman</h2>
                 <div className="flex-1 h-px bg-black/10"></div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                 {SHIPPING_OPTIONS.map((opt) => {
                   const isActive = shippingMethod.id === opt.id;
                   return (

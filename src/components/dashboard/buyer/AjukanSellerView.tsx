@@ -114,7 +114,7 @@ export function AjukanSellerView({
     const cfg = STATUS_CONFIG[existingApplication.status];
     const Icon = cfg.icon;
     return (
-      <div className="p-8 pb-20 max-w-2xl mx-auto">
+      <div className="p-4 md:p-8 pb-20 max-w-2xl mx-auto">
         <h2 className="text-3xl font-extrabold text-gray-900 mb-8">Ajukan Menjadi Seller</h2>
         <div className={`border rounded-3xl p-8 flex flex-col items-center text-center gap-4 ${cfg.color}`}>
           <Icon className="w-16 h-16" />
@@ -133,7 +133,7 @@ export function AjukanSellerView({
 
   if (success) {
     return (
-      <div className="p-8 pb-20 max-w-2xl mx-auto">
+      <div className="p-4 md:p-8 pb-20 max-w-2xl mx-auto">
         <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-12 flex flex-col items-center text-center gap-4">
           <CheckCircle className="w-16 h-16 text-emerald-600" />
           <h3 className="text-2xl font-extrabold text-gray-900">Pengajuan Terkirim</h3>
@@ -204,7 +204,7 @@ export function AjukanSellerView({
   };
 
   return (
-    <div className="p-8 pb-20 max-w-2xl mx-auto">
+    <div className="p-4 md:p-8 pb-20 max-w-2xl mx-auto">
       <div className="mb-8">
         <h2 className="text-3xl font-extrabold text-gray-900">Ajukan Menjadi Seller</h2>
         <p className="text-gray-500 font-medium mt-1">
@@ -234,7 +234,7 @@ export function AjukanSellerView({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap sesuai KTP</label>
               <input 
@@ -340,7 +340,7 @@ export function AjukanSellerView({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nama Usaha / Kebun</label>
               <input 

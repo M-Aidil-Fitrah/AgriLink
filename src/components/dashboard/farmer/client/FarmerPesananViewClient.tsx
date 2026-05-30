@@ -62,16 +62,16 @@ export function FarmerPesananViewClient({
   );
 
   return (
-    <div className="p-8 pb-20">
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-gray-900">Pesanan Masuk</h2>
+    <div className="p-4 md:p-8 pb-20">
+      <div className="mb-6 md:mb-8">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Pesanan Masuk</h2>
         <p className="text-gray-500 font-medium mt-1">
           {initialOrders.length} pesanan diterima
         </p>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 mb-8 bg-gray-50/50 p-2 rounded-2xl w-fit">
+      <div className="flex flex-wrap items-center gap-2 mb-6 md:mb-8 bg-gray-50/50 p-2 rounded-2xl w-full md:w-fit overflow-x-auto">
         <button
           onClick={() => { setSelectedStatus("ALL"); setCurrentPage(1); }}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -122,7 +122,7 @@ export function FarmerPesananViewClient({
                 key={order.id}
                 className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
               >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-gray-50 gap-3">
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                       Pesanan #{order.id.slice(-8).toUpperCase()}
