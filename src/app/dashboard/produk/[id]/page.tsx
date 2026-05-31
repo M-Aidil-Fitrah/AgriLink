@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { ProductDetails } from "@/components/dashboard/buyer/ProductDetails";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
+import { OrderStatus } from "@prisma/client";
 
 export default async function ProductDetailPage({
   params,
@@ -8,6 +10,8 @@ export default async function ProductDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const session = await auth();
+  const currentUserId = session?.user?.id ?? null;
 
   const rawProduct = await prisma.product.findUnique({
     where: { id },
@@ -28,12 +32,36 @@ export default async function ProductDetailPage({
           },
         },
       },
+      reviews: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
   if (!rawProduct) {
     notFound();
   }
+
+  // Check if current user has a delivered order containing this product
+  const hasDeliveredOrder = currentUserId
+    ? (await prisma.order.findFirst({
+        where: {
+          userId: currentUserId,
+          status: OrderStatus.DELIVERED,
+          items: { some: { productId: id } },
+        },
+        select: { id: true },
+      })) !== null
+    : false;
 
   // Resolve image paths to URLs
   const { supabaseServer } = await import("@/lib/supabaseServer");
@@ -50,9 +78,14 @@ export default async function ProductDetailPage({
     images,
     farmer: {
       ...rawProduct.farmer,
-      // Keep role as-is since ProductWithFarmer expects it
     },
   };
 
-  return <ProductDetails product={product} />;
+  return (
+    <ProductDetails
+      product={product}
+      currentUserId={currentUserId}
+      hasDeliveredOrder={hasDeliveredOrder}
+    />
+  );
 }

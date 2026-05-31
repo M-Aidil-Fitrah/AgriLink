@@ -71,7 +71,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className={`${jakartaSans.variable} ${jakartaSans.className} antialiased selection:bg-emerald-200 selection:text-emerald-900 bg-white`}

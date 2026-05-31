@@ -32,15 +32,15 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
             >
             <div className="container mx-auto px-4 max-w-7xl">
                 <div 
-                    className={`flex items-center justify-between px-6 py-3 rounded-full transition-all duration-300 ${
+                    className={`flex items-center justify-between px-4 md:px-6 py-2.5 md:py-3 rounded-full transition-all duration-300 ${
                         isScrolled 
                         ? 'bg-white/95 backdrop-blur-md shadow-sm border border-stone-200/60' 
                         : 'bg-transparent'
                     }`}
                 >
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
+                    <Link href="/" className="flex items-center gap-1.5 md:gap-2 group shrink-0">
+                        <div className="relative w-7 h-7 md:w-8 md:h-8 group-hover:scale-110 transition-transform">
                             <Image 
                                 src="/logo_agrilink.png" 
                                 alt="Logo Agrilink" 
@@ -49,7 +49,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                                 priority
                             />
                         </div>
-                        <span className="font-bold text-lg md:text-xl tracking-tight text-stone-950">
+                        <span className="font-bold text-base md:text-xl tracking-tight text-stone-950">
                             AgriLink
                         </span>
                     </Link>
@@ -65,12 +65,12 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                     </div>
 
                     {/* CTA */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3">
                         {isLoggedIn ? (
                             /* User is logged in — show only "Mulai Sekarang" as dashboard link */
                             <Link 
                                 href="/dashboard" 
-                                className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-5 py-2 md:px-6 md:py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs md:text-[13px] font-bold px-4 py-2 md:px-6 md:py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-1.5 md:gap-2 group whitespace-nowrap"
                             >
                                 Mulai Sekarang
                                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -86,7 +86,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                                 </Link>
                                 <Link 
                                     href="/register" 
-                                    className="bg-green-600 hover:bg-green-700 text-white text-[13px] font-bold px-5 py-2 md:px-6 md:py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-2 group"
+                                    className="bg-green-600 hover:bg-green-700 text-white text-xs md:text-[13px] font-bold px-4 py-2 md:px-6 md:py-2.5 rounded-full transition-all shadow-sm shadow-green-200 flex items-center gap-1.5 md:gap-2 group whitespace-nowrap"
                                 >
                                     Mulai Sekarang
                                     <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -96,7 +96,7 @@ export const Navbar = ({ isLoggedIn }: NavbarProps) => {
                         
                         {/* Mobile Toggle */}
                         <button 
-                            className="md:hidden p-2 text-stone-950"
+                            className="md:hidden p-1.5 -mr-1.5 text-stone-950"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         >
                             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}

@@ -3,15 +3,32 @@ import { ProductGallery } from "./ProductGallery";
 import { AddToCartSection } from "./AddToCartSection";
 import { ProductFarmerCard, ProductAttribute } from "./ProductInfoComponents";
 import { FreshnessSection } from "./FreshnessSection";
-import { Calendar, MapPin, Info, ChevronLeft } from "lucide-react";
+import { ProductReviews } from "./ProductReviews";
+import { Calendar, MapPin, Info, ChevronLeft, Star } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-export function ProductDetails({ product }: { product: ProductWithFarmer }) {
+type ProductDetailsProps = {
+  product: ProductWithFarmer;
+  currentUserId: string | null;
+  hasDeliveredOrder: boolean;
+};
+
+export function ProductDetails({
+  product,
+  currentUserId,
+  hasDeliveredOrder,
+}: ProductDetailsProps) {
   const harvestDate = product.harvestDate ? new Date(product.harvestDate) : null;
 
   const sellerLat = product.farmer.sellerApplication?.latitude ?? null;
   const sellerLon = product.farmer.sellerApplication?.longitude ?? null;
+
+  const totalReviews = product.reviews.length;
+  const averageRating =
+    totalReviews > 0
+      ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      : 0;
 
   return (
     <div className="max-w-[1000px] mx-auto px-4 md:px-6 py-4 md:py-6 pb-20">
@@ -46,7 +63,7 @@ export function ProductDetails({ product }: { product: ProductWithFarmer }) {
               {product.name}
             </h1>
 
-            <div className="flex items-end gap-1.5">
+            <div className="flex items-end gap-4">
               <div className="flex flex-col">
                 <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                   Harga
@@ -58,6 +75,19 @@ export function ProductDetails({ product }: { product: ProductWithFarmer }) {
               <span className="text-xs font-bold text-gray-400 mb-0.5 pb-0.5">
                 / {product.unit}
               </span>
+
+              {/* Average rating inline */}
+              {totalReviews > 0 && (
+                <div className="flex items-center gap-1 mb-0.5 pb-0.5">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 stroke-amber-400" />
+                  <span className="text-xs font-black text-gray-700">
+                    {averageRating.toFixed(1)}
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-medium">
+                    ({totalReviews})
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -131,6 +161,14 @@ export function ProductDetails({ product }: { product: ProductWithFarmer }) {
                   "Kualitas dan kesegaran dijamin karena dikirim langsung oleh petani lokal segera setelah masa panen berakhir."}
               </p>
             </div>
+
+            {/* Reviews Section */}
+            <ProductReviews
+              productId={product.id}
+              reviews={product.reviews}
+              currentUserId={currentUserId}
+              hasDeliveredOrder={hasDeliveredOrder}
+            />
           </div>
         </div>
       </div>

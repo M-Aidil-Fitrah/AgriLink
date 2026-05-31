@@ -4,6 +4,18 @@ export type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
+export type ReviewWithUser = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: Date;
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
+};
+
 export type ProductWithFarmer = Product & {
   images: string[];
   farmer: {
@@ -16,6 +28,7 @@ export type ProductWithFarmer = Product & {
       longitude: number | null;
     } | null;
   };
+  reviews: ReviewWithUser[];
 };
 
 

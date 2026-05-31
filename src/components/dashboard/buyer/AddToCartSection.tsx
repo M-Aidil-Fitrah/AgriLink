@@ -81,11 +81,11 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-row gap-2">
         <button
           onClick={() => handleAddToCart(false)}
           disabled={isAdding || product.stock === 0}
-          className="flex-1 relative h-10 bg-white border border-emerald-600 text-emerald-700 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all hover:bg-emerald-50 flex items-center justify-center gap-2 overflow-hidden group disabled:opacity-50 disabled:border-gray-200 disabled:text-gray-300"
+          className="flex-1 relative h-10 bg-white border border-emerald-600 text-emerald-700 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all hover:bg-emerald-50 flex items-center justify-center gap-1.5 overflow-hidden group disabled:opacity-50 disabled:border-gray-200 disabled:text-gray-300"
         >
           <AnimatePresence mode="wait">
             {isAdding ? (
@@ -93,14 +93,14 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
                 <Loader2 className="w-3 h-3 animate-spin" />
               </motion.div>
             ) : showSuccess ? (
-              <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+              <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
-                Done
+                <span className="hidden sm:inline">Done</span>
               </motion.div>
             ) : (
-              <motion.div key="default" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+              <motion.div key="default" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1">
                 <ShoppingCart className="w-3 h-3" />
-                + Keranjang
+                <span>Keranjang</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -109,10 +109,10 @@ export function AddToCartSection({ product }: { product: ProductWithFarmer }) {
         <button
           onClick={() => handleAddToCart(true)}
           disabled={isAdding || product.stock === 0}
-          className="flex-[1.5] h-10 bg-emerald-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none"
+          className="flex-[1.2] h-10 bg-emerald-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-800 transition-all shadow-md flex items-center justify-center gap-1.5 disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none"
         >
           <CreditCard className="w-3 h-3" />
-          Beli Sekarang
+          Beli
         </button>
       </div>
     </div>
