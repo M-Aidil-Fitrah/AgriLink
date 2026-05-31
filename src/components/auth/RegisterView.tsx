@@ -21,7 +21,7 @@ export function RegisterView() {
     ];
 
     return (
-        <main className="h-screen w-full flex overflow-hidden bg-[#f2f4f0]">
+        <main className="min-h-[100dvh] w-full flex overflow-hidden bg-[#f2f4f0]">
             {/* Left Panel - Editorial Style */}
             <motion.div 
                 initial={{ clipPath: 'inset(0 100% 0 0)' }}
@@ -125,9 +125,9 @@ export function RegisterView() {
             </motion.div>
 
             {/* Right Panel - Form Container */}
-            <div className="flex-1 h-full bg-[#f2f4f0] relative flex items-center justify-center p-6 lg:p-12 overflow-y-auto">
+            <div className="flex-1 min-h-[100dvh] bg-[#f2f4f0] relative flex items-center justify-center py-16 px-5 sm:px-8 lg:px-12 overflow-y-auto">
                 {/* Mobile Header */}
-                <div className="lg:hidden absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                <div className="lg:hidden absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
                     <Image src="/logo_agrilink.png" width={24} height={24} alt="Logo" className="object-contain" />
                     <span className="font-bold text-stone-900 uppercase tracking-widest text-sm">
                         AgriLink

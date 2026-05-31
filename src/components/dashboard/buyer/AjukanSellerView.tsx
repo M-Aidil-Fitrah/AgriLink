@@ -60,7 +60,6 @@ export function AjukanSellerView({
 
   // File states
   const [ktpPhotoUrl, setKtpPhotoUrl] = useState("");
-  const [selfiePhotoUrl, setSelfiePhotoUrl] = useState("");
   const [businessPhotoUrl, setBusinessPhotoUrl] = useState("");
 
   // Real-time validation state
@@ -104,7 +103,7 @@ export function AjukanSellerView({
   const isFormValid = () => {
     const hasTextErrors = Object.keys(formData).some(key => getFieldError(key) !== null);
     const hasEmptyFields = Object.values(formData).some(val => !val);
-    const hasPhotos = ktpPhotoUrl && selfiePhotoUrl && businessPhotoUrl;
+    const hasPhotos = ktpPhotoUrl && businessPhotoUrl;
     const hasCoords = coords !== null;
     return !hasTextErrors && !hasEmptyFields && hasPhotos && hasCoords;
   };
@@ -149,7 +148,7 @@ export function AjukanSellerView({
     e.preventDefault();
     setError(null);
 
-    if (!ktpPhotoUrl || !selfiePhotoUrl || !businessPhotoUrl || !coords) {
+    if (!ktpPhotoUrl || !businessPhotoUrl || !coords) {
       const msg = "Semua data wajib diisi, termasuk foto dan lokasi peta";
       setError(msg);
       toast.error(msg);
@@ -157,7 +156,6 @@ export function AjukanSellerView({
       const allTouched: Record<string, boolean> = {};
       Object.keys(formData).forEach(k => allTouched[k] = true);
       allTouched.ktp = true;
-      allTouched.selfie = true;
       allTouched.business = true;
       allTouched.coords = true;
       setTouched(allTouched);
@@ -178,7 +176,6 @@ export function AjukanSellerView({
       fullName: fd.get("fullName") as string,
       nik: fd.get("nik") as string,
       ktpPhotoUrl,
-      selfiePhotoUrl,
       phone: fd.get("phone") as string,
       address: fd.get("address") as string,
       businessName: fd.get("businessName") as string,
@@ -292,7 +289,7 @@ export function AjukanSellerView({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
             <div className="space-y-4">
               <ImageUpload
                 label="Foto KTP"
@@ -308,22 +305,6 @@ export function AjukanSellerView({
                 isPrivate={true}
               />
               {touched.ktp && !ktpPhotoUrl && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Foto KTP wajib diunggah</p>}
-            </div>
-            <div className="space-y-4">
-              <ImageUpload
-                label="Foto Selfie dengan KTP"
-                hint="Foto Anda sambil memegang KTP secara jelas"
-                value={selfiePhotoUrl}
-                onChange={(val) => {
-                  const url = typeof val === 'string' ? val : val[0];
-                  setSelfiePhotoUrl(url);
-                  setTouched(prev => ({ ...prev, selfie: true }));
-                }}
-                bucket="verifikasi-seller"
-                folder="selfie"
-                isPrivate={true}
-              />
-              {touched.selfie && !selfiePhotoUrl && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Foto selfie wajib diunggah</p>}
             </div>
           </div>
         </div>

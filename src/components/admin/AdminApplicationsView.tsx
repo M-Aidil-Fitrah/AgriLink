@@ -6,7 +6,7 @@ import { SellerApplication, User, SellerApplicationStatus } from "@prisma/client
 import { CheckCircle, XCircle, Clock, MapPin, Phone, Building, ChevronDown, ChevronUp } from "lucide-react";
 import { SecureImage } from "@/components/SecureImage";
 
-type ApplicationWithUser = SellerApplication & {
+type ApplicationWithUser = Omit<SellerApplication, "selfiePhotoUrl"> & {
   user: Pick<User, "id" | "name" | "email" | "role">;
 };
 
@@ -132,19 +132,11 @@ function ApplicationCard({ app }: { app: ApplicationWithUser }) {
                   <span className="font-bold text-gray-900 text-right max-w-[200px]">{app.address}</span>
                 </div>
               </div>
-              {/* KTP Photos */}
-              <div className="grid grid-cols-2 gap-2 mt-4">
-                <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">Foto KTP</p>
-                  <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden">
-                    <SecureImage src={app.ktpPhotoUrl} bucket="verifikasi-seller" isPrivate={true} alt="KTP" fill className="object-cover" sizes="150px" />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">Selfie + KTP</p>
-                  <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden">
-                    <SecureImage src={app.selfiePhotoUrl} bucket="verifikasi-seller" isPrivate={true} alt="Selfie KTP" fill className="object-cover" sizes="150px" />
-                  </div>
+              {/* KTP Photo */}
+              <div className="mt-4">
+                <p className="text-xs text-gray-400 font-semibold mb-1">Foto KTP</p>
+                <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden max-w-[200px]">
+                  <SecureImage src={app.ktpPhotoUrl} bucket="verifikasi-seller" isPrivate={true} alt="KTP" fill className="object-cover" sizes="200px" />
                 </div>
               </div>
             </div>
